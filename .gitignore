@@ -1,0 +1,12 @@
+asm/
+assets/
+disc/SLUS_006.64
+build/
+linker/
+.vscode/
+.idea/
+__pycache__/
+permuter/
+expected/
+.venv/
+objdiff.json
