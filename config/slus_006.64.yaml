@@ -30,8 +30,10 @@ options:
   section_order: [".rodata", ".text", ".data", ".bss"]
   # auto_link_sections: [".data", ".rodata", ".bss"]
 
-  symbol_addrs_path: config/symbol_addrs.txt
-  reloc_addrs_path: config/reloc_addrs.txt
+  symbol_addrs_path: 
+    - config/symbol_addrs.slus_006.64.txt
+  reloc_addrs_path: 
+    - config/reloc_addrs.txt
 
   undefined_funcs_auto_path: linker/undefined_funcs_auto.slus_006.64.txt
   undefined_syms_auto_path: linker/undefined_syms_auto.slus_006.64.txt
@@ -56,14 +58,17 @@ segments:
     start: 0x800
     vram: 0x80010000
     bss_size: 0x544
+    align: 4
     subsegments:
       - [0x800, rodata]
       - [0x9CE0, asm] 
       - [0x9D78, c, main/main]
       - [0xA164, asm]
-      - [0xA2CC, c, main/main_loop]
+      - [0xA16C, c, main/main_loop]
+      - [0xA1CC, asm]
+      #- [0xA2CC, c, main/main_loop]
       - [0xA42C, asm]
-      - [0x23688, c, util/lzss]
+      - [0x23688, hasm, util/lzss]
       - [0x23754, asm]
       - [0x3F290, data]
       - [0x49AC0, bss]

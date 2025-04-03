@@ -1,0 +1,5 @@
+ChangeGameState = 0x8001996c;
+HeapFree = 0x800320e8;
+g_CurGameState = 0x80018088;
+g_CurOverlayBuffer = 0x800592bc;
+g_CurOverlayID =  0x800592c0;
