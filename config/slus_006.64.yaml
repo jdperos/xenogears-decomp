@@ -58,7 +58,7 @@ segments:
     start: 0x800
     vram: 0x80010000
     bss_size: 0x544
-    align: 4
+    align: 8
     subsegments:
       - [0x800, rodata]
       - [0x9CE0, asm] 
@@ -70,6 +70,8 @@ segments:
       - [0xA42C, asm]
       - [0x23688, hasm, util/lzss]
       - [0x23754, asm]
+      #- [0x3C720, c, system/interrupts] # InitVsyncInterrupts
+      #- [0x3C778, c, system/interrupts] # VsyncInterruptHandler
       - [0x3C7F0, c, system/interrupts]
       - [0x3C81C, c, system/interrupts]
       - [0x3C848, asm]
