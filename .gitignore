@@ -1,6 +1,6 @@
 asm/
 assets/
-disc/SLUS_006.64
+disc/*
 build/
 linker/
 .vscode/

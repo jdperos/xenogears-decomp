@@ -5,14 +5,20 @@ ClearVsyncInterruptCallbacks = 0x8004c01c;
 VsyncInterruptHandler = 0x8004bf78;
 InitVsyncInterrupts = 0x8004bf20;
 SetInterruptHandler = 0x8004b770;
-LZSSHeapDecompress = 0x80032e88
-LZSSDecompress = 0x80032eb4
+LZSSHeapDecompress = 0x80032e88;
+LZSSDecompress = 0x80032eb4;
+DecodeSector = 0x800289d0;
 
 g_CurGameState = 0x80018088;
 g_CurOverlayBuffer = 0x800592bc;
 g_CurOverlayID =  0x800592c0;
+
+g_CurDecodingOffset = 0x8004fe14;
+g_DiskArchiveTable = 0x8004fdf0;
+
 g_VsyncInterruptCallbacks = 0x80058940;
 g_VsyncInterruptCount = 0x80058960;
 g_InterruptControl = 0x8005890c;
+
 
 g_pTMR_HRETRACE_MODE = 0x80058964;

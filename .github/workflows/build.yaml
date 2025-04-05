@@ -31,7 +31,8 @@ jobs:
 
       - name: Setup build environment
         run: |
-          curl -o disc/SLUS_006.64 "${{ secrets.FILE_URL }}"
+          curl -L -o disc/SLUS_006.64 "${{ secrets.FILE_URL }}"
+          curl -L -o disc/OVERLAY_0x6.bin "${{ secrets.FILE_URL_2 }}"
 
       #- name: Build and create progress report
       #  run: make report

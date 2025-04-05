@@ -1,7 +1,7 @@
 # Adapted from https://github.com/Vatuu/silent-hill-decomp/tree/master
 
 # Configuration
-BUILD_OVERLAYS ?= 0
+BUILD_OVERLAYS ?= 1
 NON_MATCHING   ?= 0
 SKIP_ASM       ?= 0
 
@@ -33,6 +33,7 @@ OBJDIFF := $(OBJDIFF_DIR)/objdiff
 PYTHON          := python3
 SPLAT           := $(PYTHON) -m splat split
 MASPSX          := $(PYTHON) $(TOOLS_DIR)/maspsx/maspsx.py
+GET_YAML_TARGET := $(PYTHON) $(TOOLS_DIR)/get_yaml_target.py
 
 # Flags
 OPT_FLAGS           := -O2
@@ -43,7 +44,7 @@ CPP_FLAGS           := $(INCLUDE_FLAGS) $(DEFINE_FLAGS) -P -MMD -MP -undef -Wall
 LD_FLAGS            := $(ENDIAN) $(OPT_FLAGS) -nostdlib --no-check-sections
 OBJCOPY_FLAGS       := -O binary
 OBJDUMP_FLAGS       := --disassemble-all --reloc --disassemble-zeroes -Mreg-names=32
-SPLAT_FLAGS         := --disassemble-all
+SPLAT_FLAGS         := --disassemble-all --make-full-disasm-for-code
 DL_Flags := -G0
 AS_FLAGS := $(ENDIAN) $(INCLUDE_FLAGS) $(OPT_FLAGS) $(DL_FLAGS) -march=r3000 -mtune=r3000 -no-pad-sections
 CC_FLAGS := $(OPT_FLAGS) $(DL_FLAGS) -mips1 -mcpu=3000 -w -funsigned-char -fpeephole -ffunction-cse -fpcc-struct-return -fcommon -fverbose-asm -msoft-float -mgas -fgnu-linker -quiet
@@ -70,7 +71,13 @@ gen_o_files = $(addprefix $(BUILD_DIR)/, \
 							$(patsubst %.s, %.s.o, $(call find_s_files, $1)) \
 							$(patsubst %.c, %.c.o, $(call find_c_files, $1)))
 
-get_target_out = $(addprefix $(OUT_DIR)/,$1)
+# get_target_out = $(addprefix $(OUT_DIR)/,$1)
+
+# Function to get path to .yaml file for given target.
+get_yaml_path = $(addsuffix .yaml,$(addprefix $(CONFIG_DIR)/,$1))
+
+# Function to get target output path for given target.
+get_target_out = $(addprefix $(OUT_DIR)/,$(shell $(GET_YAML_TARGET) $(call get_yaml_path,$1)))
 
 # Template definition for elf target.
 # First parameter should be source target with folder (e.g. screens/credits).
@@ -106,7 +113,7 @@ endif
 TARGET_MAIN := slus_006.64
 
 ifeq ($(BUILD_OVERLAYS), 1)
-TARGET_OVERLAYS := overlay1 overlay2
+TARGET_OVERLAYS := overlay6
 endif
 
 # Source Definitions

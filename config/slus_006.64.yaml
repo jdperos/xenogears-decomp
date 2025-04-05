@@ -58,7 +58,7 @@ segments:
     start: 0x800
     vram: 0x80010000
     bss_size: 0x544
-    align: 8
+    align: 4
     subsegments:
       - [0x800, rodata]
       - [0x9CE0, asm] 
