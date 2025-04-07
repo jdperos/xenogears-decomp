@@ -27,7 +27,7 @@ options:
   asm_jtbl_label_macro: jlabel
   asm_data_macro: dlabel
 
-  section_order: [".rodata", ".text", ".data", ".bss"]
+  section_order: [".rodata", ".text", ".data", ".sbss", ".bss"]
   # auto_link_sections: [".data", ".rodata", ".bss"]
 
   symbol_addrs_path: 
@@ -62,12 +62,18 @@ segments:
     subsegments:
       - [0x800, rodata]
       - [0x9CE0, asm] 
-      - [0x9D78, c, main/main]
+      - [0x9D78, c, main/main] # main
       - [0xA164, asm]
       - [0xA16C, c, main/main_loop]
       - [0xA1CC, asm]
       #- [0xA2CC, c, main/main_loop]
       - [0xA42C, asm]
+      #- [0x220F8, c, system/memory]
+      #- [0x22230, asm]
+      #- [0x22268, c, system/memory]
+      - [0x22310, asm]
+      - [0x23364, c, system/memory]
+      - [0x233AC, asm]
       - [0x23688, hasm, util/lzss]
       - [0x23754, asm]
       #- [0x3C720, c, system/interrupts] # InitVsyncInterrupts
@@ -76,5 +82,7 @@ segments:
       - [0x3C81C, c, system/interrupts]
       - [0x3C848, asm]
       - [0x3F290, data]
-      - [0x49AC0, bss]
+      - [0x49AC0, sbss]
+      - [0x49B18, .sbss, system/memory]
+      - [0x49B38, bss]
   - [0x4A000]
