@@ -3,7 +3,7 @@
 
 extern s16 D_80059318;
 extern s16 D_8005931C;
-extern void* pHeap;
+extern void* g_Heap;
 extern s32 D_80059324;
 extern s32 D_80059328;
 extern s32 D_8005932C;

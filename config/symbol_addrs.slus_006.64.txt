@@ -10,7 +10,7 @@ LZSSDecompress = 0x80032eb4;
 DecodeSector = 0x800289d0;
 InitHeap = 0x80031A68;
 
-pHeap = 0x80059320;
+g_Heap = 0x80059320;
 
 g_CurGameState = 0x80018088;
 g_CurOverlayBuffer = 0x800592bc;

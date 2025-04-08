@@ -3,9 +3,7 @@
 
 s16 D_80059318;
 s16 D_8005931C;
-void* pHeap;
-s32 D_80059324;
-s32 D_80059328;
+void* g_Heap;
 s32 D_8005932C;
 s32 D_80059330;
 s32 D_80059334;
@@ -17,7 +15,7 @@ s32 D_80059338;
 void InitHeap(void* heapStart, void* heapEnd) {
     HeapBlock* startBlock = (HeapBlock*)((u32)heapStart & -4);
     HeapBlock* endBlock = (HeapBlock*)((u32)heapEnd & -4);
-    pHeap = &startBlock[1];
+    g_Heap = &startBlock[1];
     startBlock->pNext = endBlock;
     
     D_80059318 = 0x20;

@@ -47,7 +47,7 @@ options:
   rodata_string_guesser_level: 2
   data_string_guesser_level: 2
 
-  ld_bss_is_noload: False
+  ld_bss_is_noload: True
 segments:
   - name: header
     type: header
@@ -58,6 +58,7 @@ segments:
     start: 0x800
     vram: 0x80010000
     bss_size: 0x544
+    bss_contains_common: True
     align: 4
     subsegments:
       - [0x800, rodata]
@@ -70,10 +71,10 @@ segments:
       - [0xA42C, asm]
       #- [0x220F8, c, system/memory]
       #- [0x22230, asm]
-      #- [0x22268, c, system/memory]
+      - [0x22268, c, system/memory]
       - [0x22310, asm]
-      - [0x23364, c, system/memory]
-      - [0x233AC, asm]
+      #- [0x23364, c, system/memory]
+      #- [0x233AC, asm]
       - [0x23688, hasm, util/lzss]
       - [0x23754, asm]
       #- [0x3C720, c, system/interrupts] # InitVsyncInterrupts
@@ -82,7 +83,8 @@ segments:
       - [0x3C81C, c, system/interrupts]
       - [0x3C848, asm]
       - [0x3F290, data]
-      - [0x49AC0, sbss]
-      - [0x49B18, .sbss, system/memory]
-      - [0x49B38, bss]
+      - { vram: 0x800592C0, type: sbss }
+      - { vram: 0x80059318, type: scommon, name: system/memory }
+      - { vram: 0x8005933C, type: bss }
+  - [0x49AC0, rodatabin]
   - [0x4A000]
