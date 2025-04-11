@@ -5,7 +5,7 @@
 u16 D_80059318;
 u16 D_8005931C;
 void* g_Heap;
-s32 g_HeapNeedsConsolidation;
+u32 g_HeapNeedsConsolidation;
 s32 D_80059330;
 s32 D_80059334;
 s32 D_80059338;
@@ -160,7 +160,7 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
         }
 
         // Goes into error handler, does not return.
-        func_80019ACC(0x82);
+        func_80019ACC(ERR_HEAP_OUT_OF_MEMORY);
     }
 
     // 0x1EC
@@ -228,15 +228,22 @@ void HeapConsolidate(void) {
 }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800320A4);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800320B8);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800320D0);
 
 
-u32 HeapFree(void* ptr) {
+
+void HeapPinBlock(HeapBlock* pBlock) {
+    pBlock[-1].flagPinned = 0;
+}
+
+void HeapPinBlockCopy(HeapBlock* pBlock) {
+    pBlock[-1].flagPinned = 0;
+}
+
+u32 HeapFree(void* pMem) {
     u32 nCallerAddr;
     HeapBlock* pBlock;  
 
-    if (ptr == NULL) {
+    if (pMem == NULL) {
         if (D_80059330 != 0) {
             return 1;
         }
@@ -247,10 +254,10 @@ u32 HeapFree(void* ptr) {
         :: "r"(&nCallerAddr));
         D_8005933C = 0;
         D_80059340 = nCallerAddr - 8;
-        func_80019ACC(0x83);
+        func_80019ACC(ERR_HEAP_FREE_NULL);
     }
 
-    pBlock = ((HeapBlock*)ptr);
+    pBlock = ((HeapBlock*)pMem);
     if (pBlock[-1].flagPinned == 0) {
         pBlock[-1].flagMemType = 0x21;
         pBlock[-1].flagUnk = 0x0;

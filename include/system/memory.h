@@ -10,6 +10,9 @@ extern void func_80031FF8();
 #define HEAP_BLOCK_FREE 0
 #define HEAP_BLOCK_END 1
 
+#define ERR_HEAP_OUT_OF_MEMORY 0x82
+#define ERR_HEAP_FREE_NULL 0x83
+
 typedef struct {
     void* pNext;
     u32 flagAllocSrc: 21;
