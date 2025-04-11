@@ -294,3 +294,18 @@ void HeapForceFreeAllBlocks(void) {
         HeapFree(pMem + 8);
     }
 }
+
+u32 HeapGetTotalFreeSize(void) {
+    u32 nTotalFreeSize;
+    HeapBlock* pCurBlock;
+
+    nTotalFreeSize = 0;
+    pCurBlock = (HeapBlock*)g_Heap - 1;
+    while (pCurBlock->flagUnk != HEAP_BLOCK_END) {
+        if (pCurBlock->flagUnk == HEAP_BLOCK_FREE) {
+            nTotalFreeSize += ((u32)pCurBlock->pNext - (u32)pCurBlock) - sizeof(HeapBlock)*2;
+        }
+        pCurBlock = (HeapBlock*)pCurBlock->pNext - 1;
+    }
+    return nTotalFreeSize;
+}
