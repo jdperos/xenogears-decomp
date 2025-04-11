@@ -5,7 +5,7 @@
 u16 D_80059318;
 u16 D_8005931C;
 void* g_Heap;
-s32 D_8005932C;
+s32 g_HeapNeedsConsolidation;
 s32 D_80059330;
 s32 D_80059334;
 s32 D_80059338;
@@ -21,7 +21,7 @@ void InitHeap(void* heapStart, void* heapEnd) {
     
     D_80059318 = 0x20;
     D_8005931C = 0xa;
-    D_8005932C = 0;
+    g_HeapNeedsConsolidation = 0;
     D_80059334 = 0;
     D_80059338 = 0;
     
@@ -70,9 +70,8 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
     D_80059340 = nCallerAddr;
     nCallerAddr = ((nCallerAddr << 7) >> 9);
     
-    // Do we need to free stuff?
-    if (D_8005932C != 0) {
-        func_80031FF8();
+    if (g_HeapNeedsConsolidation != 0) {
+        HeapConsolidate();
     }
 
     bOutOfMemory = 1; 
@@ -201,4 +200,29 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
     pFreeBlockHeader->flagPinned = 0;
     pFreeBlockHeader->flagAllocSrc = nCallerAddr;
     return pFreeBlock;
+}
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031F70);
+
+void HeapConsolidate(void) {
+    HeapBlock* pCurrent;
+    HeapBlock* pOther;
+    
+    pCurrent = (HeapBlock*)g_Heap - 1;
+
+    while (pCurrent->flagUnk != HEAP_BLOCK_END) {
+        if (pCurrent->flagUnk == HEAP_BLOCK_FREE) {
+            pOther = pCurrent->pNext;
+            while (
+                (pCurrent->flagUnk == HEAP_BLOCK_FREE) &&
+                (pOther[-1].flagUnk == HEAP_BLOCK_FREE)
+            ) {
+                pOther = pOther[-1].pNext;
+                pCurrent->pNext = pOther;
+            }
+        }
+        pCurrent = (HeapBlock*)pCurrent->pNext - 1;
+    }
+    
+    g_HeapNeedsConsolidation = 0;
 }

@@ -11,8 +11,10 @@ DecodeSector = 0x800289d0;
 InitHeap = 0x80031A68;
 HeapGetAllocInformation = 0x80031bc4;
 HeapAlloc = 0x80031BDC;
+HeapConsolidate = 0x80031FF8;
 
 g_Heap = 0x80059320;
+g_HeapNeedsConsolidation = 0x8005932C;
 
 g_CurGameState = 0x80018088;
 g_CurOverlayBuffer = 0x800592bc;
