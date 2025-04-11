@@ -16,6 +16,7 @@ HeapUnpinBlock = 0x800320B8;
 HeapUnpinBlockCopy = 0x800320D0;
 HeapFree = 0x800320e8;
 HeapFreeBlocksWithFlag = 0x8003218C;
+HeapFreeAllBlocks = 0x8003223C;
 
 g_Heap = 0x80059320;
 g_HeapNeedsConsolidation = 0x8005932C;
