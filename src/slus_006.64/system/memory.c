@@ -40,7 +40,11 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031B10);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031B9C);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031BA8);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031BB4);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031BC4);
+
+void HeapGetAllocInformation(u32* pAllocSourceAddr, u32* pAllocSize) {
+    *pAllocSourceAddr = D_80059340;
+    *pAllocSize = D_8005933C;
+}
 
 void* HeapAlloc(u32 allocSize, u32 allocFlags) {
     u32 nCallerAddr;

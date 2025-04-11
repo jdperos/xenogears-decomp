@@ -9,6 +9,7 @@ LZSSHeapDecompress = 0x80032e88;
 LZSSDecompress = 0x80032eb4;
 DecodeSector = 0x800289d0;
 InitHeap = 0x80031A68;
+HeapGetAllocInformation = 0x80031bc4;
 HeapAlloc = 0x80031BDC;
 
 g_Heap = 0x80059320;
