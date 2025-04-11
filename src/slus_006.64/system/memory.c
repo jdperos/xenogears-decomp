@@ -226,3 +226,38 @@ void HeapConsolidate(void) {
     
     g_HeapNeedsConsolidation = 0;
 }
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800320A4);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800320B8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800320D0);
+
+
+u32 HeapFree(void* ptr) {
+    u32 nCallerAddr;
+    HeapBlock* pBlock;  
+
+    if (ptr == NULL) {
+        if (D_80059330 != 0) {
+            return 1;
+        }
+        
+        asm volatile(
+            "move $t7, %0\n\t"
+            "sw $ra, 0($t7)\n\t"
+        :: "r"(&nCallerAddr));
+        D_8005933C = 0;
+        D_80059340 = nCallerAddr - 8;
+        func_80019ACC(0x83);
+    }
+
+    pBlock = ((HeapBlock*)ptr);
+    if (pBlock[-1].flagPinned == 0) {
+        pBlock[-1].flagMemType = 0x21;
+        pBlock[-1].flagUnk = 0x0;
+        pBlock[-1].flagAllocSrc = 0;
+        g_HeapNeedsConsolidation = 1;
+        return 0;
+    } else if (pBlock[-1].flagPinned == 1) {
+        return -1;
+    }
+}

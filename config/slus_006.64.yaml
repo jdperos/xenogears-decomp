@@ -72,8 +72,7 @@ segments:
       #- [0x220F8, c, system/memory]
       #- [0x22230, asm]
       - [0x22268, c, system/memory]
-      - [0x223DC, c, system/memory]
-      - [0x228A4, asm]
+      - [0x2298C, asm]
 
       
       #- [0x23364, c, system/memory]
