@@ -11,8 +11,9 @@ InitHeap = 0x80031A68;
 HeapGetAllocInformation = 0x80031bc4;
 HeapAlloc = 0x80031BDC;
 HeapConsolidate = 0x80031FF8;
-HeapPinBlock = 0x800320B8;
-HeapPinBlockCopy = 0x800320D0;
+HeapPinBlock = 0x800320A4;
+HeapUnpinBlock = 0x800320B8;
+HeapUnpinBlockCopy = 0x800320D0;
 HeapFree = 0x800320e8;
 
 g_Heap = 0x80059320;

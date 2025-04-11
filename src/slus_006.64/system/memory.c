@@ -227,15 +227,15 @@ void HeapConsolidate(void) {
     g_HeapNeedsConsolidation = 0;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800320A4);
-
-
-
 void HeapPinBlock(HeapBlock* pBlock) {
+    pBlock[-1].flagPinned = 1;
+}
+
+void HeapUnpinBlock(HeapBlock* pBlock) {
     pBlock[-1].flagPinned = 0;
 }
 
-void HeapPinBlockCopy(HeapBlock* pBlock) {
+void HeapUnpinBlockCopy(HeapBlock* pBlock) {
     pBlock[-1].flagPinned = 0;
 }
 
