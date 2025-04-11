@@ -84,25 +84,20 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
     pSmallBlock = pFreeBlockHeader = NULL;
     pCurBlockHeader = pCurBlock - 1;
     
-    // 0x7C
     while (1) {
         while (pCurBlockHeader->flagUnk != HEAP_BLOCK_FREE) {
-            // 0x90
             if (pCurBlockHeader->flagUnk == HEAP_BLOCK_END) {
                 goto l_0x1CC_EndOfHeap;
             }
-    
-            // 0xA4
+
             pCurBlock = pCurBlockHeader->pNext;
             pCurBlockHeader = pCurBlock - 1;
         }
         
-        // 0xC0
         nFreeSize = (u32)pCurBlockHeader->pNext - (u32)pCurBlockHeader - 0x10;
         nRemainingSize = nFreeSize - allocSize;
 
         if (nRemainingSize == 4 || nRemainingSize == 0) {
-            // 0xE8
             bOutOfMemory = 0;
 
             // Small block allocation
@@ -117,14 +112,10 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
                 D_80059318 = 0x20;
                 return pCurBlockHeader + 1;
             }
-        }
-        // 0x178:
-        else if (nRemainingSize >= 5) {
-            // 0x180
+        } else if (nRemainingSize >= 5) {
             bOutOfMemory = 0;
     
             if (allocFlags != 1) {
-                // 0x188
                 if (allocFlags != 2) {
                     goto l_0x1B4;
                 }
@@ -137,7 +128,6 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
                 }
                  goto l_0x1C0;
             }
-            // 0x1AC
             pFreeBlockHeader = pCurBlockHeader;
             goto l_0x1C0;
     
@@ -154,7 +144,6 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
 
     l_0x1CC_EndOfHeap:
     if (bOutOfMemory != 0) {
-        // 0x1D4
         if (D_80059330 != 0) {
             return 0;
         }
@@ -163,17 +152,13 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
         func_80019ACC(ERR_HEAP_OUT_OF_MEMORY);
     }
 
-    // 0x1EC
     if (allocFlags == 1) {
-        // 1F0
-
         // Small block allocation
         if (pFreeBlockHeader < pSmallBlock) {
             pCurBlockHeader = pSmallBlock;
             goto l_0xFC_AllocSmallBlock;
         }
 
-        // 0x200
         pNewBlock = pFreeBlockHeader->pNext - (allocSize + 8);
         pNewBlock[-1].pNext = pFreeBlockHeader->pNext;
         pNewBlock[-1].flagUnk = D_8005931C;
@@ -266,5 +251,21 @@ u32 HeapFree(void* pMem) {
         return 0;
     } else if (pBlock[-1].flagPinned == 1) {
         return -1;
+    }
+}
+
+void HeapFreeBlocksWithFlag(u8 targetFlag) {
+    void* pMem;
+    HeapBlock* pCurBlock;
+
+    pCurBlock = (HeapBlock*)g_Heap - 1;
+    while (pCurBlock->flagUnk != HEAP_BLOCK_END) {
+        if (pCurBlock->flagUnk == targetFlag) {
+            pMem = pCurBlock;
+            pCurBlock = (HeapBlock*)pCurBlock->pNext - 1;
+            HeapFree(pMem + sizeof(HeapBlock));
+        } else {
+            pCurBlock = (HeapBlock*)pCurBlock->pNext - 1;
+        }
     }
 }
