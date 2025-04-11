@@ -281,3 +281,16 @@ void HeapFreeAllBlocks(void) {
         HeapFree(pMem + 8);
     }
 }
+
+void HeapForceFreeAllBlocks(void) {
+    HeapBlock* pCurBlock;
+    void* pMem;
+
+    pCurBlock = (HeapBlock*)g_Heap - 1;
+    while (pCurBlock->flagUnk != HEAP_BLOCK_END) {
+        pMem = pCurBlock;
+        pCurBlock = (HeapBlock*)pCurBlock->pNext - 1;
+        HeapUnpinBlock(pMem + 8);
+        HeapFree(pMem + 8);
+    }
+}
