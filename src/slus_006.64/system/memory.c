@@ -7,13 +7,13 @@ u16 D_8005931C;
 void* g_Heap;
 u32 g_HeapNeedsConsolidation;
 s32 D_80059330;
-s32 D_80059334;
-s32 D_80059338;
+s32 D_80059334; // Symbols?
+s32 D_80059338; // Num symbols?
 u32 D_8005933C;
 u32 D_80059340;
 
 
-void InitHeap(void* heapStart, void* heapEnd) {
+void HeapInit(void* heapStart, void* heapEnd) {
     HeapBlock* startBlock = (HeapBlock*)((u32)heapStart & -4);
     HeapBlock* endBlock = (HeapBlock*)((u32)heapEnd & -4);
     g_Heap = &startBlock[1];
@@ -25,12 +25,12 @@ void InitHeap(void* heapStart, void* heapEnd) {
     D_80059334 = 0;
     D_80059338 = 0;
     
-    startBlock->flagUnk = 0x0;
-    startBlock->flagMemType = 0x21;
+    startBlock->userTag = HEAP_USER_NONE;
+    startBlock->contentTag = 0x21;
     
     endBlock[-1].pNext = endBlock;
-    endBlock[-1].flagUnk = 0x1;
-    endBlock[-1].flagMemType = 0x20;
+    endBlock[-1].userTag = HEAP_USER_END;
+    endBlock[-1].contentTag = 0x20;
 
     D_80059FCC[0] = 0;
     func_80031A30();
@@ -85,8 +85,8 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
     pCurBlockHeader = pCurBlock - 1;
     
     while (1) {
-        while (pCurBlockHeader->flagUnk != HEAP_BLOCK_FREE) {
-            if (pCurBlockHeader->flagUnk == HEAP_BLOCK_END) {
+        while (pCurBlockHeader->userTag != HEAP_USER_NONE) {
+            if (pCurBlockHeader->userTag == HEAP_USER_END) {
                 goto l_0x1CC_EndOfHeap;
             }
 
@@ -105,10 +105,10 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
                 pSmallBlock = pCurBlockHeader; 
             } else {
                 l_0xFC_AllocSmallBlock:
-                pCurBlockHeader->flagUnk = D_8005931C;
-                pCurBlockHeader->flagMemType = D_80059318;
-                pCurBlockHeader->flagPinned = 0;
-                pCurBlockHeader->flagAllocSrc = nCallerAddr;
+                pCurBlockHeader->userTag = D_8005931C;
+                pCurBlockHeader->contentTag = D_80059318;
+                pCurBlockHeader->isPinned = 0;
+                pCurBlockHeader->sourceAddress = nCallerAddr;
                 D_80059318 = 0x20;
                 return pCurBlockHeader + 1;
             }
@@ -161,10 +161,10 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
 
         pNewBlock = pFreeBlockHeader->pNext - (allocSize + 8);
         pNewBlock[-1].pNext = pFreeBlockHeader->pNext;
-        pNewBlock[-1].flagUnk = D_8005931C;
-        pNewBlock[-1].flagMemType = D_80059318;
-        pNewBlock[-1].flagPinned = 0;
-        pNewBlock[-1].flagAllocSrc = nCallerAddr;
+        pNewBlock[-1].userTag = D_8005931C;
+        pNewBlock[-1].contentTag = D_80059318;
+        pNewBlock[-1].isPinned = 0;
+        pNewBlock[-1].sourceAddress = nCallerAddr;
         pFreeBlockHeader->pNext = pNewBlock;
         D_80059318 = 0x20;
         return pNewBlock;
@@ -173,17 +173,17 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
     l_0x28C:
     pNewBlock2 = (HeapBlock*)((u32)pFreeBlock + allocSize); 
     pNewBlock2->pNext = pFreeBlockHeader->pNext;
-    pNewBlock2->flagUnk = pFreeBlockHeader->flagUnk;
-    pNewBlock2->flagMemType = pFreeBlockHeader->flagMemType;
-    pNewBlock2->flagPinned = pFreeBlockHeader->flagPinned;
-    pNewBlock2->flagAllocSrc = pFreeBlockHeader->flagAllocSrc;
+    pNewBlock2->userTag = pFreeBlockHeader->userTag;
+    pNewBlock2->contentTag = pFreeBlockHeader->contentTag;
+    pNewBlock2->isPinned = pFreeBlockHeader->isPinned;
+    pNewBlock2->sourceAddress = pFreeBlockHeader->sourceAddress;
     
     pFreeBlockHeader->pNext = pNewBlock2 + 1;
-    pFreeBlockHeader->flagMemType = D_80059318;
+    pFreeBlockHeader->contentTag = D_80059318;
     D_80059318 = 0x20;
-    pFreeBlockHeader->flagUnk = D_8005931C;
-    pFreeBlockHeader->flagPinned = 0;
-    pFreeBlockHeader->flagAllocSrc = nCallerAddr;
+    pFreeBlockHeader->userTag = D_8005931C;
+    pFreeBlockHeader->isPinned = 0;
+    pFreeBlockHeader->sourceAddress = nCallerAddr;
     return pFreeBlock;
 }
 
@@ -195,12 +195,12 @@ void HeapConsolidate(void) {
     
     pCurrent = (HeapBlock*)g_Heap - 1;
 
-    while (pCurrent->flagUnk != HEAP_BLOCK_END) {
-        if (pCurrent->flagUnk == HEAP_BLOCK_FREE) {
+    while (pCurrent->userTag != HEAP_USER_END) {
+        if (pCurrent->userTag == HEAP_USER_NONE) {
             pOther = pCurrent->pNext;
             while (
-                (pCurrent->flagUnk == HEAP_BLOCK_FREE) &&
-                (pOther[-1].flagUnk == HEAP_BLOCK_FREE)
+                (pCurrent->userTag == HEAP_USER_NONE) &&
+                (pOther[-1].userTag == HEAP_USER_NONE)
             ) {
                 pOther = pOther[-1].pNext;
                 pCurrent->pNext = pOther;
@@ -213,15 +213,15 @@ void HeapConsolidate(void) {
 }
 
 void HeapPinBlock(HeapBlock* pBlock) {
-    pBlock[-1].flagPinned = 1;
+    pBlock[-1].isPinned = 1;
 }
 
 void HeapUnpinBlock(HeapBlock* pBlock) {
-    pBlock[-1].flagPinned = 0;
+    pBlock[-1].isPinned = 0;
 }
 
 void HeapUnpinBlockCopy(HeapBlock* pBlock) {
-    pBlock[-1].flagPinned = 0;
+    pBlock[-1].isPinned = 0;
 }
 
 u32 HeapFree(void* pMem) {
@@ -243,13 +243,13 @@ u32 HeapFree(void* pMem) {
     }
 
     pBlock = ((HeapBlock*)pMem);
-    if (pBlock[-1].flagPinned == 0) {
-        pBlock[-1].flagMemType = 0x21;
-        pBlock[-1].flagUnk = 0x0;
-        pBlock[-1].flagAllocSrc = 0;
+    if (pBlock[-1].isPinned == 0) {
+        pBlock[-1].contentTag = 0x21;
+        pBlock[-1].userTag = 0x0;
+        pBlock[-1].sourceAddress = 0;
         g_HeapNeedsConsolidation = 1;
         return 0;
-    } else if (pBlock[-1].flagPinned == 1) {
+    } else if (pBlock[-1].isPinned == 1) {
         return -1;
     }
 }
@@ -259,8 +259,8 @@ void HeapFreeBlocksWithFlag(u8 targetFlag) {
     HeapBlock* pCurBlock;
 
     pCurBlock = (HeapBlock*)g_Heap - 1;
-    while (pCurBlock->flagUnk != HEAP_BLOCK_END) {
-        if (pCurBlock->flagUnk == targetFlag) {
+    while (pCurBlock->userTag != HEAP_USER_END) {
+        if (pCurBlock->userTag == targetFlag) {
             pMem = pCurBlock;
             pCurBlock = (HeapBlock*)pCurBlock->pNext - 1;
             HeapFree(pMem + sizeof(HeapBlock));
@@ -275,7 +275,7 @@ void HeapFreeAllBlocks(void) {
     void* pMem;
 
     pCurBlock = (HeapBlock*)g_Heap - 1;
-    while (pCurBlock->flagUnk != HEAP_BLOCK_END) {
+    while (pCurBlock->userTag != HEAP_USER_END) {
         pMem = pCurBlock;
         pCurBlock = (HeapBlock*)pCurBlock->pNext - 1;
         HeapFree(pMem + 8);
@@ -287,7 +287,7 @@ void HeapForceFreeAllBlocks(void) {
     void* pMem;
 
     pCurBlock = (HeapBlock*)g_Heap - 1;
-    while (pCurBlock->flagUnk != HEAP_BLOCK_END) {
+    while (pCurBlock->userTag != HEAP_USER_END) {
         pMem = pCurBlock;
         pCurBlock = (HeapBlock*)pCurBlock->pNext - 1;
         HeapUnpinBlock(pMem + 8);
@@ -301,11 +301,77 @@ u32 HeapGetTotalFreeSize(void) {
 
     nTotalFreeSize = 0;
     pCurBlock = (HeapBlock*)g_Heap - 1;
-    while (pCurBlock->flagUnk != HEAP_BLOCK_END) {
-        if (pCurBlock->flagUnk == HEAP_BLOCK_FREE) {
+    while (pCurBlock->userTag != HEAP_USER_END) {
+        if (pCurBlock->userTag == HEAP_USER_NONE) {
             nTotalFreeSize += ((u32)pCurBlock->pNext - (u32)pCurBlock) - sizeof(HeapBlock)*2;
         }
         pCurBlock = (HeapBlock*)pCurBlock->pNext - 1;
     }
     return nTotalFreeSize;
+}
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800323B4);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032404);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032498);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800324B8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800324C4);
+
+
+extern char* D_80059248; // "%06x"
+extern char* D_80059250; // "%6x"
+extern char* D_80059258; // "%s "
+extern char* D_8005925C; // "%s"
+extern char* D_80059260; // " / "
+extern char* D_80059264; // "\n"
+
+void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize, s32 debugFlags) {
+    char sFunctionName[0x40];
+    s32 nContentType;
+    char* sContentType;
+    u32 nContentFlag;
+
+    if (debugFlags & HEAP_DEBUG_PRINT_MCB) {
+        func_80032BDC(&D_80059248, (u32)pBlockHeader & 0xFFFFFF);
+    }
+    if (debugFlags & HEAP_DEBUG_PRINT_ADDRESS) {
+        func_80032BDC(&D_80059248, (u32)pBlockMem & 0xFFFFFF);
+    }
+    if (debugFlags & HEAP_DEBUG_PRINT_SIZE) {
+        func_80032BDC(&D_80059250, blockSize);
+    }
+    if (debugFlags & HEAP_DEBUG_PRINT_USER) {
+        func_80032BDC(&D_80059258, *(&D_80050110 + pBlockHeader->userTag));
+    }
+    if (debugFlags & HEAP_DEBUG_PRINT_GETADD) {
+        func_80032BDC(&D_80059248, (pBlockHeader->sourceAddress * 4));
+    }
+    if ((debugFlags & HEAP_DEBUG_PRINT_FUNCTION) && 
+        (pBlockHeader->userTag != HEAP_USER_NONE)
+    ) {
+
+        // Addr => Function name?
+        func_800324C4((pBlockHeader->sourceAddress * 4) - 0x80000000, sFunctionName);
+        
+        func_80032BDC(&D_8005925C, sFunctionName);
+        if (debugFlags & HEAP_DEBUG_PRINT_CONTENTS) {
+            if (pBlockHeader->contentTag & 0x1F) {
+                func_80032BDC(&D_80059260);
+            }
+        }
+    } 
+    
+    if (debugFlags & HEAP_DEBUG_PRINT_CONTENTS) {
+        nContentFlag = pBlockHeader->contentTag;
+        nContentType = nContentFlag & 0x1F;
+        if (nContentType != HEAP_CONTENT_NONE) {
+            if (nContentFlag & 0x20) {
+                sContentType = *(&D_80050140 + nContentType);
+            } else {
+                sContentType = *(nContentFlag + *(&D_80059FA4 + pBlockHeader->userTag));
+            }
+            func_80032BDC(&D_8005925C, sContentType);
+        }
+    }
+
+    func_80032BDC(&D_80059264);
 }
