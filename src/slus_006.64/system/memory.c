@@ -7,8 +7,8 @@ u16 D_8005931C;
 void* g_Heap;
 u32 g_HeapNeedsConsolidation;
 s32 D_80059330;
-s32 D_80059334; // Symbols?
-s32 D_80059338; // Num symbols?
+u8* g_SymbolData;
+void* g_SymbolDataEndAddress;
 u32 D_8005933C;
 u32 D_80059340;
 
@@ -22,8 +22,8 @@ void HeapInit(void* heapStart, void* heapEnd) {
     D_80059318 = 0x20;
     D_8005931C = 0xa;
     g_HeapNeedsConsolidation = 0;
-    D_80059334 = 0;
-    D_80059338 = 0;
+    g_SymbolData = NULL;
+    g_SymbolDataEndAddress = NULL;
     
     startBlock->userTag = HEAP_USER_NONE;
     startBlock->contentTag = 0x21;
@@ -314,8 +314,51 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800323B4);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032404);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032498);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800324B8);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800324C4);
 
+
+// Symbol:
+// 0x0: u32 address
+// 0x4: u8 nameLen
+// 0x5: u8 name[nameLen]
+void HeapGetSymbolNameFromAddress(u32 address, u8* pString) {
+    u32 byte0;
+    u32 byte1;
+    u32 byte2;
+    u32 byte3;
+    u8* pSymbol;
+    u8 chSymbolNameLetter;
+    u8* pSymbolName;
+    s32 nSymbolNameLen;
+
+    pSymbol = g_SymbolData + 4;
+    if (pSymbol != 0) {
+        while ((void*)pSymbol < g_SymbolDataEndAddress) {
+            byte0 = *pSymbol++;
+            byte1 = *pSymbol++;
+            byte2 = *pSymbol++;
+            byte3 = *pSymbol++;
+
+            if (!((byte0 | (byte1 << 0x8) | (byte2 << 0x10) | ( byte3 << 0x18)) < address))
+                break;
+
+            pSymbolName = pSymbol;
+            nSymbolNameLen = *pSymbolName;
+            pSymbol += 1;
+            pSymbol += nSymbolNameLen;
+        }
+        
+        nSymbolNameLen = *pSymbolName;
+        nSymbolNameLen -= 1;
+        pSymbolName = pSymbolName + 1;
+        while (nSymbolNameLen != -1) {
+            chSymbolNameLetter = *pSymbolName++;
+            nSymbolNameLen -= 1;
+            *pString++ = chSymbolNameLetter;
+        }    
+    }
+    
+    *pString = 0;
+}
 
 extern char* D_80059248; // "%06x"
 extern char* D_80059250; // "%6x"
@@ -350,7 +393,7 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
     ) {
 
         // Addr => Function name?
-        func_800324C4((pBlockHeader->sourceAddress * 4) - 0x80000000, sFunctionName);
+        HeapGetSymbolNameFromAddress((pBlockHeader->sourceAddress * 4) - 0x80000000, sFunctionName);
         
         func_80032BDC(&D_8005925C, sFunctionName);
         if (debugFlags & HEAP_DEBUG_PRINT_CONTENTS) {

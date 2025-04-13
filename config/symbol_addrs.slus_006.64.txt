@@ -21,10 +21,13 @@ HeapFreeBlocksWithFlag = 0x8003218C;
 HeapFreeAllBlocks = 0x8003223C;
 HeapForceFreeAllBlocks = 0x800322B4;
 HeapGetTotalFreeSize = 0x80032340;
+HeapGetSymbolNameFromAddress = 0x800324C4;
 HeapDebugPrintBlock = 0x80032584;
 
 g_Heap = 0x80059320;
 g_HeapNeedsConsolidation = 0x8005932C;
+g_SymbolData = 0x80059334;
+g_SymbolDataEndAddress = 0x80059338;
 
 g_CurGameState = 0x80018088;
 g_CurOverlayBuffer = 0x800592bc;
