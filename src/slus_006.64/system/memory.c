@@ -3,7 +3,7 @@
 #include "psyq/pc.h"
 
 u16 D_80059318;
-u16 D_8005931C;
+u16 g_HeapCurUser;
 void* g_Heap;
 u32 g_HeapNeedsConsolidation;
 s32 D_80059330;
@@ -68,7 +68,7 @@ void HeapInit(void* pHeapStart, void* pHeapEnd) {
     startBlock->pNext = endBlock;
     
     D_80059318 = 0x20;
-    D_8005931C = 0xa;
+    g_HeapCurUser = HEAP_USER_UNKNOWN;
     g_HeapNeedsConsolidation = 0;
     g_SymbolData = NULL;
     g_SymbolDataEndAddress = NULL;
@@ -103,7 +103,10 @@ void HeapRelocate(void* pNewStartAddress) {
     D_80059FCC[0] = 0;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031B9C);
+u16 HeapGetCurrentUser(void) {
+    return g_HeapCurUser;
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031BA8);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031BB4);
 
@@ -171,7 +174,7 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
                 pSmallBlock = pCurBlockHeader; 
             } else {
                 l_0xFC_AllocSmallBlock:
-                pCurBlockHeader->userTag = D_8005931C;
+                pCurBlockHeader->userTag = g_HeapCurUser;
                 pCurBlockHeader->contentTag = D_80059318;
                 pCurBlockHeader->isPinned = 0;
                 pCurBlockHeader->sourceAddress = nCallerAddr;
@@ -227,7 +230,7 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
 
         pNewBlock = pFreeBlockHeader->pNext - (allocSize + 8);
         pNewBlock[-1].pNext = pFreeBlockHeader->pNext;
-        pNewBlock[-1].userTag = D_8005931C;
+        pNewBlock[-1].userTag = g_HeapCurUser;
         pNewBlock[-1].contentTag = D_80059318;
         pNewBlock[-1].isPinned = 0;
         pNewBlock[-1].sourceAddress = nCallerAddr;
@@ -247,7 +250,7 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
     pFreeBlockHeader->pNext = pNewBlock2 + 1;
     pFreeBlockHeader->contentTag = D_80059318;
     D_80059318 = 0x20;
-    pFreeBlockHeader->userTag = D_8005931C;
+    pFreeBlockHeader->userTag = g_HeapCurUser;
     pFreeBlockHeader->isPinned = 0;
     pFreeBlockHeader->sourceAddress = nCallerAddr;
     return pFreeBlock;

@@ -73,6 +73,22 @@ typedef struct {
     u32 contentTag: 6;
 } HeapBlock;
 
+int HeapLoadSymbols(char* pSymbolFilePath);
 void HeapInit(void* heapStart, void* heapEnd);
+void HeapRelocate(void* pNewStartAddress);
+u16 HeapGetCurrentUser(void);
+void HeapGetAllocInformation(u32* pAllocSourceAddr, u32* pAllocSize);
+void* HeapAlloc(u32 allocSize, u32 allocFlags);
+void HeapConsolidate(void);
+void HeapPinBlock(HeapBlock* pBlock);
+void HeapUnpinBlock(HeapBlock* pBlock);
+void HeapUnpinBlockCopy(HeapBlock* pBlock);
+u32 HeapFree(void* pMem);
+void HeapFreeBlocksWithFlag(u8 targetFlag);
+void HeapFreeAllBlocks(void);
+void HeapForceFreeAllBlocks(void);
+u32 HeapGetTotalFreeSize(void);
+void HeapGetSymbolNameFromAddress(u32 address, u8* pString);
+void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize, s32 debugFlags);
 
 #endif

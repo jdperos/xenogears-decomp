@@ -9,6 +9,7 @@ DecodeSector = 0x800289d0;
 HeapLoadSymbols = 0x800318F8;
 HeapInit = 0x80031A68;
 HeapRelocate = 0x80031B10;
+HeapGetCurrentUser = 0x80031B9C;
 HeapGetAllocInformation = 0x80031bc4;
 HeapAlloc = 0x80031BDC;
 HeapConsolidate = 0x80031FF8;
@@ -32,6 +33,7 @@ PClseek = 0x8004c348;
 PCinit = 0x8004c38c;
 PCread = 0x8004c398;
 
+g_HeapCurUser = 0x8005931C;
 g_Heap = 0x80059320;
 g_HeapNeedsConsolidation = 0x8005932C;
 g_SymbolData = 0x80059334;
