@@ -557,3 +557,21 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
 
     func_80032BDC(&D_80059264);
 }
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", HeapDebugPrint);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032B0C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032B64);
+
+//INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032BAC);
+void HeapForceFree(void* pMem) {
+    HeapUnpinBlock(pMem);
+    HeapFree(pMem);
+}
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032BDC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032C18);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032CB8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032D60);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032DCC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032E04);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032E7C);
