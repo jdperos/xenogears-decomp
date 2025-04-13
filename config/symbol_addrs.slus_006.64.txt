@@ -30,6 +30,7 @@ HeapSetCurrentContentType = 0x800324B8;
 HeapGetSymbolNameFromAddress = 0x800324C4;
 HeapDebugPrintBlock = 0x80032584;
 HeapDebugPrint = 0x8003278C;
+HeapCalloc = 0x80032B64;
 HeapForceFree = 0x80032BAC;
 
 LZSSHeapDecompress = 0x80032e88;

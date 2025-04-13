@@ -88,6 +88,7 @@ u16 HeapGetCurrentUser(void);
 void HeapSetCurrentUser(u16 userTag);
 void HeapGetAllocInformation(u32* pAllocSourceAddr, u32* pAllocSize);
 void* HeapAlloc(u32 allocSize, u32 allocFlags);
+void* HeapInsertAlloc(HeapBlock* pMem, u32 allocSize);
 void HeapConsolidate(void);
 void HeapPinBlock(HeapBlock* pBlock);
 void HeapUnpinBlock(HeapBlock* pBlock);
@@ -103,5 +104,6 @@ void HeapChangeCurrentUser(u32 userTag, char** pContentTypes);
 void HeapSetCurrentContentType(u16 contentTag);
 void HeapGetSymbolNameFromAddress(u32 address, u8* pString);
 void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize, s32 debugFlags);
+void HeapCalloc(u32 numElements, u32 elementSize);
 void HeapForceFree(void* pMem);
 #endif

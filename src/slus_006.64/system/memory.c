@@ -561,13 +561,22 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", HeapDebugPrint);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032B0C);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032B64);
 
-//INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032BAC);
+void HeapCalloc(u32 numElements, u32 elementSize) {
+    u32 nPrevHeapUser;
+
+    nPrevHeapUser = g_HeapCurUser;
+    g_HeapCurUser = HEAP_USER_SUZU;
+    g_HeapCurContentType = HEAP_CONTENT_FAKE_CALLOC;
+    HeapAlloc(elementSize * numElements, 0);
+    g_HeapCurUser = nPrevHeapUser;
+}
+
 void HeapForceFree(void* pMem) {
     HeapUnpinBlock(pMem);
     HeapFree(pMem);
 }
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032BDC);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032C18);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032CB8);
