@@ -1,6 +1,6 @@
 #include "common.h"
 #include "system/memory.h"
-
+#include "psyq/pc.h"
 
 u16 D_80059318;
 u16 D_8005931C;
@@ -12,6 +12,54 @@ void* g_SymbolDataEndAddress;
 u32 D_8005933C;
 u32 D_80059340;
 
+
+int HeapLoadSymbols(char* pSymbolFilePath) {
+    int hSymbolFile;
+    int nSymbolFileSize;
+    int nBytesToRead;
+    char* pSymbolData;
+
+    nBytesToRead = 0x8000;
+    
+    PCinit();
+    hSymbolFile = PCopen(pSymbolFilePath, O_RDONLY, 0);
+    
+    if (hSymbolFile != -1) {
+        nSymbolFileSize = PClseek(hSymbolFile, 0, SEEK_END);
+        PClseek(hSymbolFile, 0, SEEK_SET);
+        func_800324B8(0x2E);
+        pSymbolData = HeapAlloc(nSymbolFileSize, 0);
+        g_SymbolData = pSymbolData;
+        g_SymbolDataEndAddress = pSymbolData + nSymbolFileSize;
+
+        while (1) {
+            if (nSymbolFileSize <= 0)
+                break;
+
+            if (nSymbolFileSize < nBytesToRead)
+                nBytesToRead = nSymbolFileSize;
+
+            PCread(hSymbolFile, pSymbolData, nBytesToRead);
+            nSymbolFileSize -= nBytesToRead;
+            pSymbolData += nBytesToRead;
+        }
+        
+        PCclose(hSymbolFile);
+        if ((g_SymbolData[0] != 'S') || 
+            (g_SymbolData[1] != 'Y') || 
+            (g_SymbolData[2] != 'M') || 
+            (g_SymbolData[3] != '1')) {
+            HeapFree(g_SymbolData);
+            g_SymbolData = NULL;
+            g_SymbolDataEndAddress = NULL;
+        }
+        
+        return 0;
+    }
+    return -1;
+}
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031A30);
 
 void HeapInit(void* heapStart, void* heapEnd) {
     HeapBlock* startBlock = (HeapBlock*)((u32)heapStart & -4);
@@ -391,8 +439,6 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
     if ((debugFlags & HEAP_DEBUG_PRINT_FUNCTION) && 
         (pBlockHeader->userTag != HEAP_USER_NONE)
     ) {
-
-        // Addr => Function name?
         HeapGetSymbolNameFromAddress((pBlockHeader->sourceAddress * 4) - 0x80000000, sFunctionName);
         
         func_80032BDC(&D_8005925C, sFunctionName);

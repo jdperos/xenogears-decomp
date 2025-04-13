@@ -4,11 +4,9 @@ ClearVsyncInterruptCallbacks = 0x8004c01c;
 VsyncInterruptHandler = 0x8004bf78;
 InitVsyncInterrupts = 0x8004bf20;
 SetInterruptHandler = 0x8004b770;
-LZSSHeapDecompress = 0x80032e88;
-LZSSDecompress = 0x80032eb4;
 DecodeSector = 0x800289d0;
 
-
+HeapLoadSymbols = 0x800318F8;
 HeapInit = 0x80031A68;
 HeapGetAllocInformation = 0x80031bc4;
 HeapAlloc = 0x80031BDC;
@@ -23,6 +21,15 @@ HeapForceFreeAllBlocks = 0x800322B4;
 HeapGetTotalFreeSize = 0x80032340;
 HeapGetSymbolNameFromAddress = 0x800324C4;
 HeapDebugPrintBlock = 0x80032584;
+
+LZSSHeapDecompress = 0x80032e88;
+LZSSDecompress = 0x80032eb4;
+
+PCopen = 0x8004c318;
+PCclose = 0x8004c338;
+PClseek = 0x8004c348;
+PCinit = 0x8004c38c;
+PCread = 0x8004c398;
 
 g_Heap = 0x80059320;
 g_HeapNeedsConsolidation = 0x8005932C;
