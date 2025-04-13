@@ -10,6 +10,7 @@ HeapLoadSymbols = 0x800318F8;
 HeapInit = 0x80031A68;
 HeapRelocate = 0x80031B10;
 HeapGetCurrentUser = 0x80031B9C;
+HeapSetCurrentUser = 0x80031BA8;
 HeapGetAllocInformation = 0x80031bc4;
 HeapAlloc = 0x80031BDC;
 HeapConsolidate = 0x80031FF8;

@@ -107,7 +107,10 @@ u16 HeapGetCurrentUser(void) {
     return g_HeapCurUser;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031BA8);
+void HeapSetCurrentUser(u16 userTag) {
+    g_HeapCurUser = userTag;
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031BB4);
 
 void HeapGetAllocInformation(u32* pAllocSourceAddr, u32* pAllocSize) {

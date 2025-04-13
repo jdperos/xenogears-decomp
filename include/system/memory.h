@@ -77,6 +77,7 @@ int HeapLoadSymbols(char* pSymbolFilePath);
 void HeapInit(void* heapStart, void* heapEnd);
 void HeapRelocate(void* pNewStartAddress);
 u16 HeapGetCurrentUser(void);
+void HeapSetCurrentUser(u16 userTag);
 void HeapGetAllocInformation(u32* pAllocSourceAddr, u32* pAllocSize);
 void* HeapAlloc(u32 allocSize, u32 allocFlags);
 void HeapConsolidate(void);
