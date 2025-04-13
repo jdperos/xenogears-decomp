@@ -71,7 +71,7 @@ typedef struct {
 struct HeapDelayedFreeBlock {
     struct HeapDelayedFreeBlock* pNext;
     void* pMem;
-    u32 flags;
+    u32 delay;
 };
 
 typedef struct HeapDelayedFreeBlock HeapDelayedFreeBlock;
@@ -81,7 +81,7 @@ extern HeapDelayedFreeBlock g_HeapDelayedFreeBlocksHead;
 extern u32 __attribute__((noreturn)) func_80019ACC(u32);
 extern void func_80031FF8();
 
-extern void func_80032BDC(char*, ...);
+extern void HeapPrintf(char*, ...);
 
 extern char** D_80050110;
 extern char** g_HeapContentTypeNames[];
@@ -116,5 +116,6 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
 void* HeapAllocSound(u32 allocSize);
 void HeapCalloc(u32 numElements, u32 elementSize);
 void HeapForceFree(void* pMem);
-void HeapFreeDelayed(void* pMem, u32 flags);
+void HeapDelayedFree(void* pMem, u32 delay);
+void HeapTickDelayedFree(void);
 #endif

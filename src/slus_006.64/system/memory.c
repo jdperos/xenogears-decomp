@@ -590,7 +590,7 @@ void HeapForceFree(void* pMem) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", HeapPrintf);
 
-void HeapFreeDelayed(void* pMem, u32 flags) {
+void HeapDelayedFree(void* pMem, u32 delay) {
     HeapDelayedFreeBlock* pFreeBlock;
     u32 nCallerAddr;
     
@@ -604,7 +604,7 @@ void HeapFreeDelayed(void* pMem, u32 flags) {
         func_80019ACC(ERR_HEAP_FREE_NULL);
     }
     
-    if (flags == 0) {
+    if (delay == 0) {
         HeapFree(pMem);
         return;
     }
@@ -613,12 +613,34 @@ void HeapFreeDelayed(void* pMem, u32 flags) {
     pFreeBlock = HeapAlloc(sizeof(HeapDelayedFreeBlock), 0x1);
     pFreeBlock->pNext = g_HeapDelayedFreeBlocksHead.pNext;
     pFreeBlock->pMem = pMem;
-    pFreeBlock->flags = flags;
+    pFreeBlock->delay = delay;
     g_HeapDelayedFreeBlocksHead.pNext = pFreeBlock;
 }
 
+// Iterates over delayed free blocks, decreasing the delay.
+// If delay reaches -1, these blocks are free'd.
+void HeapTickDelayedFree(void) {
+    HeapDelayedFreeBlock* pNextBlock;
+    HeapDelayedFreeBlock* pCurBlock;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032CB8);
+    pCurBlock = &g_HeapDelayedFreeBlocksHead;
+    pNextBlock = g_HeapDelayedFreeBlocksHead.pNext;
+    
+    while (pNextBlock != NULL) {
+        pNextBlock->delay -= 1;
+        if (pNextBlock->delay == -1) {
+            HeapFree(pNextBlock->pMem);
+            pCurBlock->pNext = pNextBlock->pNext;
+            HeapFree(pNextBlock);
+            if (pCurBlock->pNext == NULL)
+                break;
+        } else {
+            pCurBlock = pCurBlock->pNext;
+        }
+        pNextBlock = pCurBlock->pNext;
+    }
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032D60);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032DCC);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032E04);

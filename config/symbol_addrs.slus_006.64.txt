@@ -34,7 +34,8 @@ HeapAllocSound = 0x80032B0C;
 HeapCalloc = 0x80032B64;
 HeapForceFree = 0x80032BAC;
 HeapPrintf = 0x80032BDC;
-HeapFreeDelayed = 0x80032C18;
+HeapDelayedFree = 0x80032C18;
+HeapTickDelayedFree = 0x80032CB8;
 
 LZSSHeapDecompress = 0x80032e88;
 LZSSDecompress = 0x80032eb4;
