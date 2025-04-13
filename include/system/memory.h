@@ -104,6 +104,7 @@ void HeapChangeCurrentUser(u32 userTag, char** pContentTypes);
 void HeapSetCurrentContentType(u16 contentTag);
 void HeapGetSymbolNameFromAddress(u32 address, u8* pString);
 void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize, s32 debugFlags);
+void* HeapAllocSound(u32 allocSize);
 void HeapCalloc(u32 numElements, u32 elementSize);
 void HeapForceFree(void* pMem);
 #endif

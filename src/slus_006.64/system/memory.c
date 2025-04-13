@@ -560,7 +560,18 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", HeapDebugPrint);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032B0C);
+void* HeapAllocSound(u32 allocSize) {
+    u32 nPrevHeapUser;
+    void* pMem;
+
+    nPrevHeapUser = g_HeapCurUser;
+    g_HeapCurUser = HEAP_USER_SUZU;
+    g_HeapCurContentType = HEAP_CONTENT_SOUND;
+    pMem = HeapAlloc(allocSize, 1);
+    HeapPinBlock(pMem);
+    g_HeapCurUser = nPrevHeapUser;
+    return pMem;
+}
 
 void HeapCalloc(u32 numElements, u32 elementSize) {
     u32 nPrevHeapUser;
