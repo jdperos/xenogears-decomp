@@ -393,7 +393,30 @@ u32 HeapWalkUntilEnd(void) {
     return 0;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032404);
+u32 HeapGetLargestFreeBlockSize(void) {
+    u32 nLargestFreeBlockSize;
+    HeapBlock* pCurBlock;
+    u32 nBlockSize;
+
+    pCurBlock = (HeapBlock*)g_Heap - 1;
+    nLargestFreeBlockSize = 0;
+    while (pCurBlock->userTag != HEAP_USER_END) {
+        if (pCurBlock->userTag == HEAP_USER_NONE) {
+            nBlockSize = ((u32)pCurBlock->pNext - (u32)pCurBlock) - sizeof(HeapBlock)*2;
+            if (nLargestFreeBlockSize < nBlockSize) {
+                nLargestFreeBlockSize = nBlockSize;
+            }
+        }
+        pCurBlock = (HeapBlock*)pCurBlock->pNext - 1;
+    }
+    
+    if (nLargestFreeBlockSize < sizeof(HeapBlock)) {
+        nLargestFreeBlockSize = sizeof(HeapBlock);
+    }
+    return nLargestFreeBlockSize - sizeof(HeapBlock);
+}
+
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032498);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800324B8);
 

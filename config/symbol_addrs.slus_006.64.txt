@@ -23,6 +23,7 @@ HeapFreeAllBlocks = 0x8003223C;
 HeapForceFreeAllBlocks = 0x800322B4;
 HeapGetTotalFreeSize = 0x80032340;
 HeapWalkUntilEnd = 0x800323B4;
+HeapGetLargestFreeBlockSize = 0x80032404;
 HeapGetSymbolNameFromAddress = 0x800324C4;
 HeapDebugPrintBlock = 0x80032584;
 
