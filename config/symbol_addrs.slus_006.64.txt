@@ -13,6 +13,7 @@ HeapGetCurrentUser = 0x80031B9C;
 HeapSetCurrentUser = 0x80031BA8;
 HeapGetAllocInformation = 0x80031bc4;
 HeapAlloc = 0x80031BDC;
+HeapInsertAlloc = 0x80031F70;
 HeapConsolidate = 0x80031FF8;
 HeapPinBlock = 0x800320A4;
 HeapUnpinBlock = 0x800320B8;

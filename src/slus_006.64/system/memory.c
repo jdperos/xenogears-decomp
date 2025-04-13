@@ -6,7 +6,7 @@ u16 g_HeapCurContentType;
 u16 g_HeapCurUser;
 void* g_Heap;
 u32 g_HeapNeedsConsolidation;
-s32 D_80059330;
+u32 D_80059330;
 u8* g_SymbolData;
 void* g_SymbolDataEndAddress;
 u32 D_8005933C;
@@ -27,7 +27,7 @@ int HeapLoadSymbols(char* pSymbolFilePath) {
     if (hSymbolFile != -1) {
         nSymbolFileSize = PClseek(hSymbolFile, 0, SEEK_END);
         PClseek(hSymbolFile, 0, SEEK_SET);
-        HeapSetCurrentContentType(HEAP_DEFAULT_CONTENT_TYPES | HEAP_CONTENT_SYMBOL_DATA);
+        HeapSetCurrentContentType(HEAP_CONTENT_SYMBOL_DATA);
         pSymbolData = HeapAlloc(nSymbolFileSize, 0);
         g_SymbolData = pSymbolData;
         g_SymbolDataEndAddress = pSymbolData + nSymbolFileSize;
@@ -67,18 +67,18 @@ void HeapInit(void* pHeapStart, void* pHeapEnd) {
     g_Heap = &startBlock[1];
     startBlock->pNext = endBlock;
     
-    g_HeapCurContentType = HEAP_DEFAULT_CONTENT_TYPES;
+    g_HeapCurContentType = HEAP_CONTENT_NONE;
     g_HeapCurUser = HEAP_USER_UNKNOWN;
     g_HeapNeedsConsolidation = 0;
     g_SymbolData = NULL;
     g_SymbolDataEndAddress = NULL;
     
     startBlock->userTag = HEAP_USER_NONE;
-    startBlock->contentTag = HEAP_DEFAULT_CONTENT_TYPES | HEAP_CONTENT_FREE;
+    startBlock->contentTag = HEAP_CONTENT_FREE;
     
     endBlock[-1].pNext = endBlock;
     endBlock[-1].userTag = HEAP_USER_END;
-    endBlock[-1].contentTag = 0x20;
+    endBlock[-1].contentTag = HEAP_CONTENT_NONE;
 
     D_80059FCC[0] = 0;
     func_80031A30();
@@ -99,7 +99,7 @@ void HeapRelocate(void* pNewStartAddress) {
     g_Heap = &pNewHeap[1];
     pNewHeap->pNext = pPrevHeap[-1].pNext;
     pNewHeap->userTag = HEAP_USER_NONE;
-    pNewHeap->contentTag = 0x20 | HEAP_CONTENT_FREE;
+    pNewHeap->contentTag = HEAP_CONTENT_FREE;
     D_80059FCC[0] = 0;
 }
 
@@ -112,6 +112,15 @@ void HeapSetCurrentUser(u16 userTag) {
 }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031BB4);
+/*
+u32 func_80031BB4(u32 new) {
+  u32 prev;
+  prev = D_80059330;
+  D_80059330 = new;
+  return prev;
+}
+*/
+
 
 void HeapGetAllocInformation(u32* pAllocSourceAddr, u32* pAllocSize) {
     *pAllocSourceAddr = D_80059340;
@@ -181,7 +190,7 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
                 pCurBlockHeader->contentTag = g_HeapCurContentType;
                 pCurBlockHeader->isPinned = 0;
                 pCurBlockHeader->sourceAddress = nCallerAddr;
-                g_HeapCurContentType = HEAP_DEFAULT_CONTENT_TYPES;
+                g_HeapCurContentType = HEAP_CONTENT_NONE;
                 return pCurBlockHeader + 1;
             }
         } else if (nRemainingSize >= 5) {
@@ -238,7 +247,7 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
         pNewBlock[-1].isPinned = 0;
         pNewBlock[-1].sourceAddress = nCallerAddr;
         pFreeBlockHeader->pNext = pNewBlock;
-        g_HeapCurContentType = HEAP_DEFAULT_CONTENT_TYPES;
+        g_HeapCurContentType = HEAP_CONTENT_NONE;
         return pNewBlock;
     }
     
@@ -252,14 +261,36 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
     
     pFreeBlockHeader->pNext = pNewBlock2 + 1;
     pFreeBlockHeader->contentTag = g_HeapCurContentType;
-    g_HeapCurContentType = HEAP_DEFAULT_CONTENT_TYPES;
+    g_HeapCurContentType = HEAP_CONTENT_NONE;
     pFreeBlockHeader->userTag = g_HeapCurUser;
     pFreeBlockHeader->isPinned = 0;
     pFreeBlockHeader->sourceAddress = nCallerAddr;
     return pFreeBlock;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031F70);
+void* HeapInsertAlloc(HeapBlock* pMem, u32 allocSize) {
+    HeapBlock* pBlockHeader;
+    HeapBlock* pNewBlock;
+    HeapBlock* pNextBlock;
+    u32 nFreeSize;
+
+    pNextBlock = (HeapBlock*)pMem[-1].pNext;
+    pBlockHeader = &pMem[-1];
+
+    nFreeSize = (u32)pNextBlock - (u32)pBlockHeader - sizeof(HeapBlock)*2;
+    if (allocSize + sizeof(HeapBlock)*2 >= nFreeSize)
+        return NULL;
+    
+    pNewBlock = (u32)pMem + allocSize;
+    pNewBlock->pNext = pNextBlock;
+    pNewBlock->userTag = HEAP_USER_NONE;
+    pNewBlock->contentTag = HEAP_CONTENT_FREE;
+    pNewBlock->sourceAddress = 0;
+    pNewBlock->isPinned = 0;
+    pMem[-1].pNext = &pNewBlock[1];
+    g_HeapNeedsConsolidation = 1;
+    return pBlockHeader;
+}
 
 void HeapConsolidate(void) {
     HeapBlock* pCurrent;
@@ -514,7 +545,7 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
     if (debugFlags & HEAP_DEBUG_PRINT_CONTENTS) {
         nContentFlag = pBlockHeader->contentTag;
         nContentType = nContentFlag & 0x1F;
-        if (nContentType != HEAP_CONTENT_NONE) {
+        if (nContentType != HEAP_CONTENT_NULL) {
             if (nContentFlag & HEAP_DEFAULT_CONTENT_TYPES) {
                 sContentType = g_HeapContentTypeNames[nContentType];
             } else {
