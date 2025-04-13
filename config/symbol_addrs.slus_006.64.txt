@@ -25,6 +25,7 @@ HeapGetTotalFreeSize = 0x80032340;
 HeapWalkUntilEnd = 0x800323B4;
 HeapGetLargestFreeBlockSize = 0x80032404;
 HeapChangeCurrentUser = 0x80032498;
+HeapSetCurrentContentType = 0x800324B8;
 HeapGetSymbolNameFromAddress = 0x800324C4;
 HeapDebugPrintBlock = 0x80032584;
 
@@ -38,6 +39,10 @@ PClseek = 0x8004c348;
 PCinit = 0x8004c38c;
 PCread = 0x8004c398;
 
+
+g_HeapContentTypeNames = 0x80050140;
+
+g_HeapCurContentType = 0x80059318;
 g_HeapCurUser = 0x8005931C;
 g_Heap = 0x80059320;
 g_HeapNeedsConsolidation = 0x8005932C;
