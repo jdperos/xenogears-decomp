@@ -4,19 +4,6 @@
 
 #define HEAP_NUM_USERS 0xA
 
-extern s32 D_80059FCC[3];
-
-extern u32 __attribute__((noreturn)) func_80019ACC(u32);
-extern void func_80031FF8();
-
-extern void func_80032BDC(char*, ...);
-
-extern char** D_80050110;
-extern char** g_HeapContentTypeNames[];
-
-// Pointers to Content type name arrays for specific heap users
-extern char** g_HeapUserContentNames[HEAP_NUM_USERS];
-
 // 0x80050110 - Block user flags
 #define HEAP_USER_NONE 0x0
 #define HEAP_USER_END 0x1
@@ -81,6 +68,28 @@ typedef struct {
     u32 contentTag: 6;
 } HeapBlock;
 
+struct HeapDelayedFreeBlock {
+    struct HeapDelayedFreeBlock* pNext;
+    void* pMem;
+    u32 flags;
+};
+
+typedef struct HeapDelayedFreeBlock HeapDelayedFreeBlock;
+
+extern HeapDelayedFreeBlock g_HeapDelayedFreeBlocksHead;
+
+extern u32 __attribute__((noreturn)) func_80019ACC(u32);
+extern void func_80031FF8();
+
+extern void func_80032BDC(char*, ...);
+
+extern char** D_80050110;
+extern char** g_HeapContentTypeNames[];
+
+// Pointers to Content type name arrays for specific heap users
+extern char** g_HeapUserContentNames[HEAP_NUM_USERS];
+
+
 int HeapLoadSymbols(char* pSymbolFilePath);
 void HeapInit(void* heapStart, void* heapEnd);
 void HeapRelocate(void* pNewStartAddress);
@@ -107,4 +116,5 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
 void* HeapAllocSound(u32 allocSize);
 void HeapCalloc(u32 numElements, u32 elementSize);
 void HeapForceFree(void* pMem);
+void HeapFreeDelayed(void* pMem, u32 flags);
 #endif

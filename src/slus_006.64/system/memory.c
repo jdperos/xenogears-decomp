@@ -9,8 +9,8 @@ u32 g_HeapNeedsConsolidation;
 u32 D_80059330;
 u8* g_SymbolData;
 void* g_SymbolDataEndAddress;
-u32 D_8005933C;
-u32 D_80059340;
+u32 g_HeapLastAllocSize;
+u32 g_HeapLastAllocSrcAddr;
 
 
 int HeapLoadSymbols(char* pSymbolFilePath) {
@@ -80,7 +80,7 @@ void HeapInit(void* pHeapStart, void* pHeapEnd) {
     endBlock[-1].userTag = HEAP_USER_END;
     endBlock[-1].contentTag = HEAP_CONTENT_NONE;
 
-    D_80059FCC[0] = 0;
+    g_HeapDelayedFreeBlocksHead.pNext = NULL;
     func_80031A30();
 }
 
@@ -100,7 +100,7 @@ void HeapRelocate(void* pNewStartAddress) {
     pNewHeap->pNext = pPrevHeap[-1].pNext;
     pNewHeap->userTag = HEAP_USER_NONE;
     pNewHeap->contentTag = HEAP_CONTENT_FREE;
-    D_80059FCC[0] = 0;
+    g_HeapDelayedFreeBlocksHead.pNext = NULL;
 }
 
 u16 HeapGetCurrentUser(void) {
@@ -123,8 +123,8 @@ u32 func_80031BB4(u32 new) {
 
 
 void HeapGetAllocInformation(u32* pAllocSourceAddr, u32* pAllocSize) {
-    *pAllocSourceAddr = D_80059340;
-    *pAllocSize = D_8005933C;
+    *pAllocSourceAddr = g_HeapLastAllocSrcAddr;
+    *pAllocSize = g_HeapLastAllocSize;
 }
 
 void* HeapAlloc(u32 allocSize, u32 allocFlags) {
@@ -148,7 +148,7 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
     :: "r"(&nCallerAddr));
     
     nCallerAddr -= 8;
-    D_80059340 = nCallerAddr;
+    g_HeapLastAllocSrcAddr = nCallerAddr;
     nCallerAddr = ((nCallerAddr << 7) >> 9);
     
     if (g_HeapNeedsConsolidation != 0) {
@@ -156,7 +156,7 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
     }
 
     bOutOfMemory = 1; 
-    D_8005933C = allocSize;
+    g_HeapLastAllocSize = allocSize;
     allocSize = (allocSize + 3);
     allocSize &= -4;
     pFreeBlock = NULL;
@@ -340,8 +340,8 @@ u32 HeapFree(void* pMem) {
             "move $t7, %0\n\t"
             "sw $ra, 0($t7)\n\t"
         :: "r"(&nCallerAddr));
-        D_8005933C = 0;
-        D_80059340 = nCallerAddr - 8;
+        g_HeapLastAllocSize = 0;
+        g_HeapLastAllocSrcAddr = nCallerAddr - 8;
         func_80019ACC(ERR_HEAP_FREE_NULL);
     }
 
@@ -515,29 +515,29 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
     u32 nContentFlag;
 
     if (debugFlags & HEAP_DEBUG_PRINT_MCB) {
-        func_80032BDC(&D_80059248, (u32)pBlockHeader & 0xFFFFFF);
+        HeapPrintf(&D_80059248, (u32)pBlockHeader & 0xFFFFFF);
     }
     if (debugFlags & HEAP_DEBUG_PRINT_ADDRESS) {
-        func_80032BDC(&D_80059248, (u32)pBlockMem & 0xFFFFFF);
+        HeapPrintf(&D_80059248, (u32)pBlockMem & 0xFFFFFF);
     }
     if (debugFlags & HEAP_DEBUG_PRINT_SIZE) {
-        func_80032BDC(&D_80059250, blockSize);
+        HeapPrintf(&D_80059250, blockSize);
     }
     if (debugFlags & HEAP_DEBUG_PRINT_USER) {
-        func_80032BDC(&D_80059258, *(&D_80050110 + pBlockHeader->userTag));
+        HeapPrintf(&D_80059258, *(&D_80050110 + pBlockHeader->userTag));
     }
     if (debugFlags & HEAP_DEBUG_PRINT_GETADD) {
-        func_80032BDC(&D_80059248, (pBlockHeader->sourceAddress * 4));
+        HeapPrintf(&D_80059248, (pBlockHeader->sourceAddress * 4));
     }
     if ((debugFlags & HEAP_DEBUG_PRINT_FUNCTION) && 
         (pBlockHeader->userTag != HEAP_USER_NONE)
     ) {
         HeapGetSymbolNameFromAddress((pBlockHeader->sourceAddress * 4) - 0x80000000, sFunctionName);
         
-        func_80032BDC(&D_8005925C, sFunctionName);
+        HeapPrintf(&D_8005925C, sFunctionName);
         if (debugFlags & HEAP_DEBUG_PRINT_CONTENTS) {
             if (pBlockHeader->contentTag & 0x1F) {
-                func_80032BDC(&D_80059260);
+                HeapPrintf(&D_80059260);
             }
         }
     } 
@@ -551,11 +551,11 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
             } else {
                 sContentType = g_HeapUserContentNames[pBlockHeader->userTag][nContentFlag];
             }
-            func_80032BDC(&D_8005925C, sContentType);
+            HeapPrintf(&D_8005925C, sContentType);
         }
     }
 
-    func_80032BDC(&D_80059264);
+    HeapPrintf(&D_80059264);
 }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", HeapDebugPrint);
@@ -588,8 +588,36 @@ void HeapForceFree(void* pMem) {
     HeapFree(pMem);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032BDC);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032C18);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", HeapPrintf);
+
+void HeapFreeDelayed(void* pMem, u32 flags) {
+    HeapDelayedFreeBlock* pFreeBlock;
+    u32 nCallerAddr;
+    
+    if (pMem == NULL) {
+        asm volatile(
+            "move $t7, %0\n\t"
+            "sw $ra, 0($t7)\n\t"
+        :: "r"(&nCallerAddr));
+        g_HeapLastAllocSize = 0;
+        g_HeapLastAllocSrcAddr = nCallerAddr - 8;
+        func_80019ACC(ERR_HEAP_FREE_NULL);
+    }
+    
+    if (flags == 0) {
+        HeapFree(pMem);
+        return;
+    }
+    
+    HeapSetCurrentContentType(HEAP_CONTENT_DELAY_FREE);
+    pFreeBlock = HeapAlloc(sizeof(HeapDelayedFreeBlock), 0x1);
+    pFreeBlock->pNext = g_HeapDelayedFreeBlocksHead.pNext;
+    pFreeBlock->pMem = pMem;
+    pFreeBlock->flags = flags;
+    g_HeapDelayedFreeBlocksHead.pNext = pFreeBlock;
+}
+
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032CB8);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032D60);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032DCC);

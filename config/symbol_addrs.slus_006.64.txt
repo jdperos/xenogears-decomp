@@ -33,6 +33,8 @@ HeapDebugPrint = 0x8003278C;
 HeapAllocSound = 0x80032B0C;
 HeapCalloc = 0x80032B64;
 HeapForceFree = 0x80032BAC;
+HeapPrintf = 0x80032BDC;
+HeapFreeDelayed = 0x80032C18;
 
 LZSSHeapDecompress = 0x80032e88;
 LZSSDecompress = 0x80032eb4;
@@ -53,7 +55,10 @@ g_Heap = 0x80059320;
 g_HeapNeedsConsolidation = 0x8005932C;
 g_SymbolData = 0x80059334;
 g_SymbolDataEndAddress = 0x80059338;
+g_HeapLastAllocSize = 0x8005933C;
+g_HeapLastAllocSrcAddr = 0x80059340;
 g_HeapUserContentNames = 0x80059FA4;
+g_HeapDelayedFreeBlocksHead = 0x80059FCC;
 
 g_CurGameState = 0x80018088;
 g_CurOverlayBuffer = 0x800592bc;
