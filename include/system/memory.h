@@ -89,6 +89,7 @@ void HeapFreeBlocksWithFlag(u8 targetFlag);
 void HeapFreeAllBlocks(void);
 void HeapForceFreeAllBlocks(void);
 u32 HeapGetTotalFreeSize(void);
+u32 HeapWalkUntilEnd(void);
 void HeapGetSymbolNameFromAddress(u32 address, u8* pString);
 void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize, s32 debugFlags);
 

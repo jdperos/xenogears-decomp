@@ -215,8 +215,8 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
     }
 
     l_0x1CC_EndOfHeap:
-    if (bOutOfMemory != 0) {
-        if (D_80059330 != 0) {
+    if (bOutOfMemory) {
+        if (D_80059330) {
             return 0;
         }
 
@@ -301,7 +301,7 @@ u32 HeapFree(void* pMem) {
     HeapBlock* pBlock;  
 
     if (pMem == NULL) {
-        if (D_80059330 != 0) {
+        if (D_80059330) {
             return 1;
         }
         
@@ -382,7 +382,17 @@ u32 HeapGetTotalFreeSize(void) {
     return nTotalFreeSize;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800323B4);
+u32 HeapWalkUntilEnd(void) {
+    HeapBlock* pCurBlock;
+
+    pCurBlock = (HeapBlock*)g_Heap - 1;
+    while (pCurBlock->userTag != HEAP_USER_END) {
+        pCurBlock = (HeapBlock*)pCurBlock->pNext - 1;
+    }
+    
+    return 0;
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032404);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032498);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800324B8);
