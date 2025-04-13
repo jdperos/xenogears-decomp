@@ -61,9 +61,9 @@ int HeapLoadSymbols(char* pSymbolFilePath) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031A30);
 
-void HeapInit(void* heapStart, void* heapEnd) {
-    HeapBlock* startBlock = (HeapBlock*)((u32)heapStart & -4);
-    HeapBlock* endBlock = (HeapBlock*)((u32)heapEnd & -4);
+void HeapInit(void* pHeapStart, void* pHeapEnd) {
+    HeapBlock* startBlock = (HeapBlock*)((u32)pHeapStart & -4);
+    HeapBlock* endBlock = (HeapBlock*)((u32)pHeapEnd & -4);
     g_Heap = &startBlock[1];
     startBlock->pNext = endBlock;
     
@@ -74,7 +74,7 @@ void HeapInit(void* heapStart, void* heapEnd) {
     g_SymbolDataEndAddress = NULL;
     
     startBlock->userTag = HEAP_USER_NONE;
-    startBlock->contentTag = 0x21;
+    startBlock->contentTag = 0x20 | HEAP_CONTENT_FREE;
     
     endBlock[-1].pNext = endBlock;
     endBlock[-1].userTag = HEAP_USER_END;
@@ -84,7 +84,25 @@ void HeapInit(void* heapStart, void* heapEnd) {
     func_80031A30();
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031B10);
+void HeapRelocate(void* pNewStartAddress) {
+    HeapBlock* pNewHeap;
+    HeapBlock* pPrevHeap;
+    
+    HeapFreeAllBlocks();
+    if (g_HeapNeedsConsolidation) {
+        HeapConsolidate();
+    }
+
+    pNewStartAddress = ((u32)pNewStartAddress & -4);
+    pNewHeap = (HeapBlock*)pNewStartAddress;
+    pPrevHeap = g_Heap;
+    g_Heap = &pNewHeap[1];
+    pNewHeap->pNext = pPrevHeap[-1].pNext;
+    pNewHeap->userTag = HEAP_USER_NONE;
+    pNewHeap->contentTag = 0x20 | HEAP_CONTENT_FREE;
+    D_80059FCC[0] = 0;
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031B9C);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031BA8);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031BB4);
