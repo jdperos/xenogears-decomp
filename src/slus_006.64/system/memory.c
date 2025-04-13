@@ -416,8 +416,12 @@ u32 HeapGetLargestFreeBlockSize(void) {
     return nLargestFreeBlockSize - sizeof(HeapBlock);
 }
 
+void HeapChangeCurrentUser(u32 userTag, char** pContentTypes) {
+    g_HeapCurUser = userTag;
+    g_HeapUserContentNames[userTag] = pContentTypes;
+    D_80059330 = 0;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032498);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800324B8);
 
 
@@ -510,10 +514,10 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
         nContentFlag = pBlockHeader->contentTag;
         nContentType = nContentFlag & 0x1F;
         if (nContentType != HEAP_CONTENT_NONE) {
-            if (nContentFlag & 0x20) {
+            if (nContentFlag & HEAP_DEFAULT_CONTENT_TYPES) {
                 sContentType = *(&D_80050140 + nContentType);
             } else {
-                sContentType = *(nContentFlag + *(&D_80059FA4 + pBlockHeader->userTag));
+                sContentType = g_HeapUserContentNames[pBlockHeader->userTag][nContentFlag];
             }
             func_80032BDC(&D_8005925C, sContentType);
         }

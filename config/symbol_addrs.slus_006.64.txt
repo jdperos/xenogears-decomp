@@ -24,11 +24,13 @@ HeapForceFreeAllBlocks = 0x800322B4;
 HeapGetTotalFreeSize = 0x80032340;
 HeapWalkUntilEnd = 0x800323B4;
 HeapGetLargestFreeBlockSize = 0x80032404;
+HeapChangeCurrentUser = 0x80032498;
 HeapGetSymbolNameFromAddress = 0x800324C4;
 HeapDebugPrintBlock = 0x80032584;
 
 LZSSHeapDecompress = 0x80032e88;
 LZSSDecompress = 0x80032eb4;
+
 
 PCopen = 0x8004c318;
 PCclose = 0x8004c338;
@@ -41,6 +43,7 @@ g_Heap = 0x80059320;
 g_HeapNeedsConsolidation = 0x8005932C;
 g_SymbolData = 0x80059334;
 g_SymbolDataEndAddress = 0x80059338;
+g_HeapUserContentNames = 0x80059FA4;
 
 g_CurGameState = 0x80018088;
 g_CurOverlayBuffer = 0x800592bc;

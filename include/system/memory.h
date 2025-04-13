@@ -2,6 +2,10 @@
 #define _MEMORY_H
 
 
+#define HEAP_NUM_USERS 0xA
+
+#define HEAP_DEFAULT_CONTENT_TYPES 0x20
+
 extern s32 D_80059FCC[3];
 
 extern u32 __attribute__((noreturn)) func_80019ACC(u32);
@@ -11,8 +15,9 @@ extern void func_80032BDC(char*, ...);
 
 extern char** D_80050110;
 extern char** D_80050140;
-extern char** D_80059FA4;
 
+// Pointers to Content type name arrays for specific heap users
+extern char** g_HeapUserContentNames[HEAP_NUM_USERS];
 
 // 0x80050110 - Block user flags
 #define HEAP_USER_NONE 0x0
@@ -91,6 +96,7 @@ void HeapForceFreeAllBlocks(void);
 u32 HeapGetTotalFreeSize(void);
 u32 HeapWalkUntilEnd(void);
 u32 HeapGetLargestFreeBlockSize(void);
+void HeapChangeCurrentUser(u32 userTag, char** pContentTypes)
 void HeapGetSymbolNameFromAddress(u32 address, u8* pString);
 void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize, s32 debugFlags);
 
