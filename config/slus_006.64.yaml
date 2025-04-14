@@ -62,6 +62,8 @@ segments:
     align: 4
     subsegments:
       - [0x800, rodata]
+      - [0x9258, .rodata, system/memory]
+      - [0x927C, rodata]
       - [0x9CE0, asm] 
       - [0x9D78, c, main/main] # main
       - [0xA164, asm]
@@ -78,7 +80,8 @@ segments:
       - [0x3C81C, c, system/interrupts]
       - [0x3C848, asm]
       - [0x3F290, sdata]
-      - [0x49A70, data]
+      - [0x49A48, .sdata, system/memory]
+      - [0x49AB8, data]
       - { vram: 0x800592C0, type: sbss }
       - { vram: 0x80059318, type: scommon, name: system/memory }
       - { vram: 0x80059344, type: bss }

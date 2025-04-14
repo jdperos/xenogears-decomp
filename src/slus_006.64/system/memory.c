@@ -6,7 +6,7 @@ u16 g_HeapCurContentType;
 u16 g_HeapCurUser;
 void* g_Heap;
 u32 g_HeapNeedsConsolidation;
-u32 D_80059330;
+u32 g_HeapIsErrorHandlerOff;
 u8* g_SymbolData;
 void* g_SymbolDataEndAddress;
 u32 g_HeapLastAllocSize;
@@ -111,15 +111,12 @@ void HeapSetCurrentUser(u16 userTag) {
     g_HeapCurUser = userTag;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031BB4);
-/*
-u32 func_80031BB4(u32 new) {
-  u32 prev;
-  prev = D_80059330;
-  D_80059330 = new;
-  return prev;
+unsigned int HeapToggleErrorHandler(unsigned int status) {
+  unsigned int prevStatus;
+  prevStatus = g_HeapIsErrorHandlerOff;
+  g_HeapIsErrorHandlerOff = status;
+  return prevStatus;
 }
-*/
 
 
 void HeapGetAllocInformation(u32* pAllocSourceAddr, u32* pAllocSize) {
@@ -225,7 +222,7 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
 
     l_0x1CC_EndOfHeap:
     if (bOutOfMemory) {
-        if (D_80059330) {
+        if (g_HeapIsErrorHandlerOff) {
             return 0;
         }
 
@@ -332,7 +329,7 @@ u32 HeapFree(void* pMem) {
     HeapBlock* pBlock;  
 
     if (pMem == NULL) {
-        if (D_80059330) {
+        if (g_HeapIsErrorHandlerOff) {
             return 1;
         }
         
@@ -450,7 +447,7 @@ u32 HeapGetLargestFreeBlockSize(void) {
 void HeapChangeCurrentUser(u32 userTag, char** pContentTypes) {
     g_HeapCurUser = userTag;
     g_HeapUserContentNames[userTag] = pContentTypes;
-    D_80059330 = 0;
+    g_HeapIsErrorHandlerOff = 0;
 }
 
 void HeapSetCurrentContentType(u16 contentTag) {
@@ -501,27 +498,6 @@ void HeapGetSymbolNameFromAddress(u32 address, u8* pString) {
     *pString = 0;
 }
 
-extern char* D_80059248; // "%06x"
-extern char* D_80059250; // "%6x"
-extern char* D_80059258; // "%s "
-extern char* D_8005925C; // "%s"
-extern char* D_80059260; // " / "
-extern char* D_80059264; // "\n"
-
-extern char D_80018A58;
-extern char D_80018A64;
-extern char D_80018A70;
-extern char D_80059268;
-extern char D_80059270;
-extern char D_80059278;
-extern char D_80059280;
-extern char D_80059288;
-extern char D_80059290;
-extern char D_80059298;
-extern char D_800592A0;
-extern char D_800592A8;
-extern char D_800592B0;
-
 void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize, s32 debugFlags) {
     char sFunctionName[0x40];
     s32 nContentType;
@@ -529,29 +505,29 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
     u32 nContentFlag;
 
     if (debugFlags & HEAP_DEBUG_PRINT_MCB) {
-        HeapPrintf(&D_80059248, (u32)pBlockHeader & 0xFFFFFF);
+        HeapPrintf("%06x ", (u32)pBlockHeader & 0xFFFFFF);
     }
     if (debugFlags & HEAP_DEBUG_PRINT_ADDRESS) {
-        HeapPrintf(&D_80059248, (u32)pBlockMem & 0xFFFFFF);
+        HeapPrintf("%06x ", (u32)pBlockMem & 0xFFFFFF);
     }
     if (debugFlags & HEAP_DEBUG_PRINT_SIZE) {
-        HeapPrintf(&D_80059250, blockSize);
+        HeapPrintf("%6x ", blockSize);
     }
     if (debugFlags & HEAP_DEBUG_PRINT_USER) {
-        HeapPrintf(&D_80059258, *(&D_80050110 + pBlockHeader->userTag));
+        HeapPrintf("%s ", *(&D_80050110 + pBlockHeader->userTag));
     }
     if (debugFlags & HEAP_DEBUG_PRINT_GETADD) {
-        HeapPrintf(&D_80059248, (pBlockHeader->sourceAddress * 4));
+        HeapPrintf("%06x ", (pBlockHeader->sourceAddress * 4));
     }
     if ((debugFlags & HEAP_DEBUG_PRINT_FUNCTION) && 
         (pBlockHeader->userTag != HEAP_USER_NONE)
     ) {
         HeapGetSymbolNameFromAddress((pBlockHeader->sourceAddress * 4) - 0x80000000, sFunctionName);
         
-        HeapPrintf(&D_8005925C, sFunctionName);
+        HeapPrintf("%s", sFunctionName);
         if (debugFlags & HEAP_DEBUG_PRINT_CONTENTS) {
             if (pBlockHeader->contentTag & 0x1F) {
-                HeapPrintf(&D_80059260);
+                HeapPrintf(" / ");
             }
         }
     } 
@@ -565,11 +541,11 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
             } else {
                 sContentType = g_HeapUserContentNames[pBlockHeader->userTag][nContentFlag];
             }
-            HeapPrintf(&D_8005925C, sContentType);
+            HeapPrintf("%s", sContentType);
         }
     }
 
-    HeapPrintf(&D_80059264);
+    HeapPrintf("\n");
 }
 
 void HeapDebugPrint(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags) {
@@ -614,24 +590,24 @@ void HeapDebugPrint(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags) {
 
     // Print table header to screen
     if (debugFlags & HEAP_DEBUG_PRINT_NO)
-        HeapPrintf(&D_80059268);
+        HeapPrintf("No- ");
     if (debugFlags & HEAP_DEBUG_PRINT_MCB)
-        HeapPrintf(&D_80059270);
+        HeapPrintf("MCB--- ");
     if (debugFlags & HEAP_DEBUG_PRINT_ADDRESS)
-        HeapPrintf(&D_80059278);
+        HeapPrintf("ADDR-- ");
     if (debugFlags & HEAP_DEBUG_PRINT_SIZE)
-        HeapPrintf(&D_80059280);
+        HeapPrintf("SIZE-- ");
     if (debugFlags & HEAP_DEBUG_PRINT_USER)
-        HeapPrintf(&D_80059288);
+        HeapPrintf("USER ");
     if (debugFlags & HEAP_DEBUG_PRINT_GETADD)
-        HeapPrintf(&D_80059290);
+        HeapPrintf("GETADD ");
     if (debugFlags & HEAP_DEBUG_PRINT_FUNCTION)
-        HeapPrintf(&D_80018A58);
+        HeapPrintf("FUNCTION/");
     if (debugFlags & HEAP_DEBUG_PRINT_CONTENTS)
-        HeapPrintf(&D_80018A64);
+        HeapPrintf("CONTENTS");
     
     nBlockSize = 0;
-    HeapPrintf(&D_80059264); // Newline
+    HeapPrintf("\n"); // Newline
     pCurBlockHeader = (HeapBlock*)g_Heap - 1;
     pCurBlock = (HeapBlock*)g_Heap;
 
@@ -658,7 +634,7 @@ void HeapDebugPrint(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags) {
                 nBlocksToSkip -= 1;
             } else {
                 if (debugFlags & HEAP_DEBUG_PRINT_NO) {
-                    HeapPrintf(&D_80059298, nBlockNumber);
+                    HeapPrintf("%3d ", nBlockNumber);
                 }
                 
                 // Print block information
@@ -681,21 +657,21 @@ void HeapDebugPrint(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags) {
 
     // Print table footer to screen
     if (debugFlags & HEAP_DEBUG_PRINT_NO)
-        HeapPrintf(&D_800592A0);
+        HeapPrintf("--- ");
     if (debugFlags & HEAP_DEBUG_PRINT_MCB)
-        HeapPrintf(&D_800592A8);
+        HeapPrintf("------ ");
     if (debugFlags & HEAP_DEBUG_PRINT_ADDRESS)
-        HeapPrintf(&D_800592A8);
+        HeapPrintf("------ ");
     if (debugFlags & HEAP_DEBUG_PRINT_SIZE)
-        HeapPrintf(&D_800592A8);
+        HeapPrintf("------ ");
     if (debugFlags & HEAP_DEBUG_PRINT_USER)
-        HeapPrintf(&D_800592B0);
+        HeapPrintf("---- ");
     
     if (debugFlags & HEAP_DEBUG_PRINT_TOTAL_FREE_SIZE)
-        HeapPrintf(&D_80018A70, HeapGetTotalFreeSize());
+        HeapPrintf("\nFree %6x", HeapGetTotalFreeSize());
 
     // Newline
-    HeapPrintf(&D_80059264);
+    HeapPrintf("\n");
 }
 
 
@@ -798,6 +774,7 @@ void HeapFreeAllDelayedBlocks(void) {
 }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032DCC);
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032E04);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032E7C);

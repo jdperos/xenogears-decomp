@@ -11,6 +11,7 @@ HeapInit = 0x80031A68;
 HeapRelocate = 0x80031B10;
 HeapGetCurrentUser = 0x80031B9C;
 HeapSetCurrentUser = 0x80031BA8;
+HeapToggleErrorHandler = 0x80031BB4;
 HeapGetAllocInformation = 0x80031bc4;
 HeapAlloc = 0x80031BDC;
 HeapInsertAlloc = 0x80031F70;
@@ -55,10 +56,12 @@ g_HeapCurContentType = 0x80059318;
 g_HeapCurUser = 0x8005931C;
 g_Heap = 0x80059320;
 g_HeapNeedsConsolidation = 0x8005932C;
+g_HeapIsErrorHandlerOff = 0x80059330;
 g_SymbolData = 0x80059334;
 g_SymbolDataEndAddress = 0x80059338;
 g_HeapLastAllocSize = 0x8005933C;
 g_HeapLastAllocSrcAddr = 0x80059340;
+
 g_HeapUserContentNames = 0x80059FA4;
 g_HeapDelayedFreeBlocksHead = 0x80059FCC;
 

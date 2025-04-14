@@ -45,6 +45,10 @@
 #define HEAP_CONTENT_LS_FONT (HEAP_DEFAULT_CONTENT_TYPES | 0x12)
 #define HEAP_CONTENT_DELAY_FREE (HEAP_DEFAULT_CONTENT_TYPES | 0x13)
 
+// Error handler states
+#define HEAP_ERROR_HANDLER_ON 0x0
+#define HEAP_ERROR_HANDLER_OFF 0x1
+
 // Error flags
 #define ERR_HEAP_OUT_OF_MEMORY 0x82
 #define ERR_HEAP_FREE_NULL 0x83
@@ -95,6 +99,7 @@ void HeapInit(void* heapStart, void* heapEnd);
 void HeapRelocate(void* pNewStartAddress);
 u16 HeapGetCurrentUser(void);
 void HeapSetCurrentUser(u16 userTag);
+unsigned int HeapToggleErrorHandler(unsigned int status);
 void HeapGetAllocInformation(u32* pAllocSourceAddr, u32* pAllocSize);
 void* HeapAlloc(u32 allocSize, u32 allocFlags);
 void* HeapInsertAlloc(HeapBlock* pMem, u32 allocSize);
