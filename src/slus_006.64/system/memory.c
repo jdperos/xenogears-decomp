@@ -508,6 +508,20 @@ extern char* D_8005925C; // "%s"
 extern char* D_80059260; // " / "
 extern char* D_80059264; // "\n"
 
+extern char D_80018A58;
+extern char D_80018A64;
+extern char D_80018A70;
+extern char D_80059268;
+extern char D_80059270;
+extern char D_80059278;
+extern char D_80059280;
+extern char D_80059288;
+extern char D_80059290;
+extern char D_80059298;
+extern char D_800592A0;
+extern char D_800592A8;
+extern char D_800592B0;
+
 void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize, s32 debugFlags) {
     char sFunctionName[0x40];
     s32 nContentType;
@@ -558,7 +572,132 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
     HeapPrintf(&D_80059264);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", HeapDebugPrint);
+void HeapDebugPrint(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags) {
+    char _sBuffer[0x40];
+    u32 bIsDone;
+    u32 nBlockSize;
+    u32 debugFlags;
+    u32 nBlockNumber;
+    u32 nBlocksToPrint;
+    u32 nBlocksToSkip;
+    HeapBlock* pNextBlock;
+    HeapBlock* pNext;
+    HeapBlock* pCurBlockHeader;
+    HeapBlock* pCurBlock;
+
+    nBlocksToSkip = startBlockIdx;
+    nBlocksToPrint = endBlockIdx;
+    debugFlags = flags;
+    nBlockNumber = 0;
+    bIsDone = 0;
+
+    // Default flags
+    if (debugFlags == 0) {
+        debugFlags = HEAP_DEBUG_PRINT_TOTAL_FREE_SIZE | 
+            HEAP_DEBUG_PRINT_CONTENTS | 
+            HEAP_DEBUG_PRINT_SIZE | 
+            HEAP_DEBUG_PRINT_ADDRESS | 
+            HEAP_DEBUG_PRINT_NO;
+    }
+    
+    if (mode) {
+        HeapConsolidate();
+    }
+    
+    if (nBlocksToPrint) {
+        bIsDone = 1;
+    }
+    
+    if (g_SymbolData == NULL) {
+        debugFlags &= ~HEAP_DEBUG_PRINT_FUNCTION;
+    }
+
+    // Print table header to screen
+    if (debugFlags & HEAP_DEBUG_PRINT_NO)
+        HeapPrintf(&D_80059268);
+    if (debugFlags & HEAP_DEBUG_PRINT_MCB)
+        HeapPrintf(&D_80059270);
+    if (debugFlags & HEAP_DEBUG_PRINT_ADDRESS)
+        HeapPrintf(&D_80059278);
+    if (debugFlags & HEAP_DEBUG_PRINT_SIZE)
+        HeapPrintf(&D_80059280);
+    if (debugFlags & HEAP_DEBUG_PRINT_USER)
+        HeapPrintf(&D_80059288);
+    if (debugFlags & HEAP_DEBUG_PRINT_GETADD)
+        HeapPrintf(&D_80059290);
+    if (debugFlags & HEAP_DEBUG_PRINT_FUNCTION)
+        HeapPrintf(&D_80018A58);
+    if (debugFlags & HEAP_DEBUG_PRINT_CONTENTS)
+        HeapPrintf(&D_80018A64);
+    
+    nBlockSize = 0;
+    HeapPrintf(&D_80059264); // Newline
+    pCurBlockHeader = (HeapBlock*)g_Heap - 1;
+    pCurBlock = (HeapBlock*)g_Heap;
+
+    while (pCurBlockHeader->userTag != HEAP_USER_END) {
+        nBlockSize += ((u32)pCurBlockHeader->pNext - (u32)pCurBlockHeader) - sizeof(HeapBlock)*2;
+        
+        if (
+            mode == 2 && 
+            (pNextBlock = ((HeapBlock*)pCurBlockHeader->pNext),
+            pCurBlockHeader->contentTag == pNextBlock[-1].contentTag &&
+            pCurBlockHeader->userTag == pNextBlock[-1].userTag)
+        ) {
+            nBlockNumber += 1;
+            pCurBlockHeader = &pNextBlock[-1];            
+        } else if (
+            mode == 3 && 
+            (pNextBlock = ((HeapBlock*)pCurBlockHeader->pNext), 
+            pCurBlockHeader->sourceAddress == pNextBlock[-1].sourceAddress)
+        ) {
+            nBlockNumber += 1;
+            pCurBlockHeader = &pNextBlock[-1];
+        } else {    
+            if (nBlocksToSkip) {
+                nBlocksToSkip -= 1;
+            } else {
+                if (debugFlags & HEAP_DEBUG_PRINT_NO) {
+                    HeapPrintf(&D_80059298, nBlockNumber);
+                }
+                
+                // Print block information
+                HeapDebugPrintBlock(pCurBlockHeader, pCurBlock, nBlockSize, debugFlags);
+                
+                nBlocksToPrint -= 1;
+            }
+            
+            if (!bIsDone || nBlocksToPrint) {
+                nBlockNumber += 1;
+                pNext = (HeapBlock*)pCurBlockHeader->pNext;
+                nBlockSize = 0;
+                pCurBlockHeader = &pNext[-1];
+                pCurBlock = pNext;
+            } else {
+                break;
+            }
+        }
+    }
+
+    // Print table footer to screen
+    if (debugFlags & HEAP_DEBUG_PRINT_NO)
+        HeapPrintf(&D_800592A0);
+    if (debugFlags & HEAP_DEBUG_PRINT_MCB)
+        HeapPrintf(&D_800592A8);
+    if (debugFlags & HEAP_DEBUG_PRINT_ADDRESS)
+        HeapPrintf(&D_800592A8);
+    if (debugFlags & HEAP_DEBUG_PRINT_SIZE)
+        HeapPrintf(&D_800592A8);
+    if (debugFlags & HEAP_DEBUG_PRINT_USER)
+        HeapPrintf(&D_800592B0);
+    
+    if (debugFlags & HEAP_DEBUG_PRINT_TOTAL_FREE_SIZE)
+        HeapPrintf(&D_80018A70, HeapGetTotalFreeSize());
+
+    // Newline
+    HeapPrintf(&D_80059264);
+}
+
 
 void* HeapAllocSound(u32 allocSize) {
     u32 nPrevHeapUser;
