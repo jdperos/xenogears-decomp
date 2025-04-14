@@ -641,7 +641,29 @@ void HeapTickDelayedFree(void) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032D60);
+void HeapFreeAllDelayedBlocks(void) {
+    HeapDelayedFreeBlock* pHead;
+    HeapDelayedFreeBlock* pNextBlock;
+
+    pHead = &g_HeapDelayedFreeBlocksHead;
+    pNextBlock = g_HeapDelayedFreeBlocksHead.pNext;
+    
+    while (pNextBlock != NULL) {
+        HeapFree(pNextBlock->pMem);
+        pHead->pNext = pNextBlock->pNext;
+        HeapFree(pNextBlock);
+        if (pHead->pNext == NULL)
+            break;
+        pNextBlock = pHead->pNext;
+    }
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032DCC);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032E04);
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032E7C);
+/*
+u32 func_80032E7C(u32 *pData) {
+    return *pData;
+}
+*/

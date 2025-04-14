@@ -36,6 +36,7 @@ HeapForceFree = 0x80032BAC;
 HeapPrintf = 0x80032BDC;
 HeapDelayedFree = 0x80032C18;
 HeapTickDelayedFree = 0x80032CB8;
+HeapFreeAllDelayedBlocks = 0x80032D60;
 
 LZSSHeapDecompress = 0x80032e88;
 LZSSDecompress = 0x80032eb4;
@@ -46,7 +47,7 @@ PCclose = 0x8004c338;
 PClseek = 0x8004c348;
 PCinit = 0x8004c38c;
 PCread = 0x8004c398;
-
+PCwrite = 0x8004c470;
 
 g_HeapContentTypeNames = 0x80050140;
 

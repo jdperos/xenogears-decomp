@@ -118,4 +118,5 @@ void HeapCalloc(u32 numElements, u32 elementSize);
 void HeapForceFree(void* pMem);
 void HeapDelayedFree(void* pMem, u32 delay);
 void HeapTickDelayedFree(void);
+void HeapFreeAllDelayedBlocks(void);
 #endif
