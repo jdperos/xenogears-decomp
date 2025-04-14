@@ -63,6 +63,7 @@
 #define HEAP_DEBUG_PRINT_FUNCTION 0x40
 #define HEAP_DEBUG_PRINT_CONTENTS 0x80
 #define HEAP_DEBUG_PRINT_TOTAL_FREE_SIZE 0x8000
+#define HEAP_DEBUG_PRINT_ALL 0xFFFFFFFF
 
 typedef struct {
     void* pNext;
@@ -85,6 +86,7 @@ extern HeapDelayedFreeBlock g_HeapDelayedFreeBlocksHead;
 extern u32 __attribute__((noreturn)) func_80019ACC(u32);
 extern void func_80031FF8();
 
+extern unsigned int StrLen(char* pString);
 extern void HeapPrintf(char*, ...);
 
 extern char** D_80050110;
@@ -117,12 +119,14 @@ u32 HeapGetLargestFreeBlockSize(void);
 void HeapChangeCurrentUser(u32 userTag, char** pContentTypes);
 void HeapSetCurrentContentType(u16 contentTag);
 void HeapGetSymbolNameFromAddress(u32 address, u8* pString);
-void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize, s32 debugFlags);
-void HeapDebugPrint(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags);
+void HeapDebugDumpBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize, s32 debugFlags);
+void HeapDebugDump(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags);
 void* HeapAllocSound(u32 allocSize);
 void HeapCalloc(u32 numElements, u32 elementSize);
 void HeapForceFree(void* pMem);
 void HeapDelayedFree(void* pMem, u32 delay);
 void HeapTickDelayedFree(void);
 void HeapFreeAllDelayedBlocks(void);
+void HeapWriteToDebugFile(char* pBuffer)
+void HeapDumpToFile(char *pOutputFilePath);
 #endif

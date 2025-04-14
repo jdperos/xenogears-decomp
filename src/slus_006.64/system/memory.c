@@ -11,6 +11,8 @@ u8* g_SymbolData;
 void* g_SymbolDataEndAddress;
 u32 g_HeapLastAllocSize;
 u32 g_HeapLastAllocSrcAddr;
+u32 D_80059344;
+int g_HeapDebugDumpFileHandle;
 
 
 int HeapLoadSymbols(char* pSymbolFilePath) {
@@ -117,7 +119,6 @@ unsigned int HeapToggleErrorHandler(unsigned int status) {
   g_HeapIsErrorHandlerOff = status;
   return prevStatus;
 }
-
 
 void HeapGetAllocInformation(u32* pAllocSourceAddr, u32* pAllocSize) {
     *pAllocSourceAddr = g_HeapLastAllocSrcAddr;
@@ -498,7 +499,7 @@ void HeapGetSymbolNameFromAddress(u32 address, u8* pString) {
     *pString = 0;
 }
 
-void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize, s32 debugFlags) {
+void HeapDebugDumpBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize, s32 debugFlags) {
     char sFunctionName[0x40];
     s32 nContentType;
     char* sContentType;
@@ -548,7 +549,7 @@ void HeapDebugPrintBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize
     HeapPrintf("\n");
 }
 
-void HeapDebugPrint(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags) {
+void HeapDebugDump(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags) {
     char _sBuffer[0x40];
     u32 bIsDone;
     u32 nBlockSize;
@@ -607,7 +608,7 @@ void HeapDebugPrint(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags) {
         HeapPrintf("CONTENTS");
     
     nBlockSize = 0;
-    HeapPrintf("\n"); // Newline
+    HeapPrintf("\n");
     pCurBlockHeader = (HeapBlock*)g_Heap - 1;
     pCurBlock = (HeapBlock*)g_Heap;
 
@@ -638,7 +639,7 @@ void HeapDebugPrint(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags) {
                 }
                 
                 // Print block information
-                HeapDebugPrintBlock(pCurBlockHeader, pCurBlock, nBlockSize, debugFlags);
+                HeapDebugDumpBlock(pCurBlockHeader, pCurBlock, nBlockSize, debugFlags);
                 
                 nBlocksToPrint -= 1;
             }
@@ -670,10 +671,8 @@ void HeapDebugPrint(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags) {
     if (debugFlags & HEAP_DEBUG_PRINT_TOTAL_FREE_SIZE)
         HeapPrintf("\nFree %6x", HeapGetTotalFreeSize());
 
-    // Newline
     HeapPrintf("\n");
 }
-
 
 void* HeapAllocSound(u32 allocSize) {
     u32 nPrevHeapUser;
@@ -773,9 +772,27 @@ void HeapFreeAllDelayedBlocks(void) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032DCC);
+void HeapWriteToDebugFile(char* pBuffer) {
+  unsigned int nLen;
+  
+  nLen = StrLen(pBuffer);
+  PCwrite(g_HeapDebugDumpFileHandle, pBuffer, nLen);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032E04);
+extern void func_800379C8();
+extern void func_8003700C();
+void* D_800592B8 = func_8003700C;
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", HeapDumpToFile);
+/*
+void HeapDumpToFile(char *pOutputFilePath) {
+    PCinit();
+    g_HeapDebugDumpFileHandle = PCcreate(pOutputFilePath, 0);
+    D_800592B8 = (void*)func_80032DCC;
+    HeapDebugDump(1, 0, 0, HEAP_DEBUG_PRINT_ALL);
+    PCclose(g_HeapDebugDumpFileHandle);
+    D_800592B8 = (void*)func_800379C8;
+}
+*/
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032E7C);
 /*
