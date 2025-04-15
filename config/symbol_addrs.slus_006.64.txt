@@ -7,6 +7,8 @@ SetInterruptHandler = 0x8004b770;
 DecodeSector = 0x800289d0;
 
 HeapGetNextBlockHeader = 0x80031894;
+HeapGetBlockUser = 0x800318A8;
+HeapIsBlockPinned = 0x800318DC;
 HeapLoadSymbols = 0x800318F8;
 HeapReset = 0x80031A30;
 HeapInit = 0x80031A68;

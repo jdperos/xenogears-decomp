@@ -102,6 +102,8 @@ extern char** g_HeapUserContentNames[HEAP_NUM_USERS];
 
 
 void* HeapGetNextBlockHeader(HeapBlock* pHeapBlock);
+unsigned int HeapGetBlockUser(HeapBlock* pHeapBlock);
+unsigned int HeapIsBlockPinned(HeapBlock* pHeapBlock);
 int HeapLoadSymbols(char* pSymbolFilePath);
 void HeapReset(void);
 void HeapInit(void* heapStart, void* heapEnd);

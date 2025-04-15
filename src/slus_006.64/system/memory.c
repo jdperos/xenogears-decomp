@@ -18,9 +18,16 @@ void* HeapGetNextBlockHeader(HeapBlock* pHeapBlock) {
     return (HeapBlock*)(pHeapBlock[-1].pNext - (u32)pHeapBlock) - 1;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800318A8);
+unsigned int HeapGetBlockUser(HeapBlock* pHeapBlock) {
+    return pHeapBlock[-1].userTag;
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800318BC);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800318DC);
+
+unsigned int HeapIsBlockPinned(HeapBlock* pHeapBlock) {
+    return pHeapBlock[-1].isPinned;
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800318F0);
 
 int HeapLoadSymbols(char* pSymbolFilePath) {
