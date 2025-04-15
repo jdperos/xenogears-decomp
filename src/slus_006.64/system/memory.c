@@ -785,20 +785,14 @@ void HeapWriteToDebugFile(char* pBuffer) {
     PCwrite(g_HeapDebugDumpFileHandle, pBuffer, nLen);
 }
 
-extern void func_800379C8();
-extern void func_8003700C();
-void* D_800592B8 = func_8003700C;
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", HeapDumpToFile);
-/*
 void HeapDumpToFile(char *pOutputFilePath) {
     PCinit();
     g_HeapDebugDumpFileHandle = PCcreate(pOutputFilePath, 0);
-    D_800592B8 = &HeapWriteToDebugFile;
+    D_800592B8 = (FnPrintf_t*)HeapWriteToDebugFile;
     HeapDebugDump(1, 0, 0, HEAP_DEBUG_PRINT_ALL);
+    D_800592B8 = (FnPrintf_t*)func_800379C8;
     PCclose(g_HeapDebugDumpFileHandle);
-    D_800592B8 = &func_800379C8;
 }
-*/
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032E7C);
 /*

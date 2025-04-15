@@ -81,8 +81,13 @@ struct HeapDelayedFreeBlock {
 
 typedef struct HeapDelayedFreeBlock HeapDelayedFreeBlock;
 
+typedef void FnPrintf_t (char*, ...);
+extern FnPrintf_t* D_800592B8;
+
 extern HeapDelayedFreeBlock g_HeapDelayedFreeBlocksHead;
 
+extern void func_800379C8(u8*);
+//void* D_800592B8 = func_8003700C;
 extern u32 __attribute__((noreturn)) func_80019ACC(u32);
 extern void func_80031FF8();
 extern void func_8003747C(u32);
