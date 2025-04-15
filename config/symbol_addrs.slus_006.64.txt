@@ -8,6 +8,7 @@ DecodeSector = 0x800289d0;
 
 HeapGetNextBlockHeader = 0x80031894;
 HeapGetBlockUser = 0x800318A8;
+HeapGetBlockSourceAddress = 0x800318BC;
 HeapIsBlockPinned = 0x800318DC;
 HeapLoadSymbols = 0x800318F8;
 HeapReset = 0x80031A30;

@@ -22,7 +22,9 @@ unsigned int HeapGetBlockUser(HeapBlock* pHeapBlock) {
     return pHeapBlock[-1].userTag;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800318BC);
+unsigned int HeapGetBlockSourceAddress(HeapBlock* pHeapBlock) {
+    return (pHeapBlock[-1].sourceAddress * 4) + 0x80000000;
+}
 
 unsigned int HeapIsBlockPinned(HeapBlock* pHeapBlock) {
     return pHeapBlock[-1].isPinned;
