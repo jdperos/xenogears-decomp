@@ -1,3 +1,6 @@
+#ifndef _PSYQ_PC_H
+#define _PSYQ_PC_H
+
 extern int PCclose(int fd);
 extern int PCinit(void);
 extern int PClseek(int fd, int offset, int mode);
@@ -13,3 +16,5 @@ extern int PCwrite(int fd, char* buff, int len);
 #define SEEK_SET 0
 #define SEEK_CUR 1
 #define SEEK_END 2
+
+#endif

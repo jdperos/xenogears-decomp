@@ -51,6 +51,7 @@ LZSSHeapDecompress = 0x80032e88;
 LZSSDecompress = 0x80032eb4;
 
 StrLen = 0x8003FBC8;
+Sprintf = 0x8003FBF8;
 
 PCopen = 0x8004c318;
 PCclose = 0x8004c338;
@@ -61,6 +62,8 @@ PCread = 0x8004c398;
 PCwrite = 0x8004c470;
 
 g_HeapContentTypeNames = 0x80050140;
+
+g_HeapDebugPrintfFn = 0x800592B8;
 
 g_HeapCurContentType = 0x80059318;
 g_HeapCurUser = 0x8005931C;

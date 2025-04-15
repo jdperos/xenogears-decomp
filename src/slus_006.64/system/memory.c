@@ -2,6 +2,7 @@
 #include "system/memory.h"
 #include "psyq/pc.h"
 
+// .sbss
 u16 g_HeapCurContentType;
 u16 g_HeapCurUser;
 void* g_Heap;
@@ -12,7 +13,10 @@ void* g_SymbolDataEndAddress;
 u32 g_HeapLastAllocSize;
 u32 g_HeapLastAllocSrcAddr;
 u32 D_80059344;
-int g_HeapDebugDumpFileHandle;
+
+// .rodata
+HeapDelayedFreeBlock g_HeapDelayedFreeBlocksHead;
+
 
 void* HeapGetNextBlockHeader(HeapBlock* pHeapBlock) {
     return (HeapBlock*)(pHeapBlock[-1].pNext - (u32)pHeapBlock) - 1;
@@ -23,14 +27,20 @@ unsigned int HeapGetBlockUser(HeapBlock* pHeapBlock) {
 }
 
 unsigned int HeapGetBlockSourceAddress(HeapBlock* pHeapBlock) {
-    return (pHeapBlock[-1].sourceAddress * 4) + 0x80000000;
+    return (pHeapBlock[-1].sourceAddress * 4) + VRAM_BASE_ADDRESS;
 }
 
 unsigned int HeapIsBlockPinned(HeapBlock* pHeapBlock) {
     return pHeapBlock[-1].isPinned;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800318F0);
+void func_800318F0() {
+    // Empty function, could have contained something
+    // for debugging based on defines at some point?
+    // #ifdef XXX
+    //    ...
+    // #endif
+};
 
 int HeapLoadSymbols(char* pSymbolFilePath) {
     int hSymbolFile;
@@ -546,7 +556,7 @@ void HeapDebugDumpBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize,
     if ((debugFlags & HEAP_DEBUG_PRINT_FUNCTION) && 
         (pBlockHeader->userTag != HEAP_USER_NONE)
     ) {
-        HeapGetSymbolNameFromAddress((pBlockHeader->sourceAddress * 4) - 0x80000000, sFunctionName);
+        HeapGetSymbolNameFromAddress((pBlockHeader->sourceAddress * 4) + VRAM_BASE_ADDRESS, sFunctionName);
         
         HeapPrintf("%s", sFunctionName);
         if (debugFlags & HEAP_DEBUG_PRINT_CONTENTS) {
@@ -725,7 +735,18 @@ void HeapForceFree(void* pMem) {
     HeapFree(pMem);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", HeapPrintf);
+// HeapPrintf: g_HeapDebugPrintfFn must be GP rel
+// HeapDumpToFile: g_HeapDebugPrintfFn must be extern
+// Because of this, HeapDumpToFile is part of another TU than HeapPrintf
+FnPrintf_t* g_HeapDebugPrintfFn = func_8003700C;
+
+// Variadic args may have been used instead of 
+// single argument, but can't find a match w/ va
+void HeapPrintf(char* pFormat, void* arg) {
+    char sBuffer[1024];
+    Sprintf(sBuffer, pFormat, arg);
+    g_HeapDebugPrintfFn(sBuffer);
+}
 
 void HeapDelayedFree(void* pMem, u32 delay) {
     HeapDelayedFreeBlock* pFreeBlock;
@@ -793,24 +814,4 @@ void HeapFreeAllDelayedBlocks(void) {
             break;
         pNextBlock = pHead->pNext;
     }
-}
-
-void HeapWriteToDebugFile(char* pBuffer) {
-    unsigned int nLen;
-
-    nLen = StrLen(pBuffer);
-    PCwrite(g_HeapDebugDumpFileHandle, pBuffer, nLen);
-}
-
-void HeapDumpToFile(char *pOutputFilePath) {
-    PCinit();
-    g_HeapDebugDumpFileHandle = PCcreate(pOutputFilePath, 0);
-    D_800592B8 = (FnPrintf_t*)HeapWriteToDebugFile;
-    HeapDebugDump(1, 0, 0, HEAP_DEBUG_PRINT_ALL);
-    D_800592B8 = (FnPrintf_t*)func_800379C8;
-    PCclose(g_HeapDebugDumpFileHandle);
-}
-
-void* HeapDerefPtr(u32* pData) {
-    return *pData;
 }

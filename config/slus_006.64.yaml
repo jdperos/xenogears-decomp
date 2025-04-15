@@ -72,6 +72,7 @@ segments:
       #- [0xA2CC, c, main/main_loop]
       - [0xA42C, asm]
       - [0x22094, c, system/memory]
+      - [0x235CC, c, system/heap_debug]
       - [0x23688, hasm, util/lzss]
       - [0x23754, asm]
       #- [0x3C720, c, system/interrupts] # InitVsyncInterrupts
@@ -81,9 +82,11 @@ segments:
       - [0x3C848, asm]
       - [0x3F290, sdata]
       - [0x49A48, .sdata, system/memory]
-      - [0x49AB8, data]
+      - [0x49AB8, .sdata, system/heap_debug]
+      - [0x49ABC, data]
       - { vram: 0x800592C0, type: sbss }
       - { vram: 0x80059318, type: scommon, name: system/memory }
-      - { vram: 0x8005934C, type: bss }
+      - { vram: 0x80059348, type: scommon, name: system/heap_debug }
+      - { vram: 0x80059350, type: bss }
   - [0x49AC0, rodatabin]
   - [0x4A000]

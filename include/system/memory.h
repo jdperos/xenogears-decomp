@@ -1,6 +1,20 @@
-#ifndef _MEMORY_H
-#define _MEMORY_H
+#ifndef _XENO_MEMORY_H
+#define _XENO_MEMORY_H
 
+
+// Temporary ----------------------------
+extern u32 __attribute__((noreturn)) func_80019ACC(u32);
+extern void func_80031FF8();
+extern void func_8003747C(u32);
+extern void func_8003700C(u8*);
+
+extern unsigned int StrLen(char* pString);
+extern int Sprintf(char* pStr, char* pFormat, ...);
+// --------------------------------------
+
+
+
+#define VRAM_BASE_ADDRESS 0x80000000
 
 #define HEAP_NUM_USERS 0xA
 
@@ -82,17 +96,7 @@ struct HeapDelayedFreeBlock {
 typedef struct HeapDelayedFreeBlock HeapDelayedFreeBlock;
 
 typedef void FnPrintf_t (char*, ...);
-extern FnPrintf_t* D_800592B8;
-
-extern HeapDelayedFreeBlock g_HeapDelayedFreeBlocksHead;
-
-extern void func_800379C8(u8*);
-//void* D_800592B8 = func_8003700C;
-extern u32 __attribute__((noreturn)) func_80019ACC(u32);
-extern void func_80031FF8();
-extern void func_8003747C(u32);
-extern unsigned int StrLen(char* pString);
-extern void HeapPrintf(char*, ...);
+extern FnPrintf_t* g_HeapDebugPrintfFn;
 
 extern char** D_80050110;
 extern char** g_HeapContentTypeNames[];
