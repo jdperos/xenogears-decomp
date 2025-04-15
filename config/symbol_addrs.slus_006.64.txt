@@ -6,6 +6,7 @@ InitVsyncInterrupts = 0x8004bf20;
 SetInterruptHandler = 0x8004b770;
 DecodeSector = 0x800289d0;
 
+HeapGetNextBlockHeader = 0x80031894;
 HeapLoadSymbols = 0x800318F8;
 HeapReset = 0x80031A30;
 HeapInit = 0x80031A68;
@@ -41,6 +42,7 @@ HeapTickDelayedFree = 0x80032CB8;
 HeapFreeAllDelayedBlocks = 0x80032D60;
 HeapWriteToDebugFile = 0x80032DCC;
 HeapDumpToFile = 0x80032E04;
+HeapDerefPtr = 0x80032E7C;
 
 LZSSHeapDecompress = 0x80032e88;
 LZSSDecompress = 0x80032eb4;

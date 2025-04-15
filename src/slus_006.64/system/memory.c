@@ -14,6 +14,14 @@ u32 g_HeapLastAllocSrcAddr;
 u32 D_80059344;
 int g_HeapDebugDumpFileHandle;
 
+void* HeapGetNextBlockHeader(HeapBlock* pHeapBlock) {
+    return (HeapBlock*)(pHeapBlock[-1].pNext - (u32)pHeapBlock) - 1;
+}
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800318A8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800318BC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800318DC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_800318F0);
 
 int HeapLoadSymbols(char* pSymbolFilePath) {
     int hSymbolFile;

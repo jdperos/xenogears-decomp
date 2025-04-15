@@ -71,7 +71,7 @@ segments:
       - [0xA1CC, asm]
       #- [0xA2CC, c, main/main_loop]
       - [0xA42C, asm]
-      - [0x220F8, c, system/memory]
+      - [0x22094, c, system/memory]
       - [0x23688, hasm, util/lzss]
       - [0x23754, asm]
       #- [0x3C720, c, system/interrupts] # InitVsyncInterrupts
