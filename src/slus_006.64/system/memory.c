@@ -773,10 +773,10 @@ void HeapFreeAllDelayedBlocks(void) {
 }
 
 void HeapWriteToDebugFile(char* pBuffer) {
-  unsigned int nLen;
-  
-  nLen = StrLen(pBuffer);
-  PCwrite(g_HeapDebugDumpFileHandle, pBuffer, nLen);
+    unsigned int nLen;
+
+    nLen = StrLen(pBuffer);
+    PCwrite(g_HeapDebugDumpFileHandle, pBuffer, nLen);
 }
 
 extern void func_800379C8();
@@ -787,10 +787,10 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", HeapDumpToFile);
 void HeapDumpToFile(char *pOutputFilePath) {
     PCinit();
     g_HeapDebugDumpFileHandle = PCcreate(pOutputFilePath, 0);
-    D_800592B8 = (void*)func_80032DCC;
+    D_800592B8 = &HeapWriteToDebugFile;
     HeapDebugDump(1, 0, 0, HEAP_DEBUG_PRINT_ALL);
     PCclose(g_HeapDebugDumpFileHandle);
-    D_800592B8 = (void*)func_800379C8;
+    D_800592B8 = &func_800379C8;
 }
 */
 

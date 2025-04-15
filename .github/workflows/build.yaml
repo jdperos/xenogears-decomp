@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     strategy:
+      matrix:
+        game_id: [ SLUS_006.64 ]
       fail-fast: true
     runs-on: ubuntu-latest
     steps:
@@ -34,10 +36,7 @@ jobs:
           curl -L -o disc/SLUS_006.64 "${{ secrets.FILE_URL }}"
           curl -L -o disc/OVERLAY_0x6.BIN "${{ secrets.FILE_URL_2 }}"
           curl -L -o disc/OVERLAY_0x1.BIN "${{ secrets.FILE_URL_3 }}"
-
-      #- name: Build and create progress report
-      #  run: make report
-
+      
       - name: Build
         run: |
           make generate
@@ -46,8 +45,11 @@ jobs:
       - name: Check match
         run: make check
 
-      #- name: Upload progress report
-      #  uses: actions/upload-artifact@v4
-      #  with:
-      #      name: slus_006.64_report
-      #      path: ./build/progress.json
+      - name: Generate Progress Report
+        run: make report
+
+      - name: Upload Progress Report
+        uses: actions/upload-artifact@v4
+        with:
+            name: ${{ matrix.game_id }}_report
+            path: ./build/progress.json

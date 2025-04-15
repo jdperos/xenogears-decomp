@@ -127,6 +127,6 @@ void HeapForceFree(void* pMem);
 void HeapDelayedFree(void* pMem, u32 delay);
 void HeapTickDelayedFree(void);
 void HeapFreeAllDelayedBlocks(void);
-void HeapWriteToDebugFile(char* pBuffer)
+void HeapWriteToDebugFile(char* pBuffer);
 void HeapDumpToFile(char *pOutputFilePath);
 #endif

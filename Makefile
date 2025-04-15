@@ -129,8 +129,7 @@ all: build
 build: $(TARGET_OUT)
 
 objdiff-config: regenerate
-	@$(MAKE) NON_MATCHING=0 SKIP_ASM=0 expected
-	@$(MAKE) NON_MATCHING=1 SKIP_ASM=1 build
+	@$(MAKE) NON_MATCHING=1 SKIP_ASM=1 expected
 	@$(PYTHON) $(OBJDIFF_DIR)/objdiff_generate.py $(OBJDIFF_DIR)/config.yaml
 
 report: objdiff-config
@@ -142,11 +141,9 @@ check: build
 progress:
 	$(MAKE) build NON_MATCHING=1 SKIP_ASM=1
 
-expected: check
+expected: build
 	mkdir -p $(EXPECTED_DIR)
-	mv build/src $(EXPECTED_DIR)/src
 	mv build/asm $(EXPECTED_DIR)/asm
-	rm -rf $(BUILD_DIR)
 
 generate: $(LD_FILES)
 
