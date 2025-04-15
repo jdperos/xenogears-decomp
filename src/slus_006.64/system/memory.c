@@ -794,9 +794,6 @@ void HeapDumpToFile(char *pOutputFilePath) {
     PCclose(g_HeapDebugDumpFileHandle);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80032E7C);
-/*
-u32 func_80032E7C(u32 *pData) {
+void* HeapDerefPtr(u32* pData) {
     return *pData;
 }
-*/

@@ -135,4 +135,5 @@ void HeapTickDelayedFree(void);
 void HeapFreeAllDelayedBlocks(void);
 void HeapWriteToDebugFile(char* pBuffer);
 void HeapDumpToFile(char *pOutputFilePath);
+void* HeapDerefPtr(u32* pData);
 #endif
