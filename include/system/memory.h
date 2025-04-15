@@ -85,7 +85,7 @@ extern HeapDelayedFreeBlock g_HeapDelayedFreeBlocksHead;
 
 extern u32 __attribute__((noreturn)) func_80019ACC(u32);
 extern void func_80031FF8();
-
+extern void func_8003747C(u32);
 extern unsigned int StrLen(char* pString);
 extern void HeapPrintf(char*, ...);
 
@@ -97,6 +97,7 @@ extern char** g_HeapUserContentNames[HEAP_NUM_USERS];
 
 
 int HeapLoadSymbols(char* pSymbolFilePath);
+void HeapReset(void);
 void HeapInit(void* heapStart, void* heapEnd);
 void HeapRelocate(void* pNewStartAddress);
 u16 HeapGetCurrentUser(void);

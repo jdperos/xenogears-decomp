@@ -61,7 +61,13 @@ int HeapLoadSymbols(char* pSymbolFilePath) {
     return -1;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/memory", func_80031A30);
+void HeapReset(void) {
+    func_8003747C(0);
+    g_HeapCurContentType = HEAP_CONTENT_NONE;
+    g_HeapCurUser = HEAP_USER_UNKNOWN;
+    g_SymbolData = NULL;
+    g_SymbolDataEndAddress = NULL;
+}
 
 void HeapInit(void* pHeapStart, void* pHeapEnd) {
     HeapBlock* startBlock = (HeapBlock*)((u32)pHeapStart & -4);
@@ -83,7 +89,7 @@ void HeapInit(void* pHeapStart, void* pHeapEnd) {
     endBlock[-1].contentTag = HEAP_CONTENT_NONE;
 
     g_HeapDelayedFreeBlocksHead.pNext = NULL;
-    func_80031A30();
+    HeapReset();
 }
 
 void HeapRelocate(void* pNewStartAddress) {
