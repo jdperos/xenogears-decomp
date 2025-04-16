@@ -48,7 +48,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800413CC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800413EC);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80041410);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdDataSync);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80041430);
 

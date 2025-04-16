@@ -158,6 +158,7 @@ void HeapGetAllocInformation(u32* pAllocSourceAddr, u32* pAllocSize) {
     *pAllocSize = g_HeapLastAllocSize;
 }
 
+// Only matches on GCC 2.7.2
 void* HeapAlloc(u32 allocSize, u32 allocFlags) {
     u32 nCallerAddr;
     u32 nFreeSize;
@@ -582,6 +583,7 @@ void HeapDebugDumpBlock(HeapBlock* pBlockHeader, void* pBlockMem, u32 blockSize,
     HeapPrintf("\n");
 }
 
+// Only matches on GCC 2.7.2
 void HeapDebugDump(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags) {
     char _sBuffer[0x40];
     u32 bIsDone;

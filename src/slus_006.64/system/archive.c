@@ -6,7 +6,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveInit);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800283D4);
 
-s32 ArchiveSetIndex(unsigned int sectionIndex, unsigned int entryIndex) {
+int ArchiveSetIndex(unsigned int sectionIndex, unsigned int entryIndex) {
     s32 nOffset;
 
     nOffset = ((u_short*)g_ArchiveHeader)[sectionIndex + entryIndex] - 1;
@@ -18,7 +18,36 @@ s32 ArchiveSetIndex(unsigned int sectionIndex, unsigned int entryIndex) {
     return nOffset;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800284B4);
+int ArchiveGetArchiveOffsetIndices(s32* alignedIndex, s32* remainder) {
+    int nAligned;
+    int nIndex;
+    u_short* pArchiveHeaderEntry;
+
+    pArchiveHeaderEntry = g_ArchiveHeader;
+    nIndex = 0;
+    
+    while(nIndex < ARCHIVE_MAX_SECTIONS) {
+        if (*pArchiveHeaderEntry == g_CurArchiveOffset + 1) {
+            // Round down to 4-byte boundary
+            nAligned = (nIndex / 4) * 4;
+            
+            *alignedIndex = nAligned;
+            *remainder = nIndex - nAligned;
+            break;
+        }
+        
+        nIndex += 1;
+        pArchiveHeaderEntry += 1;
+    }
+    
+    if (nIndex == ARCHIVE_MAX_SECTIONS) {
+        *alignedIndex = 0;
+        *remainder = 0;
+    }
+    
+    return g_CurArchiveOffset;
+}
+
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028530);
 
@@ -68,6 +97,18 @@ int ArchiveDecodeSize(unsigned int entryIndex) {
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028808);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveDecodeAlignedSize);
+/*
+Only matches on GCC 2.6.X
+
+int ArchiveDecodeAlignedSize(unsigned int entryIndex) {
+    s32 nSize;
+    s32 nAlignedSize;
+    
+    nSize = ArchiveDecodeSize(entryIndex);
+    nAlignedSize = ((nSize + 3 ) / 4);
+    return nAlignedSize * 4;
+}
+*/
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028928);
 

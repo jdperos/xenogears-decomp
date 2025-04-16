@@ -3,7 +3,7 @@
 
 
 // Temporary ----------------------------
-extern u32 __attribute__((noreturn)) func_80019ACC(u32);
+extern u32 func_80019ACC(u32) __attribute__((noreturn));
 extern void func_80031FF8();
 extern void func_8003747C(u32);
 extern void func_8003700C(u8*);
