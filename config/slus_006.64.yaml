@@ -68,7 +68,7 @@ segments:
       - [0x9D78, c, main/main] # main
       - [0xA164, asm]
       - [0xA16C, c, main/main_loop]
-      - [0xA1CC, asm]
+      - [0xA2CC, asm]
       #- [0xA2CC, c, main/main_loop]
       - [0xA42C, asm]
       - [0x18A30, c, system/archive]

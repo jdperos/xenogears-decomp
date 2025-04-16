@@ -138,11 +138,11 @@ void HeapRelocate(void* pNewStartAddress) {
     g_HeapDelayedFreeBlocksHead.pNext = NULL;
 }
 
-u16 HeapGetCurrentUser(void) {
+u32 HeapGetCurrentUser(void) {
     return g_HeapCurUser;
 }
 
-void HeapSetCurrentUser(u16 userTag) {
+void HeapSetCurrentUser(u32 userTag) {
     g_HeapCurUser = userTag;
 }
 

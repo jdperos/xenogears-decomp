@@ -1,4 +1,5 @@
-ChangeGameState = 0x8001996c;
+ChangeGameState = 0x8001996C;
+LoadGameStateOverlay = 0x800199CC;
 
 ArchiveInit = 0x80028230;
 ArchiveSetIndex = 0x80028470;
@@ -81,9 +82,10 @@ PCread = 0x8004c398;
 PCwrite = 0x8004c470;
 
 g_CurGameState = 0x80018088;
-g_CurOverlayBuffer = 0x800592bc;
-g_CurOverlayID =  0x800592C0;
+g_CurGameStateOverlayBuffer = 0x800592bc;
+g_CurGameStateOverlayID =  0x800592C0;
 
+g_GameStateOverlayArchiveOffsets = 0x8004EAA0;
 g_CurArchiveOffset = 0x8004FE14;
 g_ArchiveTable = 0x8004FDf0;
 g_ArchiveHeader = 0x8004FDF4;

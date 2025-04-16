@@ -4,7 +4,7 @@
 [Build Status]: https://github.com/ladysilverberg/xenogears-decomp/actions/workflows/build.yaml/badge.svg
 [actions]: https://github.com/ladysilverberg/xenogears-decomp/actions/workflows/build.yaml
 [Progress]: https://decomp.dev/ladysilverberg/xenogears-decomp.svg?mode=shield&measure=code&category=all&label=Progress
-[progress site]: https://decomp.dev/ladysilverberg/xenogears-decomp/
+[progress site]: https://decomp.dev/ladysilverberg/xenogears-decomp
 
 This project is an in-progress matching decompilation of Xenogears for Playstation 1. The project currently targets the US release (SLUS 006.64), with the intention to target other releases as well down the road.
 
