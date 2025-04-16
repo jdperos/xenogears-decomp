@@ -13,6 +13,6 @@ expected_paths:
   src: expected/src
 
 ignored_files:
-  - main/header
+  - slus_006.64/header
 
 output: ./objdiff.json

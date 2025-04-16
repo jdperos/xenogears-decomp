@@ -1,10 +1,10 @@
 ChangeGameState = 0x8001996c;
-SetVsyncInterruptCallbackByIndex = 0x8004bff0;
-ClearVsyncInterruptCallbacks = 0x8004c01c;
-VsyncInterruptHandler = 0x8004bf78;
-InitVsyncInterrupts = 0x8004bf20;
-SetInterruptHandler = 0x8004b770;
-DecodeSector = 0x800289d0;
+
+ArchiveInit = 0x80028230;
+ArchiveSetIndex = 0x80028470;
+ArchiveDecodeSize = 0x80028738;
+ArchiveDecodeAlignedSize = 0x800288EC;
+ArchiveDecodeSector = 0x800289D0;
 
 HeapGetNextBlockHeader = 0x80031894;
 HeapGetBlockUser = 0x800318A8;
@@ -50,8 +50,22 @@ HeapDerefPtr = 0x80032E7C;
 LZSSHeapDecompress = 0x80032e88;
 LZSSDecompress = 0x80032eb4;
 
-StrLen = 0x8003FBC8;
+strlen = 0x8003FBC8;
 Sprintf = 0x8003FBF8;
+
+CdInit = 0x80040D08;
+CdControl = 0x80040FE4;
+CD_sync = 0x80041B3C;
+CD_cw = 0x80042088;
+CD_flush = 0x8004252C;
+CD_initvol = 0x8004260C;
+CD_init = 0x80042750;
+
+SetInterruptHandler = 0x8004B770;
+InitVsyncInterrupts = 0x8004BF20;
+VsyncInterruptHandler = 0x8004BF78;
+SetVsyncInterruptCallbackByIndex = 0x8004BFF0;
+ClearVsyncInterruptCallbacks = 0x8004C01C;
 
 PCopen = 0x8004c318;
 PCclose = 0x8004c338;
@@ -61,10 +75,20 @@ PCinit = 0x8004c38c;
 PCread = 0x8004c398;
 PCwrite = 0x8004c470;
 
+g_CurGameState = 0x80018088;
+g_CurOverlayBuffer = 0x800592bc;
+g_CurOverlayID =  0x800592C0;
+
+g_CurArchiveOffset = 0x8004FE14;
+g_ArchiveTable = 0x8004FDf0;
+g_ArchiveHeader = 0x8004FDF4;
+
+g_VsyncInterruptCallbacks = 0x80058940;
+g_VsyncInterruptCount = 0x80058960;
+g_InterruptControl = 0x8005890c;
+
 g_HeapContentTypeNames = 0x80050140;
-
 g_HeapDebugPrintfFn = 0x800592B8;
-
 g_HeapCurContentType = 0x80059318;
 g_HeapCurUser = 0x8005931C;
 g_Heap = 0x80059320;
@@ -76,20 +100,8 @@ g_HeapLastAllocSize = 0x8005933C;
 g_HeapLastAllocSrcAddr = 0x80059340;
 D_80059344 = 0x80059344;
 g_HeapDebugDumpFileHandle = 0x80059348;
-
 g_HeapUserContentNames = 0x80059FA4;
 g_HeapDelayedFreeBlocksHead = 0x80059FCC;
-
-g_CurGameState = 0x80018088;
-g_CurOverlayBuffer = 0x800592bc;
-g_CurOverlayID =  0x800592c0;
-
-g_CurDecodingOffset = 0x8004fe14;
-g_DiskArchiveTable = 0x8004fdf0;
-
-g_VsyncInterruptCallbacks = 0x80058940;
-g_VsyncInterruptCount = 0x80058960;
-g_InterruptControl = 0x8005890c;
 
 
 g_pTMR_HRETRACE_MODE = 0x80058964;

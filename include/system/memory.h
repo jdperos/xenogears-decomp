@@ -8,7 +8,7 @@ extern void func_80031FF8();
 extern void func_8003747C(u32);
 extern void func_8003700C(u8*);
 
-extern unsigned int StrLen(char* pString);
+extern unsigned int strlen(char* pString);
 extern int Sprintf(char* pStr, char* pFormat, ...);
 // --------------------------------------
 
@@ -138,6 +138,7 @@ void HeapDebugDump(u32 mode, u32 startBlockIdx, s32 endBlockIdx, u32 flags);
 void* HeapAllocSound(u32 allocSize);
 void HeapCalloc(u32 numElements, u32 elementSize);
 void HeapForceFree(void* pMem);
+//void HeapPrintf(char* pFormat, void* arg);
 void HeapDelayedFree(void* pMem, u32 delay);
 void HeapTickDelayedFree(void);
 void HeapFreeAllDelayedBlocks(void);

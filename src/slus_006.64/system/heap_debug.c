@@ -10,7 +10,7 @@ int g_HeapDebugDumpFileHandle;
 void HeapWriteToDebugFile(char* pBuffer) {
     unsigned int nLen;
 
-    nLen = StrLen(pBuffer);
+    nLen = strlen(pBuffer);
     PCwrite(g_HeapDebugDumpFileHandle, pBuffer, nLen);
 }
 
