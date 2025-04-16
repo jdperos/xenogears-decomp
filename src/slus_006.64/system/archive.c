@@ -51,7 +51,7 @@ int ArchiveDecodeSize(unsigned int entryIndex) {
         pArchiveEntry[3]
     );
 
-exit:
+    exit:
     return nFileSize;
 }
 
