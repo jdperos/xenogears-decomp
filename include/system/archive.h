@@ -8,6 +8,8 @@ extern u32 D_8004FE48;
 extern u32 g_ArchiveTable;
 extern u32 g_CurArchiveOffset;
 
+int ArchiveDecodeSize(unsigned int entryIndex);
+char* ArchiveGetFilePath(unsigned int entryIndex);
 int ArchiveDecodeSector(unsigned int entryIndex);
 
 #endif
