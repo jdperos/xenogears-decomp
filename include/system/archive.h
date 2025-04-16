@@ -5,9 +5,11 @@
 #define ARCHIVE_ENTRY_NAME_BUFFER_SIZE 0x40
 
 extern u32 D_8004FE48;
+extern u32 g_ArchiveHeader;
 extern u32 g_ArchiveTable;
 extern u32 g_CurArchiveOffset;
 
+s32 ArchiveSetIndex(unsigned int sectionIndex, unsigned int entryIndex);
 int ArchiveDecodeSize(unsigned int entryIndex);
 char* ArchiveGetFilePath(unsigned int entryIndex);
 int ArchiveDecodeSector(unsigned int entryIndex);

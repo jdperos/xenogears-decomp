@@ -6,7 +6,17 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveInit);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800283D4);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveSetIndex);
+s32 ArchiveSetIndex(unsigned int sectionIndex, unsigned int entryIndex) {
+    s32 nOffset;
+
+    nOffset = ((u_short*)g_ArchiveHeader)[sectionIndex + entryIndex] - 1;
+    g_CurArchiveOffset = nOffset;
+    if (nOffset < 0) {
+        g_CurArchiveOffset = 0;
+        return -1;
+    }
+    return nOffset;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800284B4);
 
