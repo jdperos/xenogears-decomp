@@ -1,5 +1,6 @@
 ChangeGameState = 0x8001996C;
 LoadGameStateOverlay = 0x800199CC;
+HeapResetUser = 0x80019C7C;
 
 ArchiveInit = 0x80028230;
 ArchiveSetIndex = 0x80028470;

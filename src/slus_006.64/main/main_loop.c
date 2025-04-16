@@ -51,6 +51,13 @@ void* LoadGameStateOverlay(unsigned int overlayIndex) {
         ArchiveSetIndex(nPrevSectionIndex, nPrevEntryIndex);
         HeapSetCurrentUser(nPrevHeapUser);
     }
-    
+
     return g_CurGameStateOverlayBuffer;
+}
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/main/main_loop", func_80019ACC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/main/main_loop", func_80019C2C);
+
+void HeapResetUser() {
+    HeapChangeCurrentUser(HEAP_USER_UNKNOWN, 0);
 }
