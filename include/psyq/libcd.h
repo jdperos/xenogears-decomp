@@ -5,7 +5,6 @@
 
 typedef void CdCallbackFn_t (u_char, u_char*);
 
-
 /*
  *  (C) Copyright 1993/1994 Sony Computer Entertainment ,Tokyo,Japan.
  *                      All Rights Reserved

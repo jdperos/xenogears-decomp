@@ -48,7 +48,12 @@ SPLAT_FLAGS         := --disassemble-all --make-full-disasm-for-code
 DL_FLAGS := -G8
 AS_FLAGS := $(ENDIAN) $(INCLUDE_FLAGS) $(OPT_FLAGS) $(DL_FLAGS) -march=r3000 -mtune=r3000 -no-pad-sections
 CC_FLAGS := $(OPT_FLAGS) $(DL_FLAGS) -mips1 -mcpu=3000 -w -funsigned-char -fpeephole -ffunction-cse -fpcc-struct-return -fcommon -fverbose-asm -msoft-float -mgas -fgnu-linker -quiet
-MASPSX_FLAGS := --use-comm-section --run-assembler $(AS_FLAGS)
+#MASPSX_FLAGS := --use-comm-section --run-assembler $(AS_FLAGS)
+
+# PSY-Q libraries uses ASPSX 2.56 (PSQ 4.0)
+define DL_FlagsSwitch
+	$(if $(or $(filter MAIN,$(patsubst build/src/slus_006.64/psyq/%,MAIN,$(1))), $(filter MAIN,$(patsubst build/asm/slus_006.64/psyq/%,MAIN,$(1)))), $(eval MASPSX_FLAGS = --aspsx-version=2.56 --use-comm-section --run-assembler $(AS_FLAGS)), $(eval MASPSX_FLAGS = --use-comm-section --run-assembler $(AS_FLAGS)))
+endef
 
 ifeq ($(NON_MATCHING),1)
 	CPP_FLAGS := $(CPP_FLAGS) -DNON_MATCHING
@@ -194,6 +199,7 @@ $(BUILD_DIR)/%.c.s: $(BUILD_DIR)/%.i
 
 $(BUILD_DIR)/%.c.o: $(BUILD_DIR)/%.c.s
 	@mkdir -p $(dir $@)
+	$(call DL_FlagsSwitch, $@)
 	-$(MASPSX) $(MASPSX_FLAGS) -o $@ $<
 	-$(OBJDUMP) $(OBJDUMP_FLAGS) $@ > $(@:.o=.dump.s)
 

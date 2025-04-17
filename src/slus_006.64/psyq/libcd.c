@@ -4,6 +4,7 @@
 extern int g_CdDebugLevel;
 extern CdCallbackFn_t* g_CdSyncCallback;
 extern CdCallbackFn_t* g_CdReadyCallback;
+extern func_80042700(); // psyq/interrupts
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdInit);
 
@@ -21,7 +22,23 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040E48);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040E58);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040E68);
+//INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReset);
+int CdReset(int mode) {
+    if (mode == 2) {
+        func_80042700();
+        return 1;
+    }
+
+    if (CD_init() !=  0)
+        return 0;
+
+    if (mode == 1) {
+        if (CD_initvol() != 0)
+            return 0;
+    }
+
+    return 1;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040ED4);
 
@@ -69,7 +86,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControl);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControlF);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80041248);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControlB);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_8004138C);
 
