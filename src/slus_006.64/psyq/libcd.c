@@ -1,6 +1,9 @@
 #include "common.h"
+#include "psyq/libcd.h"
 
 extern int g_CdDebugLevel;
+extern CdCallbackFn_t* g_CdSyncCallback;
+extern CdCallbackFn_t* g_CdReadyCallback;
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdInit);
 
@@ -38,9 +41,14 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040F74);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040F94);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040FB4);
+CdCallbackFn_t* CdSyncCallback(CdCallbackFn_t* callback) {
+    CdCallbackFn_t* prevCallback;
+    prevCallback = g_CdSyncCallback;
+    g_CdSyncCallback = callback;
+    return prevCallback;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040FCC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReadyCallback);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControl);
 
@@ -66,7 +74,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800415B4);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_sync);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80041DBC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_ready);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_cw);
 

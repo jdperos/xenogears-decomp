@@ -1,6 +1,11 @@
 /* $PSLibId: Run-time Library Release 4.3$ */
 #ifndef _LIBCD_H_
 #define _LIBCD_H_
+
+
+typedef void CdCallbackFn_t (u_char, u_char*);
+
+
 /*
  *  (C) Copyright 1993/1994 Sony Computer Entertainment ,Tokyo,Japan.
  *                      All Rights Reserved
@@ -155,8 +160,8 @@
 /*
  *	Callback
  */
-
 typedef void (*CdlCB)(u_char,u_char *);
+
 
 /*
  *	Location
@@ -251,6 +256,7 @@ typedef struct {
 /*
  *	Prototypes for Streaming
  */
+ /*
 #if defined(_LANGUAGE_C_PLUS_PLUS)||defined(__cplusplus)||defined(c_plusplus)
 extern "C" {
 #endif
@@ -272,13 +278,14 @@ int     StGetBackloc(CdlLOC *loc);
 int     StSetChannel(u_long channel);
 #if defined(_LANGUAGE_C_PLUS_PLUS)||defined(__cplusplus)||defined(c_plusplus)
 }
-#endif
+#endif*/
 #endif	/* ifndef _LIBDS_H_ */
 
 
 /*
  *	Prototypes
  */
+ /*
 #if defined(_LANGUAGE_C_PLUS_PLUS)||defined(__cplusplus)||defined(c_plusplus)
 extern "C" {
 #endif
@@ -322,5 +329,6 @@ void CdReadBreak( void );
 
 #if defined(_LANGUAGE_C_PLUS_PLUS)||defined(__cplusplus)||defined(c_plusplus)
 }
-#endif
+#endif*/
+
 #endif /* _LIBCD_H_ */

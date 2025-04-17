@@ -59,12 +59,16 @@ LZSSDecompress = 0x80032eb4;
 strlen = 0x8003FBC8;
 Sprintf = 0x8003FBF8;
 
+
 CdInit = 0x80040D08;
 CdSetDebug = 0x80040EF4;
+CdSyncCallback = 0x80040FB4;
+CdReadyCallback = 0x80040FCC;
 CdControl = 0x80040FE4;
 CdControlF = 0x8004111C;
 CdDataSync = 0x80041410;
 CD_sync = 0x80041B3C;
+CD_ready = 0x80041DBC;
 CD_cw = 0x80042088;
 CD_flush = 0x8004252C;
 CD_initvol = 0x8004260C;
@@ -95,6 +99,8 @@ g_ArchiveTable = 0x8004FDf0;
 g_ArchiveHeader = 0x8004FDF4;
 
 g_CdDebugLevel = 0x800564B4;
+g_CdSyncCallback = 0x800564A8;
+g_CdReadyCallback = 0x800564AC;
 
 g_VsyncInterruptCallbacks = 0x80058940;
 g_VsyncInterruptCount = 0x80058960;
