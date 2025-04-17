@@ -37,9 +37,15 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040F0C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040F40);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040F74);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdSync);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040F94);
+
+int CdReady(int mode, u_char* result) {
+  int nStatus;
+  
+  nStatus = CD_ready(mode, result);
+  return nStatus;
+}
 
 CdCallbackFn_t* CdSyncCallback(CdCallbackFn_t* callback) {
     CdCallbackFn_t* prevCallback;

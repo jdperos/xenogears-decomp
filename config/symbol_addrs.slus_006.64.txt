@@ -62,6 +62,8 @@ Sprintf = 0x8003FBF8;
 
 CdInit = 0x80040D08;
 CdSetDebug = 0x80040EF4;
+CdSync = 0x80040F74;
+CdReady = 0x80040F94;
 CdSyncCallback = 0x80040FB4;
 CdReadyCallback = 0x80040FCC;
 CdControl = 0x80040FE4;
