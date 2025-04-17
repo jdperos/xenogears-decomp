@@ -48,7 +48,12 @@ CdCallbackFn_t* CdSyncCallback(CdCallbackFn_t* callback) {
     return prevCallback;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReadyCallback);
+CdCallbackFn_t* CdReadyCallback(CdCallbackFn_t* callback) {
+    CdCallbackFn_t* prevCallback;
+    prevCallback = g_CdReadyCallback;
+    g_CdReadyCallback = callback;
+    return prevCallback;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControl);
 
