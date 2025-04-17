@@ -1,5 +1,7 @@
 #include "common.h"
 
+extern int g_CdDebugLevel;
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdInit);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040DA0);
@@ -20,7 +22,13 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040E68);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040ED4);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040EF4);
+int CdSetDebug(int level) {
+    int prevLevel;
+    
+    prevLevel = g_CdDebugLevel;
+    g_CdDebugLevel = level;
+    return prevLevel;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040F0C);
 
@@ -36,7 +44,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040FCC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControl);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_8004111C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControlF);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80041248);
 

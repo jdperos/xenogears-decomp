@@ -70,7 +70,7 @@ segments:
       - [0xA16C, c, main/main_loop]
       - [0xA4A0, asm]
       - [0x18A30, c, system/archive]
-      - [0x19218, asm]
+      - [0x1AD24, asm]
       - [0x22094, c, system/memory]
       - [0x235CC, c, system/heap_debug]
       - [0x23688, hasm, util/lzss]

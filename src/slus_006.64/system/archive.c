@@ -131,3 +131,24 @@ int ArchiveDecodeSector(unsigned int entryIndex) {
     pArchiveEntry = nOffset + g_ArchiveTable;
     return (pArchiveEntry[2] << 0x10) + (pArchiveEntry[1] << 0x8) + pArchiveEntry[0];
 }
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028A18);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028A60);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028A94);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028AAC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028B14);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028E60);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028ECC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028F30);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002945C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800294B4);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002954C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800295D8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveReadFile);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80029AFC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80029EB0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A260);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A2D0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A394);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A428);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A498);

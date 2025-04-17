@@ -9,6 +9,7 @@ ArchiveDecodeSize = 0x80028738;
 ArchiveDecodeAlignedSize = 0x800288EC;
 ArchiveGetFilePath = 0x80028998;
 ArchiveDecodeSector = 0x800289D0;
+ArchiveReadFile = 0x80029690;
 
 
 HeapGetNextBlockHeader = 0x80031894;
@@ -59,7 +60,9 @@ strlen = 0x8003FBC8;
 Sprintf = 0x8003FBF8;
 
 CdInit = 0x80040D08;
+CdSetDebug = 0x80040EF4;
 CdControl = 0x80040FE4;
+CdControlF = 0x8004111C;
 CdDataSync = 0x80041410;
 CD_sync = 0x80041B3C;
 CD_cw = 0x80042088;
@@ -90,6 +93,8 @@ g_GameStateOverlayArchiveOffsets = 0x8004EAA0;
 g_CurArchiveOffset = 0x8004FE14;
 g_ArchiveTable = 0x8004FDf0;
 g_ArchiveHeader = 0x8004FDF4;
+
+g_CdDebugLevel = 0x800564B4;
 
 g_VsyncInterruptCallbacks = 0x80058940;
 g_VsyncInterruptCount = 0x80058960;
