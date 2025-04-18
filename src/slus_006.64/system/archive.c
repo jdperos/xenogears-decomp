@@ -1,6 +1,7 @@
 #include "common.h"
 #include "system/archive.h"
 #include "psyq/pc.h"
+#include "psyq/libcd.h"
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveInit);
 
@@ -149,6 +150,33 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80029AFC);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80029EB0);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A260);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A2D0);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A394);
+
+void ArchiveCdSeekToFile(s32 entryIndex) {
+    u8 nCommand;
+    u8* nParam;
+    u32 nSector;
+    void* pCdLocation;
+
+    if (entryIndex > 0) {
+        pCdLocation = &g_ArchiveCdCurLocation;
+        nSector = ArchiveDecodeSector(entryIndex);
+        CdIntToPos(nSector, pCdLocation);
+        g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_SEEK;
+        CdSyncCallback(&ArchiveCdDriveCommandHandler);
+        nCommand = CdlSetloc;
+        nParam = &g_ArchiveCdCurLocation;
+    } else {
+        g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_DONE;
+        CdSyncCallback(&ArchiveCdDriveCommandHandler);
+        nCommand = CdlPause;
+        nParam = NULL;
+    }
+
+    CdControlF(nCommand, nParam);
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A428);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A498);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A524);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A57C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveCdDriveCommandHandler);

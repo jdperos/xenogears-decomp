@@ -22,14 +22,13 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040E48);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040E58);
 
-//INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReset);
 int CdReset(int mode) {
     if (mode == 2) {
         func_80042700();
         return 1;
     }
 
-    if (CD_init() !=  0)
+    if (CD_init() != 0)
         return 0;
 
     if (mode == 1) {
@@ -88,21 +87,21 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControlF);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControlB);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_8004138C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdMix);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800413AC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdGetSector2);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800413CC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdGetSector);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800413EC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdDataSync);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80041430);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdIntToPos);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80041534);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdPosToInt);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800415B4);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReadInterrupt);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_sync);
 
@@ -119,3 +118,9 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_initvol);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042700);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_init);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_datasync);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042AA8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042BA8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042C98);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042CA8);
