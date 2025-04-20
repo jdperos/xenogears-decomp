@@ -3,6 +3,9 @@
 #include "psyq/pc.h"
 #include "psyq/libcd.h"
 
+// Temp
+extern int func_800286CC(void);
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveInit);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800283D4);
@@ -157,7 +160,18 @@ int ArchiveDecodeSector(int entryIndex) {
 }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028A18);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028A60);
+
+void ArchiveCdDataSync(int mode) {
+    int nResult;
+
+    if (mode == 0) {
+        do {
+            nResult = func_800286CC();
+        } while (0 < nResult);
+    }
+    func_800286CC();
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028A94);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028AAC);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028B14);
