@@ -25,15 +25,16 @@ extern u32 D_8004FE48;
 extern u32 g_ArchiveHeader;
 extern u32 g_ArchiveTable;
 extern u32 g_CurArchiveOffset;
+extern int D_8004FE18;
 extern u32 g_ArchiveCdDriveState;
 extern CdlLOC g_ArchiveCdCurLocation;
 
-s32 ArchiveSetIndex(unsigned int sectionIndex, unsigned int entryIndex);
-int ArchiveGetArchiveOffsetIndices(s32* alignedIndex, s32* remainder);
-int ArchiveDecodeSize(unsigned int entryIndex);
-char* ArchiveGetFilePath(unsigned int entryIndex);
-int ArchiveDecodeSector(unsigned int entryIndex);
-void ArchiveCdSeekToFile(s32 entryIndex);
-void ArchiveCdDriveCommandHandler(u8 status, u8* pResult);
+s32 ArchiveSetIndex(int sectionIndex, int entryIndex);
+int ArchiveGetArchiveOffsetIndices(int* alignedIndex, int* remainder);
+int ArchiveDecodeSize(int entryIndex);
+char* ArchiveGetFilePath(int entryIndex);
+int ArchiveDecodeSector(int entryIndex);
+void ArchiveCdSeekToFile(int entryIndex);
+void ArchiveCdDriveCommandHandler(u_char status, u_char* pResult);
 
 #endif

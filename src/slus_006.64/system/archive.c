@@ -7,7 +7,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveInit);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800283D4);
 
-int ArchiveSetIndex(unsigned int sectionIndex, unsigned int entryIndex) {
+int ArchiveSetIndex(int sectionIndex, int entryIndex) {
     s32 nOffset;
 
     nOffset = ((u_short*)g_ArchiveHeader)[sectionIndex + entryIndex] - 1;
@@ -19,7 +19,7 @@ int ArchiveSetIndex(unsigned int sectionIndex, unsigned int entryIndex) {
     return nOffset;
 }
 
-int ArchiveGetArchiveOffsetIndices(s32* alignedIndex, s32* remainder) {
+int ArchiveGetArchiveOffsetIndices(int* alignedIndex, int* remainder) {
     int nAligned;
     int nIndex;
     u_short* pArchiveHeaderEntry;
@@ -49,7 +49,6 @@ int ArchiveGetArchiveOffsetIndices(s32* alignedIndex, s32* remainder) {
     return g_CurArchiveOffset;
 }
 
-
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028530);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028548);
@@ -60,17 +59,12 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800286BC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800286CC);
 
-int ArchiveDecodeSize(unsigned int entryIndex) {
+int ArchiveDecodeSize(int entryIndex) {
     char* pFilepath;
     int hArchiveFile;
     int nFileSize;
     u8* pArchiveEntry;
     u32 nOffset;
-    
-    u8 byte0;
-    u8 byte1;
-    u8 byte2;
-    u8 byte3;
     
     if (D_8004FE48) {
         pFilepath = ArchiveGetFilePath(entryIndex);
@@ -95,7 +89,36 @@ int ArchiveDecodeSize(unsigned int entryIndex) {
     return nFileSize;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028808);
+int ArchiveDecodeSizeAligned(int entryIndex) {
+    char* pFilepath;
+    int hArchiveFile;
+    int nFileSize;
+    u8* pArchiveEntry;
+    u32 nOffset;
+    
+    if (D_8004FE48) {
+        pFilepath = ArchiveGetFilePath(entryIndex);
+        hArchiveFile = PCopen(pFilepath, O_RDONLY, 0);
+        nFileSize = PClseek(hArchiveFile, 0, SEEK_END);
+        PCclose(hArchiveFile);
+        if (nFileSize > 0) {
+            goto exit;
+        }
+    }
+    
+    nOffset = (entryIndex + D_8004FE18 - 1) * ARCHIVE_HEADER_ENTRY_SIZE;
+    pArchiveEntry = nOffset + g_ArchiveTable;
+    nFileSize = (
+        (pArchiveEntry[6] << 0x18) + 
+        (pArchiveEntry[5] << 0x10) + 
+        (pArchiveEntry[4] << 0x8) + 
+        pArchiveEntry[3]
+    );
+
+    exit:
+    nFileSize = ((nFileSize + 3) / 4) * 4;
+    return nFileSize;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveDecodeAlignedSize);
 /*
@@ -113,7 +136,7 @@ int ArchiveDecodeAlignedSize(unsigned int entryIndex) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028928);
 
-char* ArchiveGetFilePath(unsigned int entryIndex) {
+char* ArchiveGetFilePath(int entryIndex) {
     u32 nOffset;
     
     if (D_8004FE48) {
@@ -124,7 +147,7 @@ char* ArchiveGetFilePath(unsigned int entryIndex) {
     return NULL;
 }
 
-int ArchiveDecodeSector(unsigned int entryIndex) {
+int ArchiveDecodeSector(int entryIndex) {
     u8* pArchiveEntry;
     u32 nOffset;
 
@@ -151,11 +174,11 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80029EB0);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A260);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A2D0);
 
-void ArchiveCdSeekToFile(s32 entryIndex) {
-    u8 nCommand;
-    u8* nParam;
-    u32 nSector;
-    void* pCdLocation;
+void ArchiveCdSeekToFile(int entryIndex) {
+    u_char nCommand;
+    u_char* nParam;
+    int nSector;
+    CdlLOC* pCdLocation;
 
     if (entryIndex > 0) {
         pCdLocation = &g_ArchiveCdCurLocation;
