@@ -5,6 +5,7 @@
 
 // Temp
 extern int func_800286CC(void);
+extern void func_8002A498(int);
 
 void ArchiveInit(u32 pArchiveTable, u32 pHeaderTable, u32 pDebugTable) {
     D_8005A488 = 0;
@@ -20,7 +21,7 @@ void ArchiveInit(u32 pArchiveTable, u32 pHeaderTable, u32 pDebugTable) {
     if ( (pDebugTable == NULL) || (pDebugTable == -1) ) {
         while (CdInit() == 0);
         CdSetDebug(0);
-        CdReadCallback(0);
+        CdDataSyncCallback(0);
         CdSyncCallback(NULL);
         CdReadyCallback(NULL);
         CdControl(7, 0, &D_80059F1C);
@@ -53,8 +54,22 @@ void ArchiveInit(u32 pArchiveTable, u32 pHeaderTable, u32 pDebugTable) {
     }
 }
 
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800283D4);
+void ArchiveReset(void) {
+    func_8002A498(0);
+    ArchiveCdDataSync(0);
+    if (g_ArchiveDebugTable == 0) {
+        while (CdControlB(9, 0, &D_80059F1C) == 0);
+        ArchiveCdSetMode(0xA0);
+        ArchiveCdDataSync(0);
+        Vsync(3);
+    }
+    CdDataSyncCallback(0);
+    CdSyncCallback(NULL);
+    CdReadyCallback(NULL);
+    D_8004FDFC = 0;
+    g_ArchiveCurFileSize = 0;
+    g_ArchiveCdDriveState = 0;
+}
 
 int ArchiveSetIndex(int sectionIndex, int entryIndex) {
     s32 nOffset;

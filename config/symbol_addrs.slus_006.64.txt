@@ -3,6 +3,7 @@ LoadGameStateOverlay = 0x800199CC;
 HeapResetUser = 0x80019C7C;
 
 ArchiveInit = 0x80028230;
+ArchiveReset = 0x800283D4;
 ArchiveSetIndex = 0x80028470;
 ArchiveGetArchiveOffsetIndices = 0x800284B4;
 ArchiveDecodeSize = 0x80028738;
@@ -77,7 +78,7 @@ CdControlB = 0x80041248;
 CdMix = 0x8004138C;
 CdGetSector2 = 0x800413AC;
 CdGetSector = 0x800413CC;
-CdReadCallback = 0x800413EC;
+CdDataSyncCallback = 0x800413EC;
 CdDataSync = 0x80041410;
 CdIntToPos = 0x80041430;
 CdPosToInt = 0x80041534;

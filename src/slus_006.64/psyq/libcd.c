@@ -93,7 +93,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdGetSector2);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdGetSector);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReadCallback);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdDataSyncCallback);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdDataSync);
 
