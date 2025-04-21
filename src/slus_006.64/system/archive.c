@@ -213,7 +213,20 @@ void ArchiveCdSeekToFile(int entryIndex) {
     CdControlF(nCommand, nParam);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveCdSetMode);
+void ArchiveCdSetMode(u_char mode) {
+    int i;
+    s8* pParam;
+
+    g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_RESET_MODE;
+    CdSyncCallback(&ArchiveCdDriveCommandHandler);
+    for (i = 3, pParam = &D_80059F1B; i >= 0; i -= 1) {
+        *pParam-- = 0;
+    }
+    
+    D_80059F18[0] = mode;
+    CdControlF(CdlSetmode, &D_80059F18);
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A498);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A524);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A57C);
@@ -400,7 +413,7 @@ void ArchiveCdDriveCommandHandler(u8 status, u8* pResult) {
             }
             break;
         
-        case 0:
+        case ARCHIVE_CD_DRIVE_IDLE:
         default:
             return;
     }

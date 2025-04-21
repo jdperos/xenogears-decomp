@@ -46,11 +46,12 @@ extern u32 D_8005A4A8;
 extern u32 D_8005A4B4;
 extern void* D_80059F08;
 extern char D_80059F14[]; // CdlFilter
-extern char* D_80059F18; // u_char* - mode
+extern u_char D_80059F18[]; // u_char* - mode
+extern u8* D_80059F1B;
 extern char D_8004FE38;
 extern char D_80059F15;
 
-s32 ArchiveSetIndex(int sectionIndex, int entryIndex);
+int ArchiveSetIndex(int sectionIndex, int entryIndex);
 int ArchiveGetArchiveOffsetIndices(int* alignedIndex, int* remainder);
 int ArchiveDecodeSize(int entryIndex);
 char* ArchiveGetFilePath(int entryIndex);
