@@ -3,6 +3,8 @@
 
 #include "psyq/libcd.h"
 
+#define CD_SECTOR_SIZE 0x800
+
 #define ARCHIVE_HEADER_ENTRY_SIZE 0x7
 #define ARCHIVE_ENTRY_NAME_BUFFER_SIZE 0x40
 #define ARCHIVE_MAX_SECTIONS 0x40
@@ -36,6 +38,13 @@ extern int D_8004FE18;
 extern unsigned int g_ArchiveCdDriveState;
 extern unsigned int g_ArchiveCdDriveError;
 extern CdlLOC g_ArchiveCdCurLocation;
+extern int g_ArchiveCurFileSize;
+
+extern s32 D_8004FDFC;
+extern s32 D_8004FE4C;
+extern u_char* D_80059F1C;
+extern s32 D_8005A49C;
+extern s32 D_8005A4A4;
 
 extern u32 D_8005A488;
 extern u32 D_8005A48C;

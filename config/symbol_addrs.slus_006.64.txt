@@ -77,6 +77,7 @@ CdControlB = 0x80041248;
 CdMix = 0x8004138C;
 CdGetSector2 = 0x800413AC;
 CdGetSector = 0x800413CC;
+CdReadCallback = 0x800413EC;
 CdDataSync = 0x80041410;
 CdIntToPos = 0x80041430;
 CdPosToInt = 0x80041534;
@@ -89,11 +90,13 @@ CD_initvol = 0x8004260C;
 CD_init = 0x80042750;
 CD_datasync = 0x8004293C;
 
+Vsync = 0x8004B54C;
 SetInterruptHandler = 0x8004B770;
 InitVsyncInterrupts = 0x8004BF20;
 VsyncInterruptHandler = 0x8004BF78;
 SetVsyncInterruptCallbackByIndex = 0x8004BFF0;
 ClearVsyncInterruptCallbacks = 0x8004C01C;
+
 
 PCopen = 0x8004c318;
 PCclose = 0x8004c338;

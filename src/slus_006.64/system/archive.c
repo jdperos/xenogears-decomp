@@ -6,7 +6,53 @@
 // Temp
 extern int func_800286CC(void);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveInit);
+void ArchiveInit(u32 pArchiveTable, u32 pHeaderTable, u32 pDebugTable) {
+    D_8005A488 = 0;
+    D_8005A48C = 0;
+    D_8005A490 = 0;
+    D_8005A494 = 0;
+    D_8005A498 = 0;
+    D_8005A49C = 0;
+    D_8005A4A4 = 0;
+    D_8005A4A8 = 0;
+    D_8005A4B4 = 0;
+    
+    if ( (pDebugTable == NULL) || (pDebugTable == -1) ) {
+        while (CdInit() == 0);
+        CdSetDebug(0);
+        CdReadCallback(0);
+        CdSyncCallback(NULL);
+        CdReadyCallback(NULL);
+        CdControl(7, 0, &D_80059F1C);
+        ArchiveCdSetMode(0xA0);
+        ArchiveCdDataSync(0);
+        Vsync(3);
+    } else {
+        PCinit();
+    }
+
+    if (pDebugTable != -1) {
+        g_ArchiveDebugTable = pDebugTable;
+    } else {
+        g_ArchiveDebugTable = NULL;
+    }
+    
+    g_ArchiveTable = pArchiveTable;
+    g_ArchiveHeader = pHeaderTable;
+    g_CurArchiveOffset = 0;
+    D_8004FDFC = 0;
+    g_ArchiveCurFileSize = 0;
+    g_ArchiveCdDriveState = 0;
+    D_8004FE4C = -1;
+    
+    if (!pDebugTable) {
+        func_8002954C(0x18, pArchiveTable, (0x10 * CD_SECTOR_SIZE), 0, 0);
+        ArchiveCdDataSync(0);
+        func_8002954C(0x28, g_ArchiveHeader, 0x7A, 0, 0);
+        ArchiveCdDataSync(0);
+    }
+}
+
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800283D4);
 
@@ -215,7 +261,7 @@ void ArchiveCdSeekToFile(int entryIndex) {
 
 void ArchiveCdSetMode(u_char mode) {
     int i;
-    s8* pParam;
+    u_char* pParam;
 
     g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_RESET_MODE;
     CdSyncCallback(&ArchiveCdDriveCommandHandler);
