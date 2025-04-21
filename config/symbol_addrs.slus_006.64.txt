@@ -13,6 +13,7 @@ ArchiveDecodeSector = 0x800289D0;
 ArchiveCdDataSync = 0x80028A60;
 ArchiveReadFile = 0x80029690;
 ArchiveCdSeekToFile = 0x8002A394;
+ArchiveCdSetMode = 0x8002A428;
 ArchiveCdDriveCommandHandler = 0x8002A68C;
 
 
@@ -113,7 +114,10 @@ g_ArchiveCurFileSize = 0x8004FDF8;
 g_ArchiveCurFileSector = 0x8004FE04;
 g_CurArchiveOffset = 0x8004FE14;
 g_ArchiveCdDriveState = 0x8004FE1C;
+g_ArchiveCdDriveError = 0x8004FE20;
+g_ArchiveDebugTable = 0x8004FE48;
 g_ArchiveCdCurLocation = 0x80059F10;
+
 
 g_CdDebugLevel = 0x800564B4;
 g_CdSyncCallback = 0x800564A8;

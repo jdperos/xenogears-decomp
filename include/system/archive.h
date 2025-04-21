@@ -21,13 +21,34 @@
 #define ARCHIVE_CD_DRIVE_HANDLE_ERROR 0xB
 #define ARCHIVE_CD_DRIVE_SET_ADPCM_PLAY_CHANNEL 0xC
 
-extern u32 D_8004FE48;
+#define ARCHIVE_CD_DRIVE_ERR_SEEK 0x1
+#define ARCHIVE_CD_DRIVE_ERR_GENERIC 0x2
+#define ARCHIVE_CD_DRIVE_ERR_READ 0x3
+#define ARCHIVE_CD_DRIVE_ERR_HALT 0x4
+#define ARCHIVE_CD_DRIVE_ERR_ADPCM 0x5
+#define ARCHIVE_CD_DRIVE_ERR_RESET_MODE 0x6
+
+extern u32 g_ArchiveDebugTable;
 extern u32 g_ArchiveHeader;
 extern u32 g_ArchiveTable;
 extern u32 g_CurArchiveOffset;
 extern int D_8004FE18;
-extern u32 g_ArchiveCdDriveState;
+extern unsigned int g_ArchiveCdDriveState;
+extern unsigned int g_ArchiveCdDriveError;
 extern CdlLOC g_ArchiveCdCurLocation;
+
+extern u32 D_8005A488;
+extern u32 D_8005A48C;
+extern u32 D_8005A490;
+extern u32 D_8005A494;
+extern u32 D_8005A498;
+extern u32 D_8005A4A8;
+extern u32 D_8005A4B4;
+extern void* D_80059F08;
+extern char D_80059F14[]; // CdlFilter
+extern char* D_80059F18; // u_char* - mode
+extern char D_8004FE38;
+extern char D_80059F15;
 
 s32 ArchiveSetIndex(int sectionIndex, int entryIndex);
 int ArchiveGetArchiveOffsetIndices(int* alignedIndex, int* remainder);

@@ -69,7 +69,7 @@ int ArchiveDecodeSize(int entryIndex) {
     u8* pArchiveEntry;
     u32 nOffset;
     
-    if (D_8004FE48) {
+    if (g_ArchiveDebugTable) {
         pFilepath = ArchiveGetFilePath(entryIndex);
         hArchiveFile = PCopen(pFilepath, O_RDONLY, 0);
         nFileSize = PClseek(hArchiveFile, 0, SEEK_END);
@@ -92,6 +92,7 @@ int ArchiveDecodeSize(int entryIndex) {
     return nFileSize;
 }
 
+// Uses D_8004FE18 as archive offset
 int ArchiveDecodeSizeAligned(int entryIndex) {
     char* pFilepath;
     int hArchiveFile;
@@ -99,7 +100,7 @@ int ArchiveDecodeSizeAligned(int entryIndex) {
     u8* pArchiveEntry;
     u32 nOffset;
     
-    if (D_8004FE48) {
+    if (g_ArchiveDebugTable) {
         pFilepath = ArchiveGetFilePath(entryIndex);
         hArchiveFile = PCopen(pFilepath, O_RDONLY, 0);
         nFileSize = PClseek(hArchiveFile, 0, SEEK_END);
@@ -142,9 +143,9 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028928);
 char* ArchiveGetFilePath(int entryIndex) {
     u32 nOffset;
     
-    if (D_8004FE48) {
+    if (g_ArchiveDebugTable) {
         nOffset = (entryIndex + g_CurArchiveOffset - 1) * ARCHIVE_ENTRY_NAME_BUFFER_SIZE;
-        return nOffset + D_8004FE48;
+        return nOffset + g_ArchiveDebugTable;
     }
 
     return NULL;
@@ -212,8 +213,195 @@ void ArchiveCdSeekToFile(int entryIndex) {
     CdControlF(nCommand, nParam);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A428);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveCdSetMode);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A498);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A524);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A57C);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveCdDriveCommandHandler);
+
+void ArchiveCdDriveCommandHandler(u8 status, u8* pResult) {
+    switch (g_ArchiveCdDriveState) {
+        case ARCHIVE_CD_DRIVE_READ_SECTOR:
+            if (status == CdlComplete) {
+                D_8005A48C += 1;
+                g_ArchiveCdDriveState += 1;
+                CdControlF(CdlReadN, NULL);
+            } else {
+                D_8005A490 += 1;
+                D_80059F08 = CdReadyCallback(NULL);
+                g_ArchiveCdDriveError = ARCHIVE_CD_DRIVE_ERR_READ;
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_ERROR;
+                CdControlF(CdlNop, NULL);
+            }
+            break;
+
+        case ARCHIVE_CD_DRIVE_READ_DONE:
+            if (status == CdlComplete) {
+                D_8005A48C += 1;
+                CdSyncCallback(NULL);
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_IDLE;
+                return;
+            }
+            D_8005A490 += 1;
+            D_80059F08 = CdReadyCallback(NULL);
+            g_ArchiveCdDriveError = ARCHIVE_CD_DRIVE_ERR_READ;
+            g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_ERROR;
+            CdControlF(CdlNop, NULL);
+            break;
+
+        case ARCHIVE_CD_DRIVE_SEEK:
+            if (status == CdlComplete) {
+                g_ArchiveCdDriveState += 1;
+                CdControlF(CdlSeekL, NULL);
+            } else {
+                g_ArchiveCdDriveError = ARCHIVE_CD_DRIVE_ERR_SEEK;
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_ERROR;
+                CdControlF(CdlNop, NULL);
+            }
+            break;
+        
+        case ARCHIVE_CD_DRIVE_SEEK_DONE:
+            if (status == CdlComplete) {
+                CdSyncCallback(NULL);
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_IDLE;
+                return;
+            }
+            
+            g_ArchiveCdDriveError = ARCHIVE_CD_DRIVE_ERR_SEEK;
+            g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_ERROR;
+            CdControlF(CdlNop, NULL);
+            break;
+
+        case ARCHIVE_CD_DRIVE_DONE:
+            if (status == CdlComplete) {
+                CdSyncCallback(NULL);
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_IDLE;
+                return;
+            }
+            
+            g_ArchiveCdDriveError = ARCHIVE_CD_DRIVE_ERR_GENERIC;
+            g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_ERROR;
+            CdControlF(CdlNop, NULL);
+            break;
+
+        case ARCHIVE_CD_DRIVE_READ_DATA_SECTOR:
+            if (status == CdlComplete) {
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_READ_SECTOR;
+                D_8005A488 += 1;
+                D_8005A494 += 1;
+                CdReadyCallback(D_80059F08);
+                CdControlF(CdlSetloc, &g_ArchiveCdCurLocation);
+            } else {
+                g_ArchiveCdDriveError = ARCHIVE_CD_DRIVE_ERR_READ;
+                D_8005A498 += 1;
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_ERROR;
+                CdControlF(CdlNop, NULL);
+            }
+            break;
+        
+        case ARCHIVE_CD_DRIVE_HALT:
+            if (status == CdlComplete) {
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_READ_DATA_SECTOR;
+                D_8005A4A8 += 1;
+                CdControlF(CdlPause, NULL);
+            } else {
+                g_ArchiveCdDriveError = ARCHIVE_CD_DRIVE_ERR_HALT;
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_ERROR;
+                D_8005A4B4 += 1;
+                CdControlF(CdlNop, NULL);
+            }
+            break;
+
+        case ARCHIVE_CD_DRIVE_SET_ADPCM_PLAY_CHANNEL:
+            if (status == CdlComplete) {
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_READ_ADPCM_SECTOR;
+                D_80059F15 = D_8004FE38;
+                D_80059F14[0] = 1;
+                CdControlF(CdlSetfilter, &D_80059F14);
+            } else {
+                g_ArchiveCdDriveError = ARCHIVE_CD_DRIVE_ERR_ADPCM;
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_ERROR;
+                CdControlF(CdlNop, NULL);
+            }
+            break;
+
+        case ARCHIVE_CD_DRIVE_READ_ADPCM_SECTOR:
+            if (status == CdlComplete) {
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_READ_SECTOR;
+                D_8005A488 += 1;
+                D_8005A494 += 1;
+                CdReadyCallback(D_80059F08);
+                CdControlF(CdlSetloc, &g_ArchiveCdCurLocation);
+            } else {
+                g_ArchiveCdDriveError = ARCHIVE_CD_DRIVE_ERR_ADPCM;
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_ERROR;
+                D_8005A498 += 1;
+                CdControlF(CdlNop, NULL);
+            }
+            break;
+
+        case ARCHIVE_CD_DRIVE_RESET_MODE:
+            if (status == CdlComplete) {
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_DONE;
+                CdControlF(CdlPause, NULL);
+            } else {
+                g_ArchiveCdDriveError = ARCHIVE_CD_DRIVE_ERR_RESET_MODE;
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_ERROR;
+                D_8005A4B4 += 1;
+                CdControlF(CdlNop, NULL);
+            }
+            break;
+
+        case ARCHIVE_CD_DRIVE_ERROR:
+            if (status == CdlComplete && !(*pResult & CdlStatShellOpen)) {
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_HANDLE_ERROR;
+                CdControlF(CdlGetTN, NULL);
+            } else {
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_ERROR;
+                CdControlF(CdlNop, NULL);
+            }
+            break;
+        
+        case ARCHIVE_CD_DRIVE_HANDLE_ERROR:
+            // Error handler
+            if (status == CdlComplete) {
+                switch (g_ArchiveCdDriveError) {
+                    case ARCHIVE_CD_DRIVE_ERR_SEEK:
+                        // Set the target location and retry
+                        g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_SEEK;
+                        CdControlF(CdlSetloc, &g_ArchiveCdCurLocation);
+                        break;
+                    case ARCHIVE_CD_DRIVE_ERR_GENERIC:
+                        g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_DONE;
+                        CdControlF(CdlPause, NULL);
+                        break;
+                    case ARCHIVE_CD_DRIVE_ERR_READ:
+                        // Pause the read and retry
+                        g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_READ_DATA_SECTOR;
+                        CdControlF(CdlPause, NULL);
+                        break;
+                    case ARCHIVE_CD_DRIVE_ERR_HALT:
+                        g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_HALT;
+                        CdControlF(CdlStop, NULL);
+                        break;
+                    case ARCHIVE_CD_DRIVE_ERR_ADPCM:
+                        g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_SET_ADPCM_PLAY_CHANNEL;
+                        CdControlF(CdlSetmode, &D_80059F18);
+                        break;
+                    case ARCHIVE_CD_DRIVE_ERR_RESET_MODE:
+                        g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_RESET_MODE;
+                        CdControlF(CdlSetmode, &D_80059F18);
+                        break;
+                    default:
+                        return;
+                }
+            } else {
+                g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_ERROR;
+                CdControlF(CdlNop, NULL);
+            }
+            break;
+        
+        case 0:
+        default:
+            return;
+    }
+}
