@@ -6,6 +6,7 @@ ArchiveInit = 0x80028230;
 ArchiveReset = 0x800283D4;
 ArchiveSetIndex = 0x80028470;
 ArchiveGetArchiveOffsetIndices = 0x800284B4;
+ArchiveGetDiscNumber = 0x80028530;
 ArchiveDecodeSize = 0x80028738;
 ArchiveDecodeSizeAligned = 0x80028808;
 ArchiveDecodeAlignedSize = 0x800288EC;

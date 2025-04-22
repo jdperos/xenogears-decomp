@@ -113,7 +113,9 @@ int ArchiveGetArchiveOffsetIndices(int* alignedIndex, int* remainder) {
     return g_CurArchiveOffset;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028530);
+unsigned short ArchiveGetDiscNumber(void) {
+    return *((unsigned short*)(g_ArchiveHeader + 0x78));
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028548);
 
