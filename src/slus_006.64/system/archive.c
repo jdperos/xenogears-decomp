@@ -121,7 +121,9 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028548);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028570);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800286BC);
+int ArchiveGetCurFileSize(void) {
+    return g_ArchiveCurFileSize;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800286CC);
 
