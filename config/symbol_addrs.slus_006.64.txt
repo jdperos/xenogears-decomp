@@ -12,6 +12,7 @@ ArchiveDataSync = 0x800286CC;
 ArchiveDecodeSize = 0x80028738;
 ArchiveDecodeSizeAligned = 0x80028808;
 ArchiveDecodeAlignedSize = 0x800288EC;
+ArchiveDecodeSizeAbsolute = 0x80028928;
 ArchiveGetFilePath = 0x80028998;
 ArchiveDecodeSector = 0x800289D0;
 ArchiveCdDataSync = 0x80028A60;

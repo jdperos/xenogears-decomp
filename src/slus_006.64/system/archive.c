@@ -216,7 +216,27 @@ int ArchiveDecodeAlignedSize(unsigned int entryIndex) {
 }
 */
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028928);
+int ArchiveDecodeSizeAbsolute(int entryIndex) {
+    int nFileSize;
+    u8* pArchiveEntry;
+    u32 nOffset;
+    
+    nOffset = (entryIndex + g_CurArchiveOffset - 1) * ARCHIVE_HEADER_ENTRY_SIZE;
+    pArchiveEntry = nOffset + g_ArchiveTable;
+    nFileSize = (
+        (pArchiveEntry[6] << 0x18) + 
+        (pArchiveEntry[5] << 0x10) + 
+        (pArchiveEntry[4] << 0x8) + 
+        pArchiveEntry[3]
+    );
+
+    if (nFileSize >= 0)
+        nFileSize = 0;
+    else
+        nFileSize = (s16) (nFileSize * -1);
+
+    return nFileSize;
+}
 
 char* ArchiveGetFilePath(int entryIndex) {
     u32 nOffset;
