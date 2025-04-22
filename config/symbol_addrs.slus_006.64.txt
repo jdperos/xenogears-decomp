@@ -8,6 +8,7 @@ ArchiveSetIndex = 0x80028470;
 ArchiveGetArchiveOffsetIndices = 0x800284B4;
 ArchiveGetDiscNumber = 0x80028530;
 ArchiveGetCurFileSize = 0x800286BC;
+ArchiveDataSync = 0x800286CC;
 ArchiveDecodeSize = 0x80028738;
 ArchiveDecodeSizeAligned = 0x80028808;
 ArchiveDecodeAlignedSize = 0x800288EC;

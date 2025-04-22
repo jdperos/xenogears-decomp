@@ -125,7 +125,20 @@ int ArchiveGetCurFileSize(void) {
     return g_ArchiveCurFileSize;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800286CC);
+int ArchiveDataSync(void) {
+    int nResult;
+
+    nResult = D_8004FDFC;
+    if (nResult == 0) {
+        if (g_ArchiveDebugTable == NULL && CdDataSync(1)) {
+            return 1;
+        }
+        if (g_ArchiveCdDriveState != 0) {
+            return 1;
+        }
+    }
+    return nResult;
+}
 
 int ArchiveDecodeSize(int entryIndex) {
     char* pFilepath;
@@ -232,10 +245,10 @@ void ArchiveCdDataSync(int mode) {
 
     if (mode == 0) {
         do {
-            nResult = func_800286CC();
+            nResult = ArchiveDataSync();
         } while (0 < nResult);
     }
-    func_800286CC();
+    ArchiveDataSync();
 }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028A94);
