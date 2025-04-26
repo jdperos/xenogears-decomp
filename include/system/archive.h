@@ -5,6 +5,8 @@
 
 #define CD_SECTOR_SIZE 0x800
 
+#define STREAM_FILE_HEADER_SIZE 0x24
+
 #define ARCHIVE_HEADER_ENTRY_SIZE 0x7
 #define ARCHIVE_ENTRY_NAME_BUFFER_SIZE 0x40
 #define ARCHIVE_MAX_SECTIONS 0x40
@@ -29,6 +31,13 @@
 #define ARCHIVE_CD_DRIVE_ERR_HALT 0x4
 #define ARCHIVE_CD_DRIVE_ERR_ADPCM 0x5
 #define ARCHIVE_CD_DRIVE_ERR_RESET_MODE 0x6
+
+typedef struct {
+    u_short state;
+    u_short id;
+    u_short unk1;
+    u_short unk2;
+} ArchiveStreamFileSectorHeader;
 
 extern u32 g_ArchiveDebugTable;
 extern u32 g_ArchiveHeader;

@@ -6,6 +6,8 @@
 // Temp
 extern int func_800286CC(void);
 extern void func_8002A498(int);
+extern int func_80028AAC(void);
+
 
 void ArchiveInit(u32 pArchiveTable, u32 pHeaderTable, u32 pDebugTable) {
     D_8005A488 = 0;
@@ -271,7 +273,8 @@ void ArchiveCdDataSync(int mode) {
     ArchiveDataSync();
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028A94);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveChangeStreamingFile);
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028AAC);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028B14);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028E60);
@@ -284,7 +287,24 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800295D8);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveReadFile);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80029AFC);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80029EB0);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A260);
+
+int* ArchiveAllocStreamFile(int numEntries, int allocMode) {
+    int* pStreamFile;
+
+    if (numEntries > 0) {
+        pStreamFile = HeapAlloc((numEntries * (CD_SECTOR_SIZE + sizeof(ArchiveStreamFileSectorHeader))) + STREAM_FILE_HEADER_SIZE, allocMode);
+        if (pStreamFile) {
+            *pStreamFile = numEntries;
+            ArchiveChangeStreamingFile(pStreamFile);
+            func_80028AAC();
+            return pStreamFile;
+        }
+    }
+    return NULL;
+}
+
+
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A2D0);
 
 void ArchiveCdSeekToFile(int entryIndex) {
