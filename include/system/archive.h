@@ -4,6 +4,7 @@
 #include "psyq/libcd.h"
 
 #define CD_SECTOR_SIZE 0x800
+#define RETRY_COUNT 0x4
 
 #define STREAM_FILE_HEADER_SIZE 0x24
 

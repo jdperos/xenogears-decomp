@@ -121,7 +121,64 @@ unsigned short ArchiveGetDiscNumber(void) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028548);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028570);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveReadHddFile);
+/*
+Only matches on GCC 2.6.X
+
+char* ArchiveReadHddFile(char* pFilePath, int* pFileSize) {
+    int nFileSize;
+    int hFile;
+    int i;
+    int nBytesRead;
+    char* pFileBuffer;
+
+    for (i = 0; i < RETRY_COUNT; i++) {
+        hFile = PCopen(pFilePath, 0, O_RDONLY);
+        if (hFile != -1)
+            break;
+    }
+
+    if (hFile == -1) {
+        pFileBuffer = NULL;
+        goto error;
+    }
+
+    nFileSize = PClseek(hFile, 0, SEEK_END);
+    if (pFileSize)
+        *pFileSize = nFileSize;
+    PClseek(hFile, 0, SEEK_SET);
+    
+    pFileBuffer = (char*) HeapAlloc(nFileSize, 0x0);
+    nBytesRead = 0;
+    if (pFileBuffer) {
+        for (i = 0; i < RETRY_COUNT; i++) {
+            nBytesRead = PCread(hFile, pFileBuffer, nFileSize);
+            if (nBytesRead != 0)
+                break;
+        }
+    } 
+    
+    if (nBytesRead == 0) {
+        if (pFileBuffer)
+            HeapFree(pFileBuffer);
+        pFileBuffer = NULL;
+    }
+
+    i = 0;
+    while (PCclose(hFile) != 0) {
+        i += 1;
+        if (i >= RETRY_COUNT) {
+            if (pFileBuffer)
+                HeapFree(pFileBuffer);
+            pFileBuffer = NULL;
+            break;
+        }        
+    }
+
+    error:
+    return pFileBuffer;
+}
+*/
 
 int ArchiveGetCurFileSize(void) {
     return g_ArchiveCurFileSize;
@@ -204,10 +261,7 @@ int ArchiveDecodeSizeAligned(int entryIndex) {
     return nFileSize;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveDecodeAlignedSize);
-/*
-Only matches on GCC 2.6.X
-
+// Only matches on GCC 2.6.X
 int ArchiveDecodeAlignedSize(unsigned int entryIndex) {
     s32 nSize;
     s32 nAlignedSize;
@@ -216,7 +270,7 @@ int ArchiveDecodeAlignedSize(unsigned int entryIndex) {
     nAlignedSize = ((nSize + 3 ) / 4);
     return nAlignedSize * 4;
 }
-*/
+
 
 int ArchiveDecodeSizeAbsolute(int entryIndex) {
     int nFileSize;
@@ -252,7 +306,7 @@ char* ArchiveGetFilePath(int entryIndex) {
 }
 
 int ArchiveDecodeSector(int entryIndex) {
-    char* pArchiveEntry;
+    u_char* pArchiveEntry;
     unsigned int nOffset;
 
     nOffset = (entryIndex + g_CurArchiveOffset - 1) * ARCHIVE_HEADER_ENTRY_SIZE;
@@ -262,7 +316,7 @@ int ArchiveDecodeSector(int entryIndex) {
 
 // Same as ArchiveDecodeSector, but uses D_8004FE18 as current archive offset
 int func_80028A18(int entryIndex) {
-    char* pArchiveEntry;
+    u_char* pArchiveEntry;
     unsigned int nOffset;
 
     nOffset = (entryIndex + D_8004FE18 - 1) * ARCHIVE_HEADER_ENTRY_SIZE;
@@ -318,8 +372,6 @@ int* ArchiveAllocStreamFile(int numEntries, int allocMode) {
     return NULL;
 }
 
-
-
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A2D0);
 
 void ArchiveCdSeekToFile(int entryIndex) {
@@ -364,7 +416,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A498);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A524);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A57C);
 
-void ArchiveCdDriveCommandHandler(u8 status, u8* pResult) {
+void ArchiveCdDriveCommandHandler(u_char status, u_char* pResult) {
     switch (g_ArchiveCdDriveState) {
         case ARCHIVE_CD_DRIVE_READ_SECTOR:
             if (status == CdlComplete) {

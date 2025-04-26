@@ -51,8 +51,26 @@ CC_FLAGS := $(OPT_FLAGS) $(DL_FLAGS) -mips1 -mcpu=3000 -w -funsigned-char -fpeep
 #MASPSX_FLAGS := --use-comm-section --run-assembler $(AS_FLAGS)
 
 # PSY-Q libraries uses ASPSX 2.56 (PSQ 4.0)
+# Archive code uses GCC 2.6.0. It is possible that the entire game code uses 2.6.0,
+# but currently there are mismatchs in heap code which only matches 2.7.2
 define DL_FlagsSwitch
-	$(if $(or $(filter MAIN,$(patsubst build/src/slus_006.64/psyq/%,MAIN,$(1))), $(filter MAIN,$(patsubst build/asm/slus_006.64/psyq/%,MAIN,$(1)))), $(eval MASPSX_FLAGS = --aspsx-version=2.56 --use-comm-section --run-assembler $(AS_FLAGS)), $(eval MASPSX_FLAGS = --use-comm-section --run-assembler $(AS_FLAGS)))
+	$(if
+		$(or 
+			$(filter MAIN,$(patsubst build/src/slus_006.64/psyq/%,MAIN,$(1))), 
+			$(filter MAIN,$(patsubst build/asm/slus_006.64/psyq/%,MAIN,$(1)))
+		),
+		$(eval MASPSX_FLAGS = --aspsx-version=2.56 --use-comm-section --run-assembler $(AS_FLAGS)), 
+		$(eval MASPSX_FLAGS = --use-comm-section --run-assembler $(AS_FLAGS))
+	)
+
+	$(if
+		$(or 
+			$(filter MAIN,$(patsubst build/src/slus_006.64/system/archive%,MAIN,$(1))), 
+			$(filter MAIN,$(patsubst build/asm/slus_006.64/system/archive%,MAIN,$(1)))
+		),
+		$(eval CC = $(TOOLS_DIR)/gcc-2.6.0-psx/cc1),
+		$(eval CC = $(TOOLS_DIR)/gcc-2.7.2-psx/cc1)
+	)	
 endef
 
 ifeq ($(NON_MATCHING),1)
@@ -195,6 +213,7 @@ $(BUILD_DIR)/%.i: %.c
 
 $(BUILD_DIR)/%.c.s: $(BUILD_DIR)/%.i
 	@mkdir -p $(dir $@)
+	$(call DL_FlagsSwitch, $@)
 	$(CC) $(CC_FLAGS) -o $@ $<
 
 $(BUILD_DIR)/%.c.o: $(BUILD_DIR)/%.c.s
