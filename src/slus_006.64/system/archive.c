@@ -73,10 +73,10 @@ void ArchiveReset(void) {
     g_ArchiveCdDriveState = 0;
 }
 
-int ArchiveSetIndex(int sectionIndex, int entryIndex) {
+int ArchiveSetIndex(int directoryIndex, int entryIndex) {
     s32 nOffset;
 
-    nOffset = ((u_short*)g_ArchiveHeader)[sectionIndex + entryIndex] - 1;
+    nOffset = ((u_short*)g_ArchiveHeader)[directoryIndex + entryIndex] - 1;
     g_CurArchiveOffset = nOffset;
     if (nOffset < 0) {
         g_CurArchiveOffset = 0;
@@ -345,7 +345,25 @@ void* ArchiveChangeStreamingFile(void* pStreamFile) {
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028AAC);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028B14);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028E60);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028ECC);
+
+void ArchiveConsolidateStreamFileEntry(int sectionIndex) {
+    short nSize;
+    int nNextIndex;
+    ArchiveStreamFileSectorHeader* pSectionHeader;
+    ArchiveStreamFileSectorHeader* pNextSectionHeader;
+
+    pSectionHeader = D_8004FE2C + sectionIndex;
+    nSize = pSectionHeader->size;
+    nNextIndex = sectionIndex + nSize;
+    
+    if (nNextIndex < D_8004FE40) {
+        pNextSectionHeader = D_8004FE2C + nNextIndex;
+        if (pNextSectionHeader->state == ARCHIVE_STREAM_FILE_NOT_LOADED) {
+            pSectionHeader->size += pNextSectionHeader->size;
+        }
+    }
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028F30);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002945C);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_800294B4);

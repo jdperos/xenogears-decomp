@@ -33,12 +33,17 @@
 #define ARCHIVE_CD_DRIVE_ERR_ADPCM 0x5
 #define ARCHIVE_CD_DRIVE_ERR_RESET_MODE 0x6
 
+#define ARCHIVE_STREAM_FILE_NOT_LOADED 0x0
+
 typedef struct {
     u_short state;
     u_short id;
-    u_short unk1;
+    u_short size; // In # file sectors
     u_short unk2;
 } ArchiveStreamFileSectorHeader;
+
+extern ArchiveStreamFileSectorHeader* D_8004FE2C;
+extern int D_8004FE40;
 
 extern u32 g_ArchiveDebugTable;
 extern u32 g_ArchiveHeader;
@@ -71,7 +76,7 @@ extern u8* D_80059F1B;
 extern char D_8004FE38;
 extern char D_80059F15;
 
-int ArchiveSetIndex(int sectionIndex, int entryIndex);
+int ArchiveSetIndex(int directoryIndex, int entryIndex);
 int ArchiveGetArchiveOffsetIndices(int* alignedIndex, int* remainder);
 int ArchiveDecodeSize(int entryIndex);
 char* ArchiveGetFilePath(int entryIndex);
