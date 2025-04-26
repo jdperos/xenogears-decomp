@@ -241,7 +241,7 @@ int ArchiveDecodeSizeAbsolute(int entryIndex) {
 }
 
 char* ArchiveGetFilePath(int entryIndex) {
-    u32 nOffset;
+    unsigned int nOffset;
     
     if (g_ArchiveDebugTable) {
         nOffset = (entryIndex + g_CurArchiveOffset - 1) * ARCHIVE_ENTRY_NAME_BUFFER_SIZE;
@@ -252,15 +252,23 @@ char* ArchiveGetFilePath(int entryIndex) {
 }
 
 int ArchiveDecodeSector(int entryIndex) {
-    u8* pArchiveEntry;
-    u32 nOffset;
+    char* pArchiveEntry;
+    unsigned int nOffset;
 
     nOffset = (entryIndex + g_CurArchiveOffset - 1) * ARCHIVE_HEADER_ENTRY_SIZE;
     pArchiveEntry = nOffset + g_ArchiveTable;
     return (pArchiveEntry[2] << 0x10) + (pArchiveEntry[1] << 0x8) + pArchiveEntry[0];
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028A18);
+// Same as ArchiveDecodeSector, but uses D_8004FE18 as current archive offset
+int func_80028A18(int entryIndex) {
+    char* pArchiveEntry;
+    unsigned int nOffset;
+
+    nOffset = (entryIndex + D_8004FE18 - 1) * ARCHIVE_HEADER_ENTRY_SIZE;
+    pArchiveEntry = nOffset + g_ArchiveTable;
+    return (pArchiveEntry[2] << 0x10) + (pArchiveEntry[1] << 0x8) + pArchiveEntry[0];
+}
 
 void ArchiveCdDataSync(int mode) {
     int nResult;
