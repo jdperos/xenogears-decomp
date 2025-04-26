@@ -121,10 +121,7 @@ unsigned short ArchiveGetDiscNumber(void) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028548);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveReadHddFile);
-/*
-Only matches on GCC 2.6.X
-
+// Only matches on GCC 2.6.X
 char* ArchiveReadHddFile(char* pFilePath, int* pFileSize) {
     int nFileSize;
     int hFile;
@@ -178,7 +175,6 @@ char* ArchiveReadHddFile(char* pFilePath, int* pFileSize) {
     error:
     return pFileBuffer;
 }
-*/
 
 int ArchiveGetCurFileSize(void) {
     return g_ArchiveCurFileSize;
@@ -270,7 +266,6 @@ int ArchiveDecodeAlignedSize(unsigned int entryIndex) {
     nAlignedSize = ((nSize + 3 ) / 4);
     return nAlignedSize * 4;
 }
-
 
 int ArchiveDecodeSizeAbsolute(int entryIndex) {
     int nFileSize;
