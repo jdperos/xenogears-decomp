@@ -119,7 +119,11 @@ unsigned short ArchiveGetDiscNumber(void) {
     return *((unsigned short*)(g_ArchiveHeader + 0x78));
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028548);
+int func_80028548(int directoryIndex, int entryIndex) {
+    int nOffset;
+    nOffset = ((u_short*)g_ArchiveHeader)[directoryIndex + entryIndex];
+    return nOffset - g_CurArchiveOffset;
+}
 
 // Only matches on GCC 2.6.X
 char* ArchiveReadHddFile(char* pFilePath, int* pFileSize) {
@@ -337,7 +341,6 @@ void* ArchiveChangeStreamingFile(void* pStreamFile) {
     g_ArchiveCurStreamFile = pStreamFile;
     return pPrevStreamFile;
 }
-
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028AAC);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028B14);
