@@ -273,7 +273,14 @@ void ArchiveCdDataSync(int mode) {
     ArchiveDataSync();
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveChangeStreamingFile);
+void* ArchiveChangeStreamingFile(void* pStreamFile) {
+    void* pPrevStreamFile;
+
+    pPrevStreamFile = g_ArchiveCurStreamFile;
+    g_ArchiveCurStreamFile = pStreamFile;
+    return pPrevStreamFile;
+}
+
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028AAC);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028B14);

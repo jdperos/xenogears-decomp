@@ -46,6 +46,7 @@ extern u32 g_CurArchiveOffset;
 extern int D_8004FE18;
 extern unsigned int g_ArchiveCdDriveState;
 extern unsigned int g_ArchiveCdDriveError;
+extern void* g_ArchiveCurStreamFile;
 extern CdlLOC g_ArchiveCdCurLocation;
 extern int g_ArchiveCurFileSize;
 
