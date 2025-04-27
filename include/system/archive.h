@@ -73,7 +73,8 @@ extern void* D_80059F08;
 extern char D_80059F14[]; // CdlFilter
 extern u_char D_80059F18[]; // u_char* - mode
 extern u8* D_80059F1B;
-extern char D_8004FE38;
+extern int D_8004FE34;
+extern int D_8004FE38;
 extern char D_80059F15;
 
 int ArchiveSetIndex(int directoryIndex, int entryIndex);

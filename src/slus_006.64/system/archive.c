@@ -5,8 +5,6 @@
 
 // Temp
 extern int func_800286CC(void);
-extern void func_8002A498(int);
-
 
 void ArchiveInit(u32 pArchiveTable, u32 pHeaderTable, u32 pDebugTable) {
     D_8005A488 = 0;
@@ -370,7 +368,6 @@ int ArchiveClearStreamFileSections(void) {
     return nEntries;
 }
 
-
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028B14);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028E60);
 
@@ -456,7 +453,28 @@ void ArchiveCdSetMode(u_char mode) {
     CdControlF(CdlSetmode, &D_80059F18);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A498);
+void func_8002A498(int arg0) {
+    int i;
+
+    D_8004FE34 = 1;
+    D_8004FE38 = arg0;
+    if (g_ArchiveDebugTable) {
+        g_ArchiveCurFileSize = 0;
+        D_8004FDFC = 0;
+        if (D_8004FE4C != -1) {
+            while (i = PCclose(D_8004FE4C)) {
+                if (i != 0) {
+                    if (i + 1 < 4)
+                        continue;
+                }
+                break;
+            }
+            D_8004FE4C = -1;
+        }
+    }
+}
+
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A524);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A57C);
 
