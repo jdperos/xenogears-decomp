@@ -6,7 +6,6 @@
 // Temp
 extern int func_800286CC(void);
 extern void func_8002A498(int);
-extern int func_80028AAC(void);
 
 
 void ArchiveInit(u32 pArchiveTable, u32 pHeaderTable, u32 pDebugTable) {
@@ -342,15 +341,44 @@ void* ArchiveChangeStreamingFile(void* pStreamFile) {
     return pPrevStreamFile;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028AAC);
+int ArchiveClearStreamFileSections(void) {
+    int nEntries;
+    int i;
+    void* pStreamData;
+    ArchiveStreamFileSectionHeader* pCurSectionHeader;
+    ArchiveStreamFileSectionHeader* pSectionHeaderStart;
+
+    pStreamData = g_ArchiveCurStreamFile;
+    if (pStreamData == NULL) {
+        return -1;
+    }
+    
+    i = 0; 
+    nEntries = *(int*)pStreamData;
+    pSectionHeaderStart = (ArchiveStreamFileSectionHeader*)(pStreamData + 4);
+    
+    pCurSectionHeader = pSectionHeaderStart;
+    while (i < nEntries) {
+        pCurSectionHeader[i].state = 0;
+        pCurSectionHeader[i].id = 0;
+        pCurSectionHeader[i].size = 0;
+        pCurSectionHeader[i].unk2 = 0;
+        i++;
+    }
+    pSectionHeaderStart->size = nEntries;
+    
+    return nEntries;
+}
+
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028B14);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_80028E60);
 
 void ArchiveConsolidateStreamFileEntry(int sectionIndex) {
     short nSize;
     int nNextIndex;
-    ArchiveStreamFileSectorHeader* pSectionHeader;
-    ArchiveStreamFileSectorHeader* pNextSectionHeader;
+    ArchiveStreamFileSectionHeader* pSectionHeader;
+    ArchiveStreamFileSectionHeader* pNextSectionHeader;
 
     pSectionHeader = D_8004FE2C + sectionIndex;
     nSize = pSectionHeader->size;
@@ -377,11 +405,11 @@ int* ArchiveAllocStreamFile(int numEntries, int allocMode) {
     int* pStreamFile;
 
     if (numEntries > 0) {
-        pStreamFile = HeapAlloc((numEntries * (CD_SECTOR_SIZE + sizeof(ArchiveStreamFileSectorHeader))) + STREAM_FILE_HEADER_SIZE, allocMode);
+        pStreamFile = HeapAlloc((numEntries * (CD_SECTOR_SIZE + sizeof(ArchiveStreamFileSectionHeader))) + STREAM_FILE_HEADER_SIZE, allocMode);
         if (pStreamFile) {
             *pStreamFile = numEntries;
             ArchiveChangeStreamingFile(pStreamFile);
-            func_80028AAC();
+            ArchiveClearStreamFileSections();
             return pStreamFile;
         }
     }

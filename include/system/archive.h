@@ -40,9 +40,9 @@ typedef struct {
     u_short id;
     u_short size; // In # file sectors
     u_short unk2;
-} ArchiveStreamFileSectorHeader;
+} ArchiveStreamFileSectionHeader;
 
-extern ArchiveStreamFileSectorHeader* D_8004FE2C;
+extern ArchiveStreamFileSectionHeader* D_8004FE2C;
 extern int D_8004FE40;
 
 extern u32 g_ArchiveDebugTable;
