@@ -1,7 +1,9 @@
 ChangeGameState = 0x8001996C;
 LoadGameStateOverlay = 0x800199CC;
 HeapResetUser = 0x80019C7C;
+GameShowSplashScreen = 0x80019D48;
 
+// Archive / Filesystem
 ArchiveInit = 0x80028230;
 ArchiveReset = 0x800283D4;
 ArchiveSetIndex = 0x80028470;
@@ -26,7 +28,7 @@ ArchiveCdSeekToFile = 0x8002A394;
 ArchiveCdSetMode = 0x8002A428;
 ArchiveCdDriveCommandHandler = 0x8002A68C;
 
-
+// Heap / Dynamic Memory
 HeapGetNextBlockHeader = 0x80031894;
 HeapGetBlockUser = 0x800318A8;
 HeapGetBlockSourceAddress = 0x800318BC;
@@ -71,9 +73,13 @@ HeapDerefPtr = 0x80032E7C;
 LZSSHeapDecompress = 0x80032e88;
 LZSSDecompress = 0x80032eb4;
 
+ControllerGetType = 0x80035734;
+
+// PSY-Q Standard Library
 strlen = 0x8003FBC8;
 Sprintf = 0x8003FBF8;
 
+// PSY-Q CD
 CdInit = 0x80040D08;
 CdReset = 0x80040E68;
 CdSetDebug = 0x80040EF4;
@@ -100,6 +106,15 @@ CD_initvol = 0x8004260C;
 CD_init = 0x80042750;
 CD_datasync = 0x8004293C;
 
+// PSY-Q Graphics
+SetDefDrawEnv = 0x80043928;
+SetDefDispEnv = 0x800439E0;
+GetClut = 0x80043A58;
+LoadImage = 0x80044894;
+PutDrawEnv = 0x80044C44;
+PutDispEnv = 0x80044E9C;
+
+// PSY-Q Interrupts
 Vsync = 0x8004B54C;
 SetInterruptHandler = 0x8004B770;
 InitVsyncInterrupts = 0x8004BF20;
@@ -107,7 +122,7 @@ VsyncInterruptHandler = 0x8004BF78;
 SetVsyncInterruptCallbackByIndex = 0x8004BFF0;
 ClearVsyncInterruptCallbacks = 0x8004C01C;
 
-
+// PSY-Q Host / PC Interface
 PCopen = 0x8004c318;
 PCclose = 0x8004c338;
 PClseek = 0x8004c348;
@@ -120,6 +135,8 @@ g_CurGameState = 0x80018088;
 g_CurGameStateOverlayBuffer = 0x800592bc;
 g_CurGameStateOverlayID =  0x800592C0;
 g_GameStateOverlayArchiveOffsets = 0x8004EAA0;
+
+g_PublishedByLogoCompressed = 0x8004EABC;
 
 g_ArchiveTable = 0x8004FDF0;
 g_ArchiveHeader = 0x8004FDF4;

@@ -77,6 +77,8 @@ segments:
       - [0x235CC, c, system/heap_debug]
       - [0x23688, hasm, util/lzss]
       - [0x23754, asm]
+      - [0x25F34, c, system/controller]
+      - [0x25FC0, asm]
       - [0x31508, c, psyq/libcd]
       - [0x3358C, asm]
       #- [0x3C720, c, system/interrupts] # InitVsyncInterrupts

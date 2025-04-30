@@ -453,14 +453,16 @@ void ArchiveCdSetMode(u_char mode) {
     CdControlF(CdlSetmode, &D_80059F18);
 }
 
-void func_8002A498(int arg0) {
+void func_8002A498(int channel) {
     int i;
 
     D_8004FE34 = 1;
-    D_8004FE38 = arg0;
+    D_8004FE38 = channel;
     if (g_ArchiveDebugTable) {
         g_ArchiveCurFileSize = 0;
         D_8004FDFC = 0;
+
+        // Close (debug) streaming file handle
         if (D_8004FE4C != -1) {
             while (i = PCclose(D_8004FE4C)) {
                 if (i != 0) {
@@ -473,7 +475,6 @@ void func_8002A498(int arg0) {
         }
     }
 }
-
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A524);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A57C);
