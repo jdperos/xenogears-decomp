@@ -7,7 +7,7 @@
 #define CONTROLLER_INTERNAL_TYPE_ANALOG_PAD 0x50
 #define CONTROLLER_INTERNAL_TYPE_ANALOG_STICK 0x70
 
-#define CONTROLLER_STATUS_SUCCESS 0x00
+#define CONTROLLER_STATUS_SUCCESS 0x0
 #define CONTROLLER_STATUS_ERROR 0xFF
 
 // External Controller types
@@ -19,6 +19,12 @@
 #define CONTROLLER_TYPE_ANALOG_STICK 0x4
 
 #define CONTROLLER_BUFFER_SIZE 0x22
+
+// Controller buffer indices
+#define CONTROLLER_STATUS 0x0
+#define CONTROLLER_TYPE 0x1
+#define CONTROLLER_BUTTONS_1 0x2
+#define CONTROLLER_BUTTONS_2 0x3
 
 /*
 Controller buffer follows this structure:
@@ -49,8 +55,10 @@ typedef struct {
 } ControllerBuffer;
 */
 
+extern u_char D_80059388; // Controller type
+
 // Controller buffer start
-extern u8 D_800625FC[];
-extern u8 D_800625FD[];
+extern u_char D_800625FC[];
+extern u_char D_800625FD[];
 
 #endif

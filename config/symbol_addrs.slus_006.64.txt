@@ -73,7 +73,9 @@ HeapDerefPtr = 0x80032E7C;
 LZSSHeapDecompress = 0x80032e88;
 LZSSDecompress = 0x80032eb4;
 
+ControllerGetButtonState = 0x8003569C;
 ControllerGetType = 0x80035734;
+ControllerResetState = 0x80035DB0;
 
 // PSY-Q Standard Library
 strlen = 0x8003FBC8;
