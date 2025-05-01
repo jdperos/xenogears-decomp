@@ -71,7 +71,7 @@ segments:
       - [0x9D78, c, main/main] # main
       - [0xA164, asm]
       - [0xA16C, c, main/main_loop]
-      - [0xA4A0, asm]
+      - [0xA9E4, asm]
       - [0x18A30, c, system/archive]
       - [0x1B424, asm]
       - [0x22094, c, system/memory]

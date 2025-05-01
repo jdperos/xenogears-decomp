@@ -1,9 +1,11 @@
 #include "common.h"
 #include "main/main.h"
 #include "system/memory.h"
+#include "system/controller.h"
 
 #include "psyq/libetc.h"
 #include "psyq/libgpu.h"
+#include "psyq/pc.h"
 
 extern unsigned int g_CurGameState;
 extern unsigned int g_CurGameStateOverlayID;
@@ -70,7 +72,7 @@ void MainLoop(int errorCode) {
             "move $t7, %0\n\t"
             "sw $ra, 0($t7)\n\t"
         :: "r"(&nCallerAddr));
-        func_80019EF8(errorCode, nCallerAddr);
+        GameHandleError(errorCode, nCallerAddr);
     }
     
     pGameState = &g_MainGameStates[g_CurGameState];
@@ -83,10 +85,7 @@ void MainLoop(int errorCode) {
     HeapResetUser();
     
     if (pGameState->hasOverlay) {
-
-        // Clear memory
         ClearMemory(pGameState->pMemStart, pGameState->pHeapStart);
-        
         pOverlayData = LoadGameStateOverlay(g_CurGameState);
         ArchiveCdDataSync(0);
 
@@ -112,7 +111,27 @@ void MainLoop(int errorCode) {
 }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/main/main_loop", func_80019C2C);
+/*
+void func_80019C2C(void) {
+  int hFile;
+  
+  PCinit();
+  hFile = PCcreate("c:\\core", 0);
+  PCwrite(hFile, 0x80000000, 0x200000);
+  PCclose(hFile);
+}
+*/
 
 void HeapResetUser() {
     HeapChangeCurrentUser(HEAP_USER_UNKNOWN, 0);
 }
+
+void GameCheckAndHandleSoftReset(void) {
+    if (g_C1ButtonState == (CTRL_BTN_START | CTRL_BTN_SELECT | CTRL_BTN_R1 | CTRL_BTN_L1)) {
+        GameSoftReset();
+    }
+}
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/main/main_loop", GameSoftReset);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/main/main_loop", GameShowSplashScreen);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/main/main_loop", GameHandleError);

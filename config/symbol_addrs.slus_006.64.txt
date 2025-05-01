@@ -1,9 +1,12 @@
 ClearMemory = 0x80019560;
 ChangeGameState = 0x8001996C;
 LoadGameStateOverlay = 0x800199CC;
-HeapResetUser = 0x80019C7C;
 MainLoop = 0x80019ACC;
+HeapResetUser = 0x80019C7C;
+GameCheckAndHandleSoftReset = 0x80019CA0;
+GameSoftReset = 0x80019CD0;
 GameShowSplashScreen = 0x80019D48;
+GameHandleError = 0x80019EF8;
 
 // Archive / Filesystem
 ArchiveInit = 0x80028230;

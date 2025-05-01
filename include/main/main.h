@@ -15,7 +15,9 @@ extern MainGameState g_MainGameStates[];
 
 extern int g_GameStateOverlayArchiveOffsets[NUM_GAME_STATE_OVERLAYS];
 
-extern void MainLoop(int) __attribute__((noreturn));
 extern void ClearMemory(u32* pStart, u32* pEnd);
+extern void MainLoop(int) __attribute__((noreturn));
+extern void GameHandleError(u32 errorCode, u32 sourceAddress) __attribute__((noreturn));
+
 
 #endif
