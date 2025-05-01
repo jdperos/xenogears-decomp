@@ -87,6 +87,8 @@ extern u_char g_ControllerType;
 extern u_char D_800625FC[];
 extern u_char D_800625FD[];
 
+extern int g_ControllerNumStates;
+
 
 extern u_char g_ControllerStickToAnalogX[0x10];
 /*

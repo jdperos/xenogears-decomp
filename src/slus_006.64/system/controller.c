@@ -106,6 +106,8 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_80035C0C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_80035CDC);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_80035DA0);
+int ControllerGetNumStates() {
+    return g_ControllerNumStates;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", ControllerResetState);

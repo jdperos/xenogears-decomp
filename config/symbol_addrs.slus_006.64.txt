@@ -80,6 +80,7 @@ ControllerRemapAnalogJoystickState = 0x8003582C;
 ControllerStickToAnalogX = 0x80035884;
 ControllerStickToAnalogY = 0x800358A0;
 ControllerPoll = 0x800358BC;
+ControllerGetNumStates = 0x80035DA0;
 ControllerResetState = 0x80035DB0;
 ControllerDebugPrint = 0x800365FC;
 
@@ -193,6 +194,7 @@ g_ControllerButtonMappings = 0x80050238;
 // Controller Input States
 g_C1PrevButtonState = 0x80059374;
 g_C2PrevButtonState = 0x80059378;
+g_ControllerNumStates = 0x8005937C;
 g_ControllerType = 0x80059388;
 g_C1LeftStickXAxis = 0x80059430;
 g_C2LeftStickXAxis = 0x80059434;
