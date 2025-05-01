@@ -26,6 +26,13 @@
 #define CONTROLLER_BUTTONS_1 0x2
 #define CONTROLLER_BUTTONS_2 0x3
 
+// Special button bits for analog stick controllers
+#define CTRL_ANALOG_STICK_BTN_L1 0x2
+#define CTRL_ANALOG_STICK_BTN_SQUARE 0x4
+#define CTRL_ANALOG_STICK_BTN_TRIANGLE 0x8
+#define CTRL_ANALOG_STICK_BTN_R1 0x10
+#define CTRL_ANALOG_STICK_BTN_R2 0x80
+
 // Button State Values
 #define CTRL_BTN_L2 0x1
 #define CTRL_BTN_R2 0x2

@@ -64,7 +64,34 @@ short ControllerRemapButtonState(u_short buttonState) {
     return nMaskedState;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", ControllerRemapAnalogJoystickState);
+// Analog Stick Controller (0x5A53) has some buttons rearranged.
+// This function remaps these buttons so we have a uniform state
+short ControllerRemapAnalogJoystickState(short buttonState) {
+    short nMaskedState;
+
+    // Mask out buttons which are rearranged on analog joystick controllers
+    nMaskedState = buttonState & ~(
+        CTRL_BTN_R2 | CTRL_BTN_L1 | CTRL_BTN_R1 | CTRL_BTN_TRIANGLE | CTRL_BTN_SQUARE
+    );
+
+    // Remap them
+    if (buttonState & CTRL_ANALOG_STICK_BTN_TRIANGLE) {
+        nMaskedState |= nMaskedState | CTRL_BTN_TRIANGLE;
+    }
+    if (buttonState & CTRL_ANALOG_STICK_BTN_L1) {
+        nMaskedState |= CTRL_BTN_L1;
+    }
+    if (buttonState & CTRL_ANALOG_STICK_BTN_R1) {
+        nMaskedState |= CTRL_BTN_R1;
+    }
+    if (buttonState & CTRL_ANALOG_STICK_BTN_R2) {
+        nMaskedState |= CTRL_BTN_R2;
+    }
+    if (buttonState & CTRL_ANALOG_STICK_BTN_SQUARE) {
+        nMaskedState |= CTRL_BTN_SQUARE;
+    }
+    return nMaskedState;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_80035884);
 
