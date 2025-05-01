@@ -95,6 +95,7 @@ extern u_short g_C2ButtonStatesPressed[CONTROLLER_MAX_NUM_STATES];
 extern u_short g_C2ButtonStatesPressedOnce[CONTROLLER_MAX_NUM_STATES];
 extern u_short g_C2ButtonStatesReleased[CONTROLLER_MAX_NUM_STATES];
 extern int g_ControllerCurStateWriteIndex;
+extern int g_ControllerCurStateReadIndex;
 extern int g_ControllerIsStateStackFull;
 extern unsigned int g_ControllerNumStates;
 

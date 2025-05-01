@@ -120,7 +120,24 @@ void ControllerPushState(void) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", ControllerPopState);
+int ControllerPopState(void) {
+    int i;
+
+    if (g_ControllerNumStates == 0) {
+        return 0;
+    }
+    
+    i = g_ControllerCurStateReadIndex & (CONTROLLER_MAX_NUM_STATES - 1);
+    g_ControllerCurStateReadIndex++;
+    g_C1ButtonState =  g_C1ButtonStatesPressed[i];
+    g_C2ButtonState = g_C2ButtonStatesPressed[i];
+    g_C1ButtonStateReleased = g_C1ButtonStatesReleased[i];
+    g_C2ButtonStateReleased = g_C2ButtonStatesReleased[i];
+    g_C1ButtonStatePressedOnce = g_C1ButtonStatesPressedOnce[i];
+    g_C2ButtonStatePressedOnce = g_C2ButtonStatesPressedOnce[i];
+    g_ControllerNumStates--;
+    return g_ControllerNumStates + 1;
+}
 
 unsigned int ControllerGetNumStates() {
     return g_ControllerNumStates;
