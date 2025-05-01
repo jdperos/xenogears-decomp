@@ -80,6 +80,8 @@ ControllerRemapAnalogJoystickState = 0x8003582C;
 ControllerStickToAnalogX = 0x80035884;
 ControllerStickToAnalogY = 0x800358A0;
 ControllerPoll = 0x800358BC;
+ControllerPushState = 0x80035C0C;
+ControllerPopState = 0x80035CDC;
 ControllerGetNumStates = 0x80035DA0;
 ControllerResetState = 0x80035DB0;
 ControllerDebugPrint = 0x800365FC;
@@ -185,6 +187,17 @@ g_HeapDebugDumpFileHandle = 0x80059348;
 g_HeapUserContentNames = 0x80059FA4;
 g_HeapDelayedFreeBlocksHead = 0x80059FCC;
 
+// Controller State
+g_ControllerIsStateStackFull = 0x80050208;
+g_ControllerCurStateWriteIndex = 0x80059380;
+g_ControllerCurStateReadIndex = 0x80059384;
+g_C1ButtonStatesPressed = 0x8005A0FC;
+g_C2ButtonStatesPressed = 0x8005A11C;
+g_C1ButtonStatesReleased = 0x8005A13C;
+g_C2ButtonStatesReleased = 0x8005A15C;
+g_C1ButtonStatesPressedOnce = 0x8005A17C;
+g_C2ButtonStatesPressedOnce = 0x8005A19C;
+
 // Controller LUTs
 g_ControllerButtonMasks = 0x800501E8;
 g_ControllerStickToAnalogX = 0x8005020C;
@@ -204,10 +217,11 @@ g_C1RightStickXAxis = 0x80059444;
 g_C2RightStickXAxis = 0x80059448;
 g_C1RightStickYAxis = 0x8005944C;
 g_C2RightStickYAxis = 0x80059450;
-g_C1ButtonStateReleased = 0x8005948C;
-g_C2ButtonStateReleased = 0x80059490;
 g_C1ButtonState = 0x80059570;
 g_C2ButtonState = 0x80059574;
-
+g_C1ButtonStateReleased = 0x8005948C;
+g_C2ButtonStateReleased = 0x80059490;
+g_C1ButtonStatePressedOnce = 0x800594A4;
+g_C2ButtonStatePressedOnce = 0x800594A8;
 
 g_pTMR_HRETRACE_MODE = 0x80058964;

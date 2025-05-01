@@ -102,11 +102,27 @@ u_char ControllerStickToAnalogY(int buttonState) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", ControllerPoll);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_80035C0C);
+void ControllerPushState(void) {
+    int i;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_80035CDC);
+    if (g_ControllerNumStates < CONTROLLER_MAX_NUM_STATES) {
+        g_ControllerNumStates += 1;
+        i = g_ControllerCurStateWriteIndex & (CONTROLLER_MAX_NUM_STATES - 1);
+        g_C1ButtonStatesPressed[i] = g_C1ButtonState;
+        g_C2ButtonStatesPressed[i] = g_C2ButtonState;
+        g_C1ButtonStatesReleased[i] = g_C1ButtonStateReleased;
+        g_C2ButtonStatesReleased[i] = g_C2ButtonStateReleased;
+        g_C1ButtonStatesPressedOnce[i] = g_C1ButtonStatePressedOnce;
+        g_C2ButtonStatesPressedOnce[i] = g_C2ButtonStatePressedOnce;
+        g_ControllerCurStateWriteIndex += 1;
+    } else {
+        g_ControllerIsStateStackFull = 1;
+    }
+}
 
-int ControllerGetNumStates() {
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", ControllerPopState);
+
+unsigned int ControllerGetNumStates() {
     return g_ControllerNumStates;
 }
 

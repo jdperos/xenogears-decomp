@@ -20,6 +20,7 @@
 #define CONTROLLER_TYPE_ANALOG_STICK 0x4
 
 #define CONTROLLER_BUFFER_SIZE 0x22
+#define CONTROLLER_MAX_NUM_STATES 0x10
 
 // Controller buffer indices
 #define CONTROLLER_STATUS 0x0
@@ -81,14 +82,27 @@ typedef struct {
 } ControllerBuffer;
 */
 
+extern u_short g_C1ButtonState;
+extern u_short g_C1ButtonStatePressedOnce;
+extern u_short g_C1ButtonStateReleased;
+extern u_short g_C1ButtonStatesPressed[CONTROLLER_MAX_NUM_STATES];
+extern u_short g_C1ButtonStatesPressedOnce[CONTROLLER_MAX_NUM_STATES];
+extern u_short g_C1ButtonStatesReleased[CONTROLLER_MAX_NUM_STATES];
+extern u_short g_C2ButtonState;
+extern u_short g_C2ButtonStatePressedOnce;
+extern u_short g_C2ButtonStateReleased;
+extern u_short g_C2ButtonStatesPressed[CONTROLLER_MAX_NUM_STATES];
+extern u_short g_C2ButtonStatesPressedOnce[CONTROLLER_MAX_NUM_STATES];
+extern u_short g_C2ButtonStatesReleased[CONTROLLER_MAX_NUM_STATES];
+extern int g_ControllerCurStateWriteIndex;
+extern int g_ControllerIsStateStackFull;
+extern unsigned int g_ControllerNumStates;
+
 extern u_char g_ControllerType;
 
 // Controller buffer start
 extern u_char D_800625FC[];
 extern u_char D_800625FD[];
-
-extern int g_ControllerNumStates;
-
 
 extern u_char g_ControllerStickToAnalogX[0x10];
 /*
