@@ -75,7 +75,11 @@ LZSSDecompress = 0x80032eb4;
 
 ControllerGetButtonState = 0x8003569C;
 ControllerGetType = 0x80035734;
+ControllerRemapButtonState = 0x800357C0;
+ControllerRemapAnalogJoystickState = 0x8003582C;
+ControllerPoll = 0x800358BC;
 ControllerResetState = 0x80035DB0;
+ControllerDebugPrint = 0x800365FC;
 
 // PSY-Q Standard Library
 strlen = 0x8003FBC8;
@@ -151,7 +155,6 @@ g_ArchiveCurStreamFile = 0x8004FE30;
 g_ArchiveDebugTable = 0x8004FE48;
 g_ArchiveCdCurLocation = 0x80059F10;
 
-
 g_CdDebugLevel = 0x800564B4;
 g_CdSyncCallback = 0x800564A8;
 g_CdReadyCallback = 0x800564AC;
@@ -162,6 +165,7 @@ g_VsyncInterruptCallbacks = 0x80058940;
 g_VsyncInterruptCount = 0x80058960;
 g_InterruptControl = 0x8005890c;
 
+// Heap
 g_HeapContentTypeNames = 0x80050140;
 g_HeapDebugPrintfFn = 0x800592B8;
 g_HeapCurContentType = 0x80059318;
@@ -177,6 +181,29 @@ D_80059344 = 0x80059344;
 g_HeapDebugDumpFileHandle = 0x80059348;
 g_HeapUserContentNames = 0x80059FA4;
 g_HeapDelayedFreeBlocksHead = 0x80059FCC;
+
+// Controller LUTs
+g_ControllerButtonMasks = 0x800501E8;
+g_ControllerStickToAnalogX = 0x8005020C;
+g_ControllerStickToAnalogY = 0x8005021C;
+g_ControllerButtonMappings = 0x80050238;
+
+// Controller Input States
+g_C1PrevButtonState = 0x80059374;
+g_C2PrevButtonState = 0x80059378;
+g_ControllerType = 0x80059388;
+g_C1LeftStickXAxis = 0x80059430;
+g_C2LeftStickXAxis = 0x80059434;
+g_C1LeftStickYAxis = 0x80059438;
+g_C2LeftStickYAxis = 0x8005943C;
+g_C1RightStickXAxis = 0x80059444;
+g_C2RightStickXAxis = 0x80059448;
+g_C1RightStickYAxis = 0x8005944C;
+g_C2RightStickYAxis = 0x80059450;
+g_C1ButtonStateReleased = 0x8005948C;
+g_C2ButtonStateReleased = 0x80059490;
+g_C1ButtonState = 0x80059570;
+g_C2ButtonState = 0x80059574;
 
 
 g_pTMR_HRETRACE_MODE = 0x80058964;

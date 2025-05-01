@@ -7,12 +7,12 @@ int ControllerGetButtonState(int controllerIndex) {
     u_char* pController;
 
     pController = &D_800625FC[controllerIndex * CONTROLLER_BUFFER_SIZE];
-    D_80059388 = 0;
+    g_ControllerType = 0;
     if (pController[CONTROLLER_STATUS] == CONTROLLER_STATUS_SUCCESS) {
-        D_80059388 = pController[CONTROLLER_TYPE] & 0xF0;
-        if (D_80059388 == CONTROLLER_INTERNAL_TYPE_DIGITAL_PAD || 
-            D_80059388 == CONTROLLER_INTERNAL_TYPE_ANALOG_PAD  || 
-            D_80059388 == CONTROLLER_INTERNAL_TYPE_ANALOG_STICK
+        g_ControllerType = pController[CONTROLLER_TYPE] & 0xF0;
+        if (g_ControllerType == CONTROLLER_INTERNAL_TYPE_DIGITAL_PAD || 
+            g_ControllerType == CONTROLLER_INTERNAL_TYPE_ANALOG_PAD  || 
+            g_ControllerType == CONTROLLER_INTERNAL_TYPE_ANALOG_STICK
         ) {
             return (
                 ~pController[CONTROLLER_BUTTONS_2] & 0xFF) | 
@@ -46,15 +46,31 @@ int ControllerGetType(int controllerIndex) {
     return CONTROLLER_TYPE_NONE;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_800357C0);
+short ControllerRemapButtonState(u_short buttonState) {
+    u_short nMaskedState;
+    int i;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_8003582C);
+    nMaskedState = buttonState & (
+        CTRL_BTN_SELECT | CTRL_BTN_L3 | CTRL_BTN_R3 | CTRL_BTN_START |
+        CTRL_BTN_UP | CTRL_BTN_RIGHT | CTRL_BTN_DOWN | CTRL_BTN_LEFT
+    );
+    
+    for (i = 0; i < 8; i++) {
+        if (g_ControllerButtonMasks[i] & buttonState) {
+            nMaskedState |= g_ControllerButtonMasks[g_ControllerButtonMappings[i]];
+        }
+    };
+    
+    return nMaskedState;
+}
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", ControllerRemapAnalogJoystickState);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_80035884);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_800358A0);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_800358BC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", ControllerPoll);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_80035C0C);
 

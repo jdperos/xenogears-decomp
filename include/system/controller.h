@@ -26,6 +26,24 @@
 #define CONTROLLER_BUTTONS_1 0x2
 #define CONTROLLER_BUTTONS_2 0x3
 
+// Button State Values
+#define CTRL_BTN_L2 0x1
+#define CTRL_BTN_R2 0x2
+#define CTRL_BTN_L1 0x4
+#define CTRL_BTN_R1 0x8
+#define CTRL_BTN_TRIANGLE 0x10
+#define CTRL_BTN_CIRCLE 0x20
+#define CTRL_BTN_CROSS 0x40
+#define CTRL_BTN_SQUARE 0x80
+#define CTRL_BTN_SELECT 0x100
+#define CTRL_BTN_L3 0x200
+#define CTRL_BTN_R3 0x400
+#define CTRL_BTN_START 0x800
+#define CTRL_BTN_UP 0x1000
+#define CTRL_BTN_RIGHT 0x2000
+#define CTRL_BTN_DOWN 0x4000
+#define CTRL_BTN_LEFT 0x8000
+
 /*
 Controller buffer follows this structure:
 
@@ -55,10 +73,47 @@ typedef struct {
 } ControllerBuffer;
 */
 
-extern u_char D_80059388; // Controller type
+extern u_char g_ControllerType;
 
 // Controller buffer start
 extern u_char D_800625FC[];
 extern u_char D_800625FD[];
+
+
+extern u_char g_ControllerStickToAnalogX[0x10];
+/*
+u_char g_ControllerStickToAnalogX[0x10] = {
+    0x80, 0x80, 0xFF, 0xFF,
+    0x80, 0x80, 0xFF, 0x80,
+    0x0, 0x0, 0x80, 0x80,
+    0x0, 0x80, 0x80, 0x80
+}
+*/
+
+extern u_char g_ControllerStickToAnalogY[0x10];
+/*
+u_char g_ControllerStickToAnalogY[0x10] = {
+    0x80, 0x0, 0x80, 0x0,
+    0xFF, 0x80, 0xFF, 0x80,
+    0x80, 0x0, 0x80, 0x80,
+    0xFF, 0x80, 0x80, 0x80
+}
+*/
+
+extern u_char g_ControllerButtonMappings[8];
+/*
+u_char g_ControllerButtonMappings[8] = {
+  0x0, 0x1, 0x2, 0x3,
+  0x4, 0x5, 0x6, 0x7
+};
+*/
+
+extern u_short g_ControllerButtonMasks[8];
+/*
+u_short g_ControllerButtonMasks[8] = {
+  CTRL_BTN_CIRCLE, CTRL_BTN_CROSS, CTRL_BTN_TRIANGLE, CTRL_BTN_SQUARE,
+  CTRL_BTN_L1, CTRL_BTN_L2, CTRL_BTN_R1, CTRL_BTN_R2
+};
+*/
 
 #endif
