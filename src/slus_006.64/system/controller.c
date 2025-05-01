@@ -96,7 +96,9 @@ u_char ControllerStickToAnalogX(int buttonState) {
     return g_ControllerStickToAnalogX[((buttonState >> 0xC) & 0xF)];
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_800358A0);
+u_char ControllerStickToAnalogY(int buttonState) {
+    return g_ControllerStickToAnalogY[((buttonState >> 0xC) & 0xF)];
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", ControllerPoll);
 
