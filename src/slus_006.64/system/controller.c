@@ -1,5 +1,4 @@
 #include "common.h"
-#include "common.h"
 #include "system/controller.h"
 
 int ControllerGetButtonState(int controllerIndex) {
@@ -93,7 +92,9 @@ short ControllerRemapAnalogJoystickState(short buttonState) {
     return nMaskedState;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_80035884);
+u_char ControllerStickToAnalogX(int buttonState) {
+    return g_ControllerStickToAnalogX[((buttonState >> 0xC) & 0xF)];
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", func_800358A0);
 

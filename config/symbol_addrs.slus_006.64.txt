@@ -77,6 +77,7 @@ ControllerGetButtonState = 0x8003569C;
 ControllerGetType = 0x80035734;
 ControllerRemapButtonState = 0x800357C0;
 ControllerRemapAnalogJoystickState = 0x8003582C;
+ControllerStickToAnalogX = 0x80035884;
 ControllerPoll = 0x800358BC;
 ControllerResetState = 0x80035DB0;
 ControllerDebugPrint = 0x800365FC;
