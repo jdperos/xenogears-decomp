@@ -1,6 +1,8 @@
+ClearMemory = 0x80019560;
 ChangeGameState = 0x8001996C;
 LoadGameStateOverlay = 0x800199CC;
 HeapResetUser = 0x80019C7C;
+MainLoop = 0x80019ACC;
 GameShowSplashScreen = 0x80019D48;
 
 // Archive / Filesystem
@@ -90,6 +92,11 @@ ControllerDebugPrint = 0x800365FC;
 strlen = 0x8003FBC8;
 Sprintf = 0x8003FBF8;
 
+// PSY-Q Kernel
+FlushCache = 0x80040454;
+EnterCriticalSection = 0x800404D4;
+ExitCriticalSection = 0x800404E4;
+
 // PSY-Q CD
 CdInit = 0x80040D08;
 CdReset = 0x80040E68;
@@ -121,17 +128,26 @@ CD_datasync = 0x8004293C;
 SetDefDrawEnv = 0x80043928;
 SetDefDispEnv = 0x800439E0;
 GetClut = 0x80043A58;
+ResetGraph = 0x80044110;
+SetGraphDebug = 0x800443A8;
+DrawSyncCallback = 0x800444d8;
+SetDispMask = 0x80044534;
+DrawSync = 0x800445D0;
+ClearImage = 0x80044764;
 LoadImage = 0x80044894;
 PutDrawEnv = 0x80044C44;
 PutDispEnv = 0x80044E9C;
 
 // PSY-Q Interrupts
 Vsync = 0x8004B54C;
+ResetCallback = 0x8004B740;
 SetInterruptHandler = 0x8004B770;
 InitVsyncInterrupts = 0x8004BF20;
 VsyncInterruptHandler = 0x8004BF78;
 SetVsyncInterruptCallbackByIndex = 0x8004BFF0;
 ClearVsyncInterruptCallbacks = 0x8004C01C;
+
+SetVideoMode = 0x8004C2F0;
 
 // PSY-Q Host / PC Interface
 PCopen = 0x8004c318;
@@ -142,7 +158,9 @@ PCinit = 0x8004c38c;
 PCread = 0x8004c398;
 PCwrite = 0x8004c470;
 
+g_MainGameStateOverlayBuffer = 0x80018084;
 g_CurGameState = 0x80018088;
+g_MainGameStates = 0x8001808C;
 g_CurGameStateOverlayBuffer = 0x800592bc;
 g_CurGameStateOverlayID =  0x800592C0;
 g_GameStateOverlayArchiveOffsets = 0x8004EAA0;
@@ -187,19 +205,10 @@ g_HeapDebugDumpFileHandle = 0x80059348;
 g_HeapUserContentNames = 0x80059FA4;
 g_HeapDelayedFreeBlocksHead = 0x80059FCC;
 
-// Controller State
-g_ControllerIsStateStackFull = 0x80050208;
-g_ControllerCurStateWriteIndex = 0x80059380;
-g_ControllerCurStateReadIndex = 0x80059384;
-g_C1ButtonStatesPressed = 0x8005A0FC;
-g_C2ButtonStatesPressed = 0x8005A11C;
-g_C1ButtonStatesReleased = 0x8005A13C;
-g_C2ButtonStatesReleased = 0x8005A15C;
-g_C1ButtonStatesPressedOnce = 0x8005A17C;
-g_C2ButtonStatesPressedOnce = 0x8005A19C;
 
-// Controller LUTs
+// Controller
 g_ControllerButtonMasks = 0x800501E8;
+g_ControllerIsStateStackFull = 0x80050208;
 g_ControllerStickToAnalogX = 0x8005020C;
 g_ControllerStickToAnalogY = 0x8005021C;
 g_ControllerButtonMappings = 0x80050238;
@@ -208,6 +217,8 @@ g_ControllerButtonMappings = 0x80050238;
 g_C1PrevButtonState = 0x80059374;
 g_C2PrevButtonState = 0x80059378;
 g_ControllerNumStates = 0x8005937C;
+g_ControllerCurStateWriteIndex = 0x80059380;
+g_ControllerCurStateReadIndex = 0x80059384;
 g_ControllerType = 0x80059388;
 g_C1LeftStickXAxis = 0x80059430;
 g_C2LeftStickXAxis = 0x80059434;
@@ -223,5 +234,12 @@ g_C1ButtonStateReleased = 0x8005948C;
 g_C2ButtonStateReleased = 0x80059490;
 g_C1ButtonStatePressedOnce = 0x800594A4;
 g_C2ButtonStatePressedOnce = 0x800594A8;
+
+g_C1ButtonStatesPressed = 0x8005A0FC;
+g_C2ButtonStatesPressed = 0x8005A11C;
+g_C1ButtonStatesReleased = 0x8005A13C;
+g_C2ButtonStatesReleased = 0x8005A15C;
+g_C1ButtonStatesPressedOnce = 0x8005A17C;
+g_C2ButtonStatesPressedOnce = 0x8005A19C;
 
 g_pTMR_HRETRACE_MODE = 0x80058964;

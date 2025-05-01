@@ -262,7 +262,7 @@ void* HeapAlloc(u32 allocSize, u32 allocFlags) {
         }
 
         // Goes into error handler, does not return.
-        func_80019ACC(ERR_HEAP_OUT_OF_MEMORY);
+        MainLoop(ERR_HEAP_OUT_OF_MEMORY);
     }
 
     if (allocFlags == 1) {
@@ -374,7 +374,7 @@ u32 HeapFree(void* pMem) {
         :: "r"(&nCallerAddr));
         g_HeapLastAllocSize = 0;
         g_HeapLastAllocSrcAddr = nCallerAddr - 8;
-        func_80019ACC(ERR_HEAP_FREE_NULL);
+        MainLoop(ERR_HEAP_FREE_NULL);
     }
 
     pBlock = ((HeapBlock*)pMem);
@@ -761,7 +761,7 @@ void HeapDelayedFree(void* pMem, u32 delay) {
         :: "r"(&nCallerAddr));
         g_HeapLastAllocSize = 0;
         g_HeapLastAllocSrcAddr = nCallerAddr - 8;
-        func_80019ACC(ERR_HEAP_FREE_NULL);
+        MainLoop(ERR_HEAP_FREE_NULL);
     }
     
     if (delay == 0) {

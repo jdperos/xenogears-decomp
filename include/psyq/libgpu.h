@@ -1,6 +1,9 @@
 /* $PSLibId: Run-time Library Release 4.3$ */
 #ifndef _LIBGPU_H_
 #define _LIBGPU_H_
+
+#include "psyq/libgte.h"
+
 /*
  *  (C) Copyright 1993-1995 Sony Corporation,Tokyo,Japan. All Rights Reserved
  *
@@ -684,20 +687,7 @@ typedef struct {
 	u_long	*paddr;		/* texture image address on main memory */
 } TIM_IMAGE;
 	       
-/*
- * Prototypes
- */
-#if defined(_LANGUAGE_C_PLUS_PLUS)||defined(__cplusplus)||defined(c_plusplus)
-extern "C" {
-#ifndef _FNTPRINT_
-#define _FNTPRINT_
-extern int FntPrint(...);
-#endif /* _FNTPRINT_ */
-#ifndef _KANJIFNTPRINT_
-#define _KANJIFNTPRINT_
-extern int KanjiFntPrint(...);
-#endif /* _KANJIFNTPRINT_ */
-#else
+
 #ifndef _FNTPRINT_
 #define _FNTPRINT_
 extern int FntPrint();
@@ -706,7 +696,6 @@ extern int FntPrint();
 #define _KANJIFNTPRINT_
 extern int KanjiFntPrint();
 #endif /* _KANJIFNTPRINT_ */
-#endif
 	
 extern DISPENV *GetDispEnv(DISPENV *env);
 extern DISPENV *PutDispEnv(DISPENV *env);
@@ -807,7 +796,5 @@ extern void GetTexWindow(DR_TWIN *p);
 extern void GetDrawArea(DR_AREA *p);
 extern void GetDrawOffset(DR_OFFSET *p);
 
-#if defined(_LANGUAGE_C_PLUS_PLUS)||defined(__cplusplus)||defined(c_plusplus)
-}
-#endif
+
 #endif /* _LIBGPU_H_ */

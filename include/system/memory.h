@@ -1,18 +1,15 @@
 #ifndef _XENO_MEMORY_H
 #define _XENO_MEMORY_H
 
+#include "main/main.h"
 
 // Temporary ----------------------------
-extern u32 func_80019ACC(u32) __attribute__((noreturn));
 extern void func_80031FF8();
 extern void func_8003747C(u32);
 extern void func_8003700C(u8*);
-
 extern unsigned int strlen(char* pString);
 extern int Sprintf(char* pStr, char* pFormat, ...);
 // --------------------------------------
-
-
 
 #define VRAM_BASE_ADDRESS 0x80000000
 

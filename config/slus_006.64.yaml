@@ -67,6 +67,7 @@ segments:
       - [0x9258, .rodata, system/memory]
       - [0x927C, rodata]
       - [0x9CE0, asm] 
+      - [0x9D60, hasm]
       - [0x9D78, c, main/main] # main
       - [0xA164, asm]
       - [0xA16C, c, main/main_loop]
