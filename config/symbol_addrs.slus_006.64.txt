@@ -78,6 +78,7 @@ HeapDerefPtr = 0x80032E7C;
 LZSSHeapDecompress = 0x80032e88;
 LZSSDecompress = 0x80032eb4;
 
+// Controllers
 ControllerGetButtonState = 0x8003569C;
 ControllerGetType = 0x80035734;
 ControllerRemapButtonState = 0x800357C0;
@@ -89,20 +90,52 @@ ControllerPushState = 0x80035C0C;
 ControllerPopState = 0x80035CDC;
 ControllerGetNumStates = 0x80035DA0;
 ControllerResetState = 0x80035DB0;
+ControllerInit = 0x80036288;
 ControllerDebugPrint = 0x800365FC;
+
+// Sound
+SoundInitialize = 0x80037B88;
+SoundHandleError = 0x8003F6B0;
 
 // PSY-Q Standard Library
 strlen = 0x8003FBC8;
 Sprintf = 0x8003FBF8;
 
-// PSY-Q Kernel
+// PSY-Q Kernel / libapi
 FlushCache = 0x80040454;
+OpenEvent = 0x80040474;
+CloseEvent = 0x80040484;
+TestEvent = 0x80040494;
+EnableEvent = 0x800404A4;
+DisableEvent = 0x800404B4;
+UnDeliverEvent = 0x800404C4;
 EnterCriticalSection = 0x800404D4;
 ExitCriticalSection = 0x800404E4;
+SwEnterCriticalSection = 0x800404F4;
+SwExitCriticalSection = 0x80040514;
+open = 0x80040534;
+read = 0x80040544;
+write = 0x80040554;
+close = 0x80040564;
+format = 0x80040574;
+firstfile = 0x80040584;
+nextfile = 0x80040594;
+rename = 0x800405A4;
+erase = 0x800405B4;
+Krom2RawAdd = 0x800405C4;
+ChangeClearPAD = 0x800405D4;
+// ...
+InitPAD = 0x80040828;
+StartPAD = 0x800408C4;
+InitPAD2 = 0x80040A8C;
+StartPAD2 = 0x80040A9C;
+EnablePAD = 0x80040AEC;
+_patch_pad = 0x80040B14;
 
 // PSY-Q CD
 CdInit = 0x80040D08;
 CdReset = 0x80040E68;
+CdFlush = 0x80040ED4;
 CdSetDebug = 0x80040EF4;
 CdSync = 0x80040F74;
 CdReady = 0x80040F94;
@@ -127,7 +160,10 @@ CD_initvol = 0x8004260C;
 CD_init = 0x80042750;
 CD_datasync = 0x8004293C;
 
-// PSY-Q Graphics
+// PSY-Q Std library?
+puts = 0x80042D8C;
+
+// PSY-Q Graphics (libgpu)
 SetDefDrawEnv = 0x80043928;
 SetDefDispEnv = 0x800439E0;
 GetClut = 0x80043A58;
@@ -141,18 +177,31 @@ LoadImage = 0x80044894;
 PutDrawEnv = 0x80044C44;
 PutDispEnv = 0x80044E9C;
 
-// PSY-Q Interrupts
+// PSY-Q Interrupts (libetc)
 Vsync = 0x8004B54C;
+v_wait = 0x8004B694;
+ChangeClearRCnt = 0x8004B730;
 ResetCallback = 0x8004B740;
-SetInterruptHandler = 0x8004B770;
-InitVsyncInterrupts = 0x8004BF20;
-VsyncInterruptHandler = 0x8004BF78;
-SetVsyncInterruptCallbackByIndex = 0x8004BFF0;
-ClearVsyncInterruptCallbacks = 0x8004C01C;
-
+InterruptCallback = 0x8004B770;
+startIntr = 0x8004B8D8;
+trapIntr = 0x8004B9B4;
+setIntr = 0x8004BB9C;
+stopIntr = 0x8004BCF0;
+restartIntr = 0x8004BD9C;
+memclrIntr = 0x8004BE24;
+setjmp = 0x8004BE50;
+startIntrVSync = 0x8004BF20;
+trapIntrVSync = 0x8004BF78;
+setIntrVSync = 0x8004BFF0;
+memclrIntrVSync = 0x8004C01C;
+startIntrDMA = 0x8004C048;
+trapIntrDMA = 0x8004C098;
+setIntrDMA = 0x8004C21C;
+memclrIntrDMA = 0x8004C2C4;
 SetVideoMode = 0x8004C2F0;
+GetVideoMode = 0x8004C308;
 
-// PSY-Q Host / PC Interface
+// PSY-Q Host / PC Interface (libsn)
 PCopen = 0x8004c318;
 PCclose = 0x8004c338;
 PClseek = 0x8004c348;
@@ -160,6 +209,28 @@ PCcreate = 0x8004c36c;
 PCinit = 0x8004c38c;
 PCread = 0x8004c398;
 PCwrite = 0x8004c470;
+
+// PSY-Q SPU (libspu)
+_spu_t = 0x8004CCA8;
+SpuInitMalloc = 0x8004D310;
+SpuSetReverb = 0x8004d3b4;
+_SpuIsInAllocateArea_ = 0x8004D504;
+SpuSetIRQ = 0x8004D600;
+SpuSetIRQCallback = 0x8004D740;
+SpuSetTransferCallback = 0x8004D964;
+SpuSetCommonAttr = 0x8004D988;
+SpuClearReverbWorkArea = 0x8004E3C8;
+
+// PSY-Q Memory Card
+_card_info = 0x8004E784;
+InitCARD = 0x8004E794;
+StartCARD = 0x8004E7E8;
+StopCARD = 0x8004E820;
+InitCARD2 = 0x8004E850;
+StartCARD2 = 0x8004E860;
+StopCARD2 = 0x8004E870;
+
+// -----------------------------------------------
 
 g_MainGameStateOverlayBuffer = 0x80018084;
 g_CurGameState = 0x80018088;
@@ -191,6 +262,14 @@ g_VsyncInterruptCallbacks = 0x80058940;
 g_VsyncInterruptCount = 0x80058960;
 g_InterruptControl = 0x8005890c;
 
+// PSY-Q SPU
+g_SpuTransferCallback = 0x80058E40;
+g_SpuIRQCallback = 0x80058E44;
+g_spu_AllocBlockNum = 0x80058E64;
+g_spu_AllocLastNum = 0x80058E68;
+g_spu_memList = 0x80058E6C;
+
+
 // Heap
 g_HeapContentTypeNames = 0x80050140;
 g_HeapDebugPrintfFn = 0x800592B8;
@@ -208,6 +287,11 @@ g_HeapDebugDumpFileHandle = 0x80059348;
 g_HeapUserContentNames = 0x80059FA4;
 g_HeapDelayedFreeBlocksHead = 0x80059FCC;
 
+// Sound
+g_SoundSpuErrorId = 0x80059500;
+g_SoundControlFlags = 0x8005957C;
+g_SoundSpuCommonAttr = 0x8005A3C0;
+g_SoundSpuMemoryTableStart = 0x8006FAC8;
 
 // Controller
 g_ControllerButtonMasks = 0x800501E8;

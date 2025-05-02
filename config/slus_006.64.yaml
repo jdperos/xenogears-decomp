@@ -80,12 +80,21 @@ segments:
       - [0x23754, asm]
       - [0x25E9C, c, system/controller]
       - [0x26644, asm]
+      - [0x28388, c, system/sound]
+      - [0x2FF38, asm]
+      - [0x30C54, c, psyq/libapi]
+      - [0x3137C, asm] # Likely part of libapi
       - [0x31508, c, psyq/libcd]
       - [0x3358C, asm]
-      #- [0x3C720, c, system/interrupts] # InitVsyncInterrupts
-      #- [0x3C778, c, system/interrupts] # VsyncInterruptHandler
-      - [0x3C7F0, c, psyq/interrupts]
-      - [0x3C848, asm]
+      - [0x34128, c, psyq/libgpu]
+      - [0x35B44, asm]
+      - [0x3BD4C, c, psyq/libetc]
+      - [0x3CB18, c, psyq/libsn]
+      - [0x3CD30, asm]
+      - [0x3D4A8, c, psyq/libspu]
+      - [0x3ED64, asm] # Likely part of libspu
+      - [0x3EF84, c, psyq/libcard]
+      - [0x3F080, asm] # Likely part of libcard
       - [0x3F290, sdata]
       - [0x49A48, .sdata, system/memory]
       - [0x49AB8, .sdata, system/heap_debug]
