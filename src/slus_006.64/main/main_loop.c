@@ -147,7 +147,7 @@ void GameShowSplashScreen(void) {
     void* pImage;
 
     HeapSetCurrentUser(HEAP_USER_SUGI);
-    pImage = LZSSHeapDecompress(&g_PublishedByLogoCompressed, 1);
+    pImage = LZSSHeapDecompress(&g_PublishedByLogoCompressed, 0x1);
 
     // Load CLUT
     pClutData = pImage + 0x14;
@@ -185,13 +185,13 @@ void GameShowSplashScreen(void) {
 
     for (i = 0x6D; i != -1; i--) {
         Vsync(0);
-    };
+    }
 
     for (i = 0x80; i >= 0; i -= 8) {
         setRGB0(&sprite, i, i, i);
         DrawPrim(&sprite);
         Vsync(0);
-    };
+    }
     
     HeapFree(pImage);
 }
