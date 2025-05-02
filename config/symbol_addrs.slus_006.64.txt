@@ -275,9 +275,21 @@ g_CdReadyCallback = 0x800564AC;
 g_CdLastSyncStatus = 0x80056788;
 g_CdLastReadyStatus = 0x80056789;
 
+g_pGPUSTAT = 0x8005783C;
+g_pTMR_HRETRACE_VAL = 0x80057840;
+g_HsyncInterruptCount = 0x80057844;
+g_VsyncPrevInterruptCount = 0x80057848;
+
+g_pI_STAT = 0x80058930;
+g_pI_MASK = 0x80058934;
+g_pDMA_DPCR = 0x80058938;
+
 g_VsyncInterruptCallbacks = 0x80058940;
 g_VsyncInterruptCount = 0x80058960;
-g_InterruptControl = 0x8005890c;
+g_VideoMode = 0x80058990;
+g_InterruptEnvironment = 0x800578A4;
+g_InterruptControl = 0x8005890C;
+g_pInterruptControl = 0x8005892C;
 
 // PSY-Q SPU
 g_SpuTransferCallback = 0x80058E40;

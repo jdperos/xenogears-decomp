@@ -66,6 +66,8 @@ segments:
       - [0x9144, rodata]
       - [0x9258, .rodata, system/memory]
       - [0x927C, rodata]
+      #- [0x9BD4, .rodata, psyq/libetc]
+      #- [0x9C08, rodata]
       - [0x9CE0, asm] 
       - [0x9D60, hasm]
       - [0x9D78, c, main/main] # main
@@ -96,6 +98,8 @@ segments:
       - [0x3EF84, c, psyq/libcard]
       - [0x3F080, asm] # Likely part of libcard
       - [0x3F290, sdata]
+      #- [0x480A4, .sdata, psyq/libetc]
+      #- [0x49130, sdata]
       - [0x49A48, .sdata, system/memory]
       - [0x49AB8, .sdata, system/heap_debug]
       - [0x49ABC, data]
