@@ -104,21 +104,22 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_8004463C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", ClearImage);
 
+// Clear Image, 2nd version
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_800447F8);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", LoadImage);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_800448F8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", StoreImage);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_8004495C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", MoveImage);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80044A20);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", ClearOTag);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80044AD8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", ClearOTagR);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80044B70);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", DrawPrim);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80044BD0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", DrawOTag);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", PutDrawEnv);
 

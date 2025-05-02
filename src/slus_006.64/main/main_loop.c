@@ -11,6 +11,9 @@ extern unsigned int g_CurGameState;
 extern unsigned int g_CurGameStateOverlayID;
 extern void* g_CurGameStateOverlayBuffer;
 
+extern void* LZSSHeapDecompress(void*, int flags); 
+extern u8 g_PublishedByLogoCompressed[];
+
 extern void func_800295D8(s32, void*, u32, u32);
 
 
@@ -133,5 +136,64 @@ void GameCheckAndHandleSoftReset(void) {
 }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/main/main_loop", GameSoftReset);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/main/main_loop", GameShowSplashScreen);
+
+void GameShowSplashScreen(void) {
+    DRAWENV drawEnv;
+    DISPENV dispEnv;
+    SPRT sprite;
+    RECT rect;
+    int i;
+    void* pClutData;
+    void* pImage;
+
+    HeapSetCurrentUser(HEAP_USER_SUGI);
+    pImage = LZSSHeapDecompress(&g_PublishedByLogoCompressed, 1);
+
+    // Load CLUT
+    pClutData = pImage + 0x14;
+    rect.y = 0xF0;
+    rect.w = 0x10;
+    rect.x = 0;
+    rect.h = 1;
+    LoadImage(&rect, pClutData);
+
+    // Load Image Data
+    rect.x = 0x280;
+    rect.y = 0;
+    rect.w = 0x40;
+    rect.h = 0x30;
+    LoadImage(&rect, pImage + 0x40);
+    
+    setSprt(&sprite);
+    setXY0(&sprite, 0x20, 0x58);
+    sprite.v0 = 0;
+    sprite.u0 = 0;
+    setWH(&sprite, 0x100, 0x30);
+    setClut(&sprite, 0x0, 0xF0);
+    
+    SetDefDrawEnv(&drawEnv, 0, 0, 0x140, 0xE0);
+    SetDefDispEnv(&dispEnv, 0, 0, 0x140, 0xE0);
+    PutDrawEnv(&drawEnv);
+    PutDispEnv(&dispEnv);
+    DrawSync(0);
+    
+    for (i = 0; i < 0x80; i += 8) {
+        setRGB0(&sprite, i, i, i);
+        DrawPrim(&sprite);
+        Vsync(0);
+    }
+
+    for (i = 0x6D; i != -1; i--) {
+        Vsync(0);
+    };
+
+    for (i = 0x80; i >= 0; i -= 8) {
+        setRGB0(&sprite, i, i, i);
+        DrawPrim(&sprite);
+        Vsync(0);
+    };
+    
+    HeapFree(pImage);
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/main/main_loop", GameHandleError);
