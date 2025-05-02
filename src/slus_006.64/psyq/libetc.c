@@ -1,7 +1,6 @@
 #include "common.h"
 
 /*
-
 #include "psyq/interrupts.h"
 
 void setIntrVSync(u32 index, VoidCallback_t callback) {
@@ -16,10 +15,7 @@ void memclrIntrVSync(void(**callbacks)(void), unsigned int numCallbacks) {
     }
 }
 
-/*
 Matches on decomp.me, but the volatile globals seems to cause issues when linking.
-*/
-/*
 void trapIntrVSync(void) {
     int i;
 
@@ -84,6 +80,12 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", setjmp);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", func_8004BE8C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", func_8004BED0);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", ReturnFromException);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", ResetEntryInt);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", HookEntryInt);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", startIntrVSync);
 

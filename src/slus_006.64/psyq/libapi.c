@@ -80,6 +80,10 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", InitPAD2);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", StartPAD2);
 
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", SysDeqIntRP);
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", EnablePAD);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", func_80040B00);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", _patch_pad);
