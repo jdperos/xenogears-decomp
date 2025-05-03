@@ -1,9 +1,9 @@
 #include "common.h"
 
-#include "psyq/libgpu.h"
+#include "system/font.h"
 
-extern void* D_80050598;
-extern RECT D_80059398;
+extern void* D_80050598; // Font CLUT Data?
+extern RECT D_80059398; // Font CLUT Dest?
 
 void FontLoadClut(short arg0, short arg1) {
     short* pClutData;
@@ -46,16 +46,25 @@ void FontLoadClut(short arg0, short arg1) {
     LoadImage(&D_80059398, &D_80050598);
 }
 
+int FontGetDefaultLetterWidth(void) {
+    return g_Font->letterWidth;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/font", func_80036F44);
+int FontGetDefaultLetterHeight(void) {
+    return g_Font->rowHeight;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/font", func_80036F5C);
+int FontGetCurLetterX(void) {
+    return g_Font->curX;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/font", func_80036F74);
+int FontGetCurLetterY(void) {
+    return g_Font->curY;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/font", func_80036F8C);
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/font", func_80036FA4);
+int FontGetCurLetterCount(void) {
+    return g_Font->curNumLetters;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/font", func_80036FBC);
 

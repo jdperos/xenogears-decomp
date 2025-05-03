@@ -96,6 +96,11 @@ ControllerDebugPrint = 0x800365FC;
 
 // Font / Text
 FontLoadClut = 0x80036E4C;
+FontGetDefaultLetterWidth = 0x80036F44;
+FontGetDefaultLetterHeight = 0x80036F5C;
+FontGetCurLetterX = 0x80036F74;
+FontGetCurLetterY = 0x80036F8C;
+FontGetCurLetterCount = 0x80036FA4;
 FontLoadFont = 0x800374E8;
 
 // Sound
@@ -326,6 +331,9 @@ D_80059344 = 0x80059344;
 g_HeapDebugDumpFileHandle = 0x80059348;
 g_HeapUserContentNames = 0x80059FA4;
 g_HeapDelayedFreeBlocksHead = 0x80059FCC;
+
+// Font
+g_Font = 0x80059394;
 
 // Sound
 g_SoundSpuErrorId = 0x80059500;
