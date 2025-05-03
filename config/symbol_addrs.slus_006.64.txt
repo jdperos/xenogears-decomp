@@ -7,6 +7,7 @@ GameCheckAndHandleSoftReset = 0x80019CA0;
 GameSoftReset = 0x80019CD0;
 GameShowSplashScreen = 0x80019D48;
 GameHandleError = 0x80019EF8;
+printf = 0x80019964;
 
 // Archive / Filesystem
 ArchiveInit = 0x80028230;
@@ -93,6 +94,10 @@ ControllerResetState = 0x80035DB0;
 ControllerInit = 0x80036288;
 ControllerDebugPrint = 0x800365FC;
 
+// Font / Text
+FontLoadClut = 0x80036E4C;
+FontLoadFont = 0x800374E8;
+
 // Sound
 SoundInitialize = 0x80037B88;
 SoundHandleError = 0x8003F6B0;
@@ -171,7 +176,9 @@ puts = 0x80042D8C;
 // PSY-Q Graphics (libgpu)
 SetDefDrawEnv = 0x80043928;
 SetDefDispEnv = 0x800439E0;
+GetTexturePage = 0x80043A1C;
 GetClut = 0x80043A58;
+SetDrawTPage = 0x80043E20;
 ResetGraph = 0x80044110;
 SetGraphDebug = 0x800443A8;
 DrawSyncCallback = 0x800444D8;
@@ -290,6 +297,10 @@ g_VideoMode = 0x80058990;
 g_InterruptEnvironment = 0x800578A4;
 g_InterruptControl = 0x8005890C;
 g_pInterruptControl = 0x8005892C;
+
+g_pDMA_DICR = 0x80058968;
+g_DmaInterruptCallbacks = 0x8005896C;
+
 
 // PSY-Q SPU
 g_SpuTransferCallback = 0x80058E40;

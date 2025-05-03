@@ -48,10 +48,13 @@ extern InterruptControl_t g_InterruptControl;
 extern InterruptControl_t* g_pInterruptControl;
 
 extern VoidCallback_t g_VsyncInterruptCallbacks[MAX_INTERRUPT_CALLBACKS];
+extern VoidCallback_t g_DmaInterruptCallbacks[MAX_INTERRUPT_CALLBACKS];
 
 extern volatile int g_VsyncInterruptCount;
 extern volatile int g_VsyncPrevInterruptCount;
 extern volatile int g_HsyncInterruptCount;
+
+extern int D_8005893C;
 
 extern volatile u_short* g_pI_STAT;
 extern volatile u_short* g_pI_MASK;
@@ -59,6 +62,7 @@ extern volatile int* g_pDMA_DPCR;
 extern volatile int* g_pGPUSTAT;
 extern volatile int* g_pTMR_HRETRACE_VAL;
 extern volatile u_long* g_pTMR_HRETRACE_MODE;
+extern volatile u_long* g_pDMA_DICR;
 
 extern long g_VideoMode;
 

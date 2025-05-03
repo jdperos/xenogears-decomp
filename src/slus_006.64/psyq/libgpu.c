@@ -4,7 +4,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetDefDrawEnv);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetDefDispEnv);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043A1C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", GetTexturePage);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", GetClut);
 
@@ -70,7 +70,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043DE0);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043E00);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043E20);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetDrawTPage);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043E4C);
 

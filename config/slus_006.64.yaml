@@ -82,6 +82,8 @@ segments:
       - [0x23754, asm]
       - [0x25E9C, c, system/controller]
       - [0x26644, asm]
+      - [0x2764C, c, system/font]
+      - [0x28078, asm]
       - [0x28388, c, system/sound]
       - [0x2FF38, asm]
       - [0x30C54, c, psyq/libapi]
