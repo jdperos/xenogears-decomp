@@ -740,7 +740,7 @@ void HeapForceFree(void* pMem) {
 // HeapPrintf: g_HeapDebugPrintfFn must be GP rel
 // HeapDumpToFile: g_HeapDebugPrintfFn must be extern
 // Because of this, HeapDumpToFile is part of another TU than HeapPrintf
-FnPrintf_t* g_HeapDebugPrintfFn = func_8003700C;
+FnPrintf_t* g_HeapDebugPrintfFn = FontPrintf;
 
 // Variadic args may have been used instead of 
 // single argument, but can't find a match w/ va

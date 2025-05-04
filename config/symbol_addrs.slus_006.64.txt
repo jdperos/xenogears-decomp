@@ -95,6 +95,17 @@ ControllerInit = 0x80036288;
 ControllerDebugPrint = 0x800365FC;
 
 // Font / Text
+FontSetFlag = 0x80036CD8;
+FontRemoveFlag = 0x80036CF8;
+FontGetFlags = 0x80036D18;
+FontSetLetterFlag = 0x80036D30;
+FontRemoveLetterFlag = 0x80036D50;
+FontGetLetterFlags = 0x80036D70;
+FontSetLetterWidth = 0x80036D88;
+FontSetRowHeight = 0x80036D98;
+FontSetCurLetterX = 0x80036DA8;
+FontSetCurLetterY = 0x80036DB8;
+FontSetColor = 0x80036DC8;
 FontLoadClut = 0x80036E4C;
 FontGetDefaultLetterWidth = 0x80036F44;
 FontGetDefaultLetterHeight = 0x80036F5C;
@@ -103,6 +114,7 @@ FontGetCurLetterY = 0x80036F8C;
 FontGetCurLetterCount = 0x80036FA4;
 FontStoreCurrentPositions = 0x80036FBC;
 FontRestoreCurrentPositions = 0x80036FE4;
+FontPrintf = 0x8003700C;
 FontSetPositionsByOffset = 0x80037058;
 FontAddLetterPrimitive = 0x800370DC;
 FontResetLetterRendering = 0x800372CC;

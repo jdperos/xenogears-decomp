@@ -25,7 +25,9 @@ typedef struct {
     short areaHeight;
     short letterWidth;
     short rowHeight;
-    char defaultColor[3]; // r, g, b
+    char r;
+    char g;
+    char b;
     char primitiveCode;
     DR_TPAGE texpageSettings[2];
     short maxNumLetters;
@@ -35,7 +37,7 @@ typedef struct {
     // 0x2 - 16x16 letters.
     // 0x4 - use uppercase letter (only if >= 0x60).
     // 0x8 - use letter width.
-    short flags2;
+    short letterFlags;
     short curX;
     short curY;
     short curNumLetters;

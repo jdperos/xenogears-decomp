@@ -1,11 +1,68 @@
 #include "common.h"
 
+#include "psyq/stdarg.h"
 #include "system/font.h"
 #include "system/memory.h"
+
+// screen printf
+extern void func_80036718(char*, char*, ...);
 
 extern void* g_FontClutData;
 extern RECT g_FontClutDest;
 extern void* D_800593A0; // Non-heap allocated Font?
+
+void FontSetFlag(u_short flag) {
+    g_Font->flags |= flag;
+}
+
+void FontRemoveFlag(u_short flag) {
+    g_Font->flags &= ~flag;
+}
+
+int FontGetFlags(void) {
+    return g_Font->flags;
+}
+
+void FontSetLetterFlag(u_short flag) {
+    g_Font->letterFlags |= flag;
+}
+
+void FontRemoveLetterFlag(u_short flag) {
+    g_Font->letterFlags &= ~flag;
+}
+
+int FontGetLetterFlags(void) {
+    return g_Font->letterFlags;
+}
+
+void FontSetLetterWidth(short newLetterWidth) {
+    g_Font->letterWidth = newLetterWidth;
+}
+
+void FontSetRowHeight(short newRowHeight) {
+    g_Font->rowHeight = newRowHeight;
+}
+
+void FontSetCurLetterX(short newX) {
+    g_Font->curX = newX;
+}
+
+void FontSetCurLetterY(short newY) {
+    g_Font->curY = newY;
+}
+
+void FontSetColor(int red, int green, int blue) {
+    g_Font->r = red;
+    g_Font->g = green;
+    g_Font->b = blue;
+    
+    // Shading
+    if ((red < 0x80) || (green < 0x80) || (blue < 0x80))
+        g_Font->primitiveCode &= 0xFE;
+    else
+        g_Font->primitiveCode |= 1;
+}
+
 
 void FontLoadClut(short arg0, short arg1) {
     short* pClutData;
@@ -80,7 +137,15 @@ void FontRestoreCurrentPositions(void) {
     g_Font->nextRowX = g_Font->storedRowX;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/font", func_8003700C);
+void FontPrintf(char* pFormat, ...) {
+    va_list args;
+    
+    if (g_Font) {
+        va_start(args, pFormat);
+        func_80036718(0, pFormat, args);
+        va_end(args);
+    }
+}
 
 void FontSetPositionsByOffset(short xOffset, short yOffset) {
     if (g_Font) {
@@ -128,11 +193,11 @@ void FontAddLetterPrimitive(int letter) {
             }     
         } else {
             // Uppercase
-            if ((pFont->flags2 & 4) && (nAsciiLetter >= 0x60))
+            if ((pFont->letterFlags & 4) && (nAsciiLetter >= 0x60))
                 nAsciiLetter -= 0x20;
             nAsciiLetter = nAsciiLetter - 0x20;
             
-            if (pFont->flags2 & 8)
+            if (pFont->letterFlags & 8)
                 nLetterWidth = pFont->arr[nAsciiLetter];
             else
                 nLetterWidth = pFont->letterWidth;
@@ -148,12 +213,12 @@ void FontAddLetterPrimitive(int letter) {
             
             if (nAsciiLetter) {
                 // Color + primitive code
-                *(int*)&pFont->pLetterRenderPacket->r0 = *(int*)&pFont->defaultColor;
+                *(int*)&pFont->pLetterRenderPacket->r0 = *(int*)&pFont->r;
 
                 setXY0Fast(pFont->pLetterRenderPacket, pFont->curX, pFont->curY);
 
                 // Letter size flag
-                if (pFont->flags2 & 2) {
+                if (pFont->letterFlags & 2) {
                     pFont->pLetterRenderPacket->clut = pFont->letterClutIds[(nAsciiLetter & 0x18) >> 3];
 
                     nU0 = (nAsciiLetter & 7) * 0x10;
@@ -182,7 +247,7 @@ void FontResetLetterRendering(void) {
     int nContext;
     u_char nPrimitiveCode;
     
-    nContext = g_Font->flags2 & 1;
+    nContext = g_Font->letterFlags & 1;
     nStartY = g_Font->startY;
     nPrimitiveCode = g_Font->primitiveCode & 0xFE;
     g_Font->pLetterRenderPacket = g_Font->pPrimBuffers[nContext];
@@ -205,7 +270,7 @@ void func_8003747C(void* pFont) {
 
 void FontFree(void) {
     if (g_Font) {
-        g_HeapDebugPrintfFn = func_8003700C; // ScreenPrintf
+        g_HeapDebugPrintfFn = FontPrintf;
         if (D_800593A0 == NULL)
             HeapFree(g_Font);
         g_Font = NULL;

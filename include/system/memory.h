@@ -6,7 +6,7 @@
 // Temporary ----------------------------
 extern void func_80031FF8();
 extern void func_8003747C(void*);
-extern void func_8003700C(u8*);
+extern void FontPrintf(char*, ...);
 extern unsigned int strlen(char* pString);
 extern int Sprintf(char* pStr, char* pFormat, ...);
 // --------------------------------------
