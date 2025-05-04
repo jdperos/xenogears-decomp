@@ -76,6 +76,7 @@ HeapWriteToDebugFile = 0x80032DCC;
 HeapDumpToFile = 0x80032E04;
 HeapDerefPtr = 0x80032E7C;
 
+// Utility
 LZSSHeapDecompress = 0x80032e88;
 LZSSDecompress = 0x80032eb4;
 
@@ -118,6 +119,7 @@ FontPrintf = 0x8003700C;
 FontSetPositionsByOffset = 0x80037058;
 FontAddLetterPrimitive = 0x800370DC;
 FontResetLetterRendering = 0x800372CC;
+FontDrawLetters = 0x80037324;
 FontFree = 0x8003748C;
 FontLoadFont = 0x800374E8;
 
@@ -126,6 +128,7 @@ SoundInitialize = 0x80037B88;
 SoundHandleError = 0x8003F6B0;
 
 // PSY-Q Standard Library
+memmove = 0x8003F99C;
 strlen = 0x8003FBC8;
 Sprintf = 0x8003FBF8;
 

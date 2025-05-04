@@ -86,6 +86,7 @@ segments:
       - [0x28078, asm]
       - [0x28388, c, system/sound]
       - [0x2FF38, asm]
+      - [0x3019C, c, psyq/libc]
       - [0x30C54, c, psyq/libapi]
       - [0x3137C, asm] # Likely part of libapi
       - [0x31508, c, psyq/libcd]

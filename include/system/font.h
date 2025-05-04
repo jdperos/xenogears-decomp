@@ -8,6 +8,13 @@
 #define setWHFast(p,_w,_h) *(int*)&(p)->w = (_w) | ((_h) << 0x10)
 #define setUV0Fast(p,_u0,_v0) *(short*)&(p)->u0 = (_u0) | ((_v0) << 0x8)
 
+// Font Flags
+
+// Font Letter Flags
+#define FONT_LETTER_RENDER_CONTEXT 0x1
+#define FONT_LETTER_16x16 0x2
+#define FONT_LETTER_ALL_UPPERCASE 0x4
+
 // This struct is just a header for the font,
 // letter data follows directly after at the end
 typedef struct {
@@ -23,7 +30,7 @@ typedef struct {
     short startY;
     short areaWidth;
     short areaHeight;
-    short letterWidth;
+    short letterWidth; // Default letter width?
     short rowHeight;
     char r;
     char g;
@@ -31,12 +38,6 @@ typedef struct {
     char primitiveCode;
     DR_TPAGE texpageSettings[2];
     short maxNumLetters;
-
-    // Flags 2
-    // 0x1 - current render buffer.
-    // 0x2 - 16x16 letters.
-    // 0x4 - use uppercase letter (only if >= 0x60).
-    // 0x8 - use letter width.
     short letterFlags;
     short curX;
     short curY;
@@ -45,7 +46,7 @@ typedef struct {
     SPRT_16* pLetterRenderPacket;
     short letterClutIds[4];
     TILE bgTiles[2];
-    char arr[0x60];
+    char letterWidths[0x60]; // Individual widths for each letter?
     void* pPrimBuffersStart[2];
     short storedPosX;
     short storedPosY;

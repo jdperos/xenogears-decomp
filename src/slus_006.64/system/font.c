@@ -63,7 +63,6 @@ void FontSetColor(int red, int green, int blue) {
         g_Font->primitiveCode |= 1;
 }
 
-
 void FontLoadClut(short arg0, short arg1) {
     short* pClutData;
     int i;
@@ -192,13 +191,12 @@ void FontAddLetterPrimitive(int letter) {
                 pFont->curY = pFont->curY + pFont->rowHeight;
             }     
         } else {
-            // Uppercase
-            if ((pFont->letterFlags & 4) && (nAsciiLetter >= 0x60))
+            if ((pFont->letterFlags & FONT_LETTER_ALL_UPPERCASE) && (nAsciiLetter >= 0x60))
                 nAsciiLetter -= 0x20;
             nAsciiLetter = nAsciiLetter - 0x20;
             
             if (pFont->letterFlags & 8)
-                nLetterWidth = pFont->arr[nAsciiLetter];
+                nLetterWidth = pFont->letterWidths[nAsciiLetter];
             else
                 nLetterWidth = pFont->letterWidth;
             
@@ -217,8 +215,7 @@ void FontAddLetterPrimitive(int letter) {
 
                 setXY0Fast(pFont->pLetterRenderPacket, pFont->curX, pFont->curY);
 
-                // Letter size flag
-                if (pFont->letterFlags & 2) {
+                if (pFont->letterFlags & FONT_LETTER_16x16) {
                     pFont->pLetterRenderPacket->clut = pFont->letterClutIds[(nAsciiLetter & 0x18) >> 3];
 
                     nU0 = (nAsciiLetter & 7) * 0x10;
@@ -247,7 +244,7 @@ void FontResetLetterRendering(void) {
     int nContext;
     u_char nPrimitiveCode;
     
-    nContext = g_Font->letterFlags & 1;
+    nContext = g_Font->letterFlags & FONT_LETTER_RENDER_CONTEXT;
     nStartY = g_Font->startY;
     nPrimitiveCode = g_Font->primitiveCode & 0xFE;
     g_Font->pLetterRenderPacket = g_Font->pPrimBuffers[nContext];
@@ -262,7 +259,64 @@ void FontResetLetterRendering(void) {
     g_Font->primitiveCode = nPrimitiveCode;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/font", func_80037324);
+void FontDrawLetters(void* ot) {
+    Font* pFont;
+    int nNumLetters;
+    void* pPrim;
+    void* pPrimBuffer;
+    short nContext;
+    short bShouldDrawPrimitives;
+    void* pOtag;
+
+    pFont = g_Font;
+    pOtag = ot;
+    
+    if (pFont) {
+        bShouldDrawPrimitives = 0;
+
+        // Switch render context
+        if (pFont->flags & FONT_LETTER_RENDER_CONTEXT) {
+            nContext = 0;
+            pFont->letterFlags &= 0xFFFE;
+        } else {
+            nContext = pFont->letterFlags & FONT_LETTER_RENDER_CONTEXT;
+            if (nContext) {
+                pFont->letterFlags &= 0xFFFE;
+            } else {
+                pFont->letterFlags |= FONT_LETTER_RENDER_CONTEXT;
+            }
+        }
+        
+        if ((pOtag == NULL) || (pOtag == -1)) {
+            DrawSync(0);
+            pOtag = &pFont->pPrimBuffersStart[nContext];
+            bShouldDrawPrimitives = 1;
+
+            // NextPrim
+            func_80043BE4(pOtag);
+        }
+        
+        nNumLetters = pFont->curNumLetters;
+        pPrimBuffer = pFont->pPrimBuffers[nContext];
+        while (nNumLetters) {
+            pPrim = pPrimBuffer;
+            pPrimBuffer += 0x10;
+            func_800317E0(pOtag, pPrim);
+            nNumLetters--;
+        }
+
+        func_80043B48(pOtag, &pFont->texpageSettings[nContext]);
+
+        if (pFont->flags & 0x10) {
+            func_80031804(pOtag, &pFont->bgTiles[nContext]);
+        }
+        
+        FontResetLetterRendering();
+        if (bShouldDrawPrimitives) {
+            DrawOTag(pOtag);
+        }
+    }
+}
 
 void func_8003747C(void* pFont) {
     D_800593A0 = pFont;
