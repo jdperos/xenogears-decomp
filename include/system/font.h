@@ -3,6 +3,11 @@
 
 #include "psyq/libgpu.h"
 
+// Should probably be moved to something like system/graphics.h at some point
+#define setXY0Fast(p,_x0,_y0) *(int*)&(p)->x0 = (_x0) | ((_y0) << 0x10)
+#define setWHFast(p,_w,_h) *(int*)&(p)->w = (_w) | ((_h) << 0x10)
+#define setUV0Fast(p,_u0,_v0) *(short*)&(p)->u0 = (_u0) | ((_v0) << 0x8)
+
 // This struct is just a header for the font,
 // letter data follows directly after at the end
 typedef struct {
@@ -13,8 +18,7 @@ typedef struct {
     short flags;
 
     short texpage;
-    void* pPacketBuffer1;
-    void* pPacketBuffer2;
+    void* pPrimBuffers[2];
     short startX;
     short startY;
     short areaWidth;
@@ -23,8 +27,7 @@ typedef struct {
     short rowHeight;
     char defaultColor[3]; // r, g, b
     char primitiveCode;
-    DR_TPAGE texpageSettings1;
-    DR_TPAGE texpageSettings2;
+    DR_TPAGE texpageSettings[2];
     short maxNumLetters;
 
     // Flags 2
@@ -37,16 +40,14 @@ typedef struct {
     short curY;
     short curNumLetters;
     short nextRowX;
-    void* pLetterRenderPacket;
+    SPRT_16* pLetterRenderPacket;
     short letterClutIds[4];
-    TILE bgTile1;
-    TILE bgTile2;
+    TILE bgTiles[2];
     char arr[0x60];
-    void* pPacket1Start;
-    void* pPacket2Start;
-    short curPosX;
-    short curPosY;
-    short newRowX;
+    void* pPrimBuffersStart[2];
+    short storedPosX;
+    short storedPosY;
+    short storedRowX;
     char vramLetterOffsetX;
     char _pad;
 } Font;

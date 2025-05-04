@@ -101,6 +101,12 @@ FontGetDefaultLetterHeight = 0x80036F5C;
 FontGetCurLetterX = 0x80036F74;
 FontGetCurLetterY = 0x80036F8C;
 FontGetCurLetterCount = 0x80036FA4;
+FontStoreCurrentPositions = 0x80036FBC;
+FontRestoreCurrentPositions = 0x80036FE4;
+FontSetPositionsByOffset = 0x80037058;
+FontAddLetterPrimitive = 0x800370DC;
+FontResetLetterRendering = 0x800372CC;
+FontFree = 0x8003748C;
 FontLoadFont = 0x800374E8;
 
 // Sound
@@ -333,7 +339,9 @@ g_HeapUserContentNames = 0x80059FA4;
 g_HeapDelayedFreeBlocksHead = 0x80059FCC;
 
 // Font
+g_FontClutData = 0x80050598;
 g_Font = 0x80059394;
+g_FontClutDest = 0x80059398;
 
 // Sound
 g_SoundSpuErrorId = 0x80059500;
