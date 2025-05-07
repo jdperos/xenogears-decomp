@@ -22,7 +22,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043B84);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043BC0);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043BE4);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", TermPrim);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043BFC);
 

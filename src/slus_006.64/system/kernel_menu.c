@@ -78,4 +78,27 @@ void KernelMenuUpdate(void) {
     setXY2Fast(&g_KernelMenuCurRenderEnvironment->cursor, 0x20, nOffsetY + 0x30);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/kernel_menu", KernelMenuMain);
+void KernelMenuMain(void) {
+    void* pOtag;
+
+    KernelMenuInitialize();
+    g_KernelMenuIsRunning = 1;
+    D_800592C8 = 0;
+    while (g_KernelMenuIsRunning || !D_800592C8) {
+        D_800592C4++;
+        D_800592C8 = D_800592C4 & 1; // Render context
+        g_KernelMenuCurRenderEnvironment = &g_KernelMenuRenderEnvironments[D_800592C8];
+        pOtag = &g_KernelMenuCurRenderEnvironment->ot;
+        TermPrim(pOtag);
+        FontDrawLetters(pOtag);
+        KernelMenuUpdate();
+        AddPrim(pOtag, &g_KernelMenuCurRenderEnvironment->cursor);
+        DrawSync(0);
+        Vsync(0);
+        PutDrawEnv(&g_KernelMenuCurRenderEnvironment->drawEnv);
+        PutDispEnv(&g_KernelMenuCurRenderEnvironment->dispEnv);
+        DrawOTag(pOtag);
+    }
+    DrawSync(0);
+    MainLoop(0);
+}

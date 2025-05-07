@@ -291,9 +291,7 @@ void FontDrawLetters(void* ot) {
             DrawSync(0);
             pOtag = &pFont->pPrimBuffersStart[nContext];
             bShouldDrawPrimitives = 1;
-
-            // NextPrim
-            func_80043BE4(pOtag);
+            TermPrim(pOtag);
         }
         
         nNumLetters = pFont->curNumLetters;

@@ -213,6 +213,7 @@ SetDefDispEnv = 0x800439E0;
 GetTexturePage = 0x80043A1C;
 GetClut = 0x80043A58;
 AddPrim = 0x80043B48;
+TermPrim = 0x80043BE4;
 SetPolyF3 = 0x80043C4C;
 SetDrawTPage = 0x80043E20;
 ResetGraph = 0x80044110;
