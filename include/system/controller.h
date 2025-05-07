@@ -99,11 +99,43 @@ extern int g_ControllerCurStateReadIndex;
 extern int g_ControllerIsStateStackFull;
 extern unsigned int g_ControllerNumStates;
 
+extern u_char g_C1LeftStickXAxis;
+extern u_char g_C1LeftStickYAxis;
+extern u_char g_C1RightStickXAxis;
+extern u_char g_C1RightStickYAxis;
+extern u_char g_C2LeftStickXAxis;
+extern u_char g_C2LeftStickYAxis;
+extern u_char g_C2RightStickXAxis;
+extern u_char g_C2RightStickYAxis;
+
+extern int g_C1PrevButtonState;
+extern int g_C2PrevButtonState;
+
+// Counts to keep track of how long no buttons has been released
+extern int D_8005022C;
+extern int D_80050230;
+
+// Timer interrupt count
+extern int D_80059488;
+
+// Analog => Stick mappings
+extern u_char g_ControllerStickToAnalogX[];
+extern u_char g_ControllerStickToAnalogY[];
+
 extern u_char g_ControllerType;
 
 // Controller buffer start
 extern u_char D_800625FC[];
 extern u_char D_800625FD[];
+// Indexes into raw controller data buffers for C1 and C2 stick values
+extern u8 D_80062600;
+extern u8 D_80062601;
+extern u8 D_80062602;
+extern u8 D_80062603;
+extern u8 D_80062622;
+extern u8 D_80062623;
+extern u8 D_80062624;
+extern u8 D_80062625;
 
 extern u_char g_ControllerStickToAnalogX[0x10];
 /*

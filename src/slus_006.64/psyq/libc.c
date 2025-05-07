@@ -1,5 +1,7 @@
 #include "common.h"
 
+extern u_long g_RandomSeed;
+
 void* memmove(u_char* pDst, u_char* pSrc, int size) {
     if (pDst >= pSrc) {
         while (size-- > 0) {
@@ -16,9 +18,17 @@ void* memmove(u_char* pDst, u_char* pSrc, int size) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libc", func_8003FA08);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libc", func_8003FA38);
+int rand(void) {
+    u_long nNext;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libc", func_8003FA68);
+    nNext = (g_RandomSeed * 0x41C64E6D) + 0x3039;
+    g_RandomSeed = nNext;
+    return (nNext >> 0x10) & 0x7FFF;
+}
+
+void srand(u_long seed) {
+    g_RandomSeed = seed;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libc", func_8003FA78);
 

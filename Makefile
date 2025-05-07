@@ -51,8 +51,7 @@ CC_FLAGS := $(OPT_FLAGS) $(DL_FLAGS) -mips1 -mcpu=3000 -w -funsigned-char -fpeep
 #MASPSX_FLAGS := --use-comm-section --run-assembler $(AS_FLAGS)
 
 # PSY-Q libraries uses ASPSX 2.56 (PSQ 4.0)
-# Archive code uses GCC 2.6.0. It is possible that the entire game code uses 2.6.0,
-# but currently there are mismatchs in heap code which only matches 2.7.2
+# Archive library code uses GCC 2.6.0.
 define DL_FlagsSwitch
 	$(if
 		$(or 
@@ -65,8 +64,8 @@ define DL_FlagsSwitch
 
 	$(if
 		$(or 
-			$(filter MAIN,$(patsubst build/src/slus_006.64/system/archive%,MAIN,$(1))), 
-			$(filter MAIN,$(patsubst build/asm/slus_006.64/system/archive%,MAIN,$(1)))
+			$(filter MAIN,$(patsubst build/src/slus_006.64/system/libarchive%,MAIN,$(1))), 
+			$(filter MAIN,$(patsubst build/asm/slus_006.64/system/libarchive%,MAIN,$(1)))
 		),
 		$(eval CC = $(TOOLS_DIR)/gcc-2.6.0-psx/cc1),
 		$(eval CC = $(TOOLS_DIR)/gcc-2.7.2-psx/cc1)

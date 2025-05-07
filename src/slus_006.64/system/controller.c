@@ -45,17 +45,17 @@ int ControllerGetType(int controllerIndex) {
     return CONTROLLER_TYPE_NONE;
 }
 
-short ControllerRemapButtonState(u_short buttonState) {
+short ControllerRemapButtonState(short buttonState) {
     u_short nMaskedState;
     int i;
 
-    nMaskedState = buttonState & (
+    nMaskedState = (u_short) buttonState & (
         CTRL_BTN_SELECT | CTRL_BTN_L3 | CTRL_BTN_R3 | CTRL_BTN_START |
         CTRL_BTN_UP | CTRL_BTN_RIGHT | CTRL_BTN_DOWN | CTRL_BTN_LEFT
     );
     
     for (i = 0; i < 8; i++) {
-        if (g_ControllerButtonMasks[i] & buttonState) {
+        if (g_ControllerButtonMasks[i] & (u_short) buttonState) {
             nMaskedState |= g_ControllerButtonMasks[g_ControllerButtonMappings[i]];
         }
     };
@@ -100,7 +100,93 @@ u_char ControllerStickToAnalogY(int buttonState) {
     return g_ControllerStickToAnalogY[((buttonState >> 0xC) & 0xF)];
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", ControllerPoll);
+void ControllerPoll(void) {
+    // Controller 1
+    g_C1ButtonState =  ControllerGetButtonState(0);
+    g_C1ButtonState = ControllerRemapButtonState(g_C1ButtonState); // Masking buttons
+
+    if (g_ControllerType) {
+        if (g_ControllerType == CONTROLLER_INTERNAL_TYPE_ANALOG_PAD) {
+            g_C1ButtonState = ControllerRemapAnalogJoystickState(g_C1ButtonState);
+            goto controller1_analog_stick;
+        } else if (g_ControllerType == CONTROLLER_INTERNAL_TYPE_ANALOG_STICK) {
+            controller1_analog_stick:
+            g_C1RightStickXAxis = D_80062600;
+            g_C1RightStickYAxis = D_80062601;
+            g_C1LeftStickXAxis = D_80062602;
+            g_C1LeftStickYAxis = D_80062603;
+        } else {
+            g_C1RightStickYAxis = 0;
+            g_C1RightStickXAxis = 0;
+            g_C1LeftStickXAxis = g_ControllerStickToAnalogX[(u16) g_C1ButtonState >> 0xC];
+            g_C1LeftStickYAxis = g_ControllerStickToAnalogY[(u16) g_C1ButtonState >> 0xC];
+        }
+    } else {
+        g_C1RightStickYAxis = 0;
+        g_C1RightStickXAxis = 0;
+        g_C1LeftStickYAxis = 0;
+        g_C1LeftStickXAxis = 0;        
+    }
+
+    g_C1ButtonStateReleased = g_C1ButtonState ^ g_C1PrevButtonState;
+    g_C1ButtonStateReleased &= g_C1ButtonState;
+    g_C1PrevButtonState = g_C1ButtonState;
+
+    // Were any buttons released?
+    if (g_C1ButtonStateReleased)
+        D_8005022C = 0;
+    
+    g_C1ButtonStatePressedOnce = g_C1ButtonState;
+    if (D_8005022C < 0x20) {
+        D_8005022C += 1;
+        g_C1ButtonStatePressedOnce = g_C1ButtonStateReleased;
+    } else if (D_80059488 & 3) {
+        g_C1ButtonStatePressedOnce = g_C1ButtonStateReleased;
+    }
+
+
+    // Controller 2
+    g_C2ButtonState = ControllerGetButtonState(1);
+    g_C2ButtonState = ControllerRemapButtonState(g_C2ButtonState);
+
+    if (g_ControllerType) {
+        if (g_ControllerType == CONTROLLER_INTERNAL_TYPE_ANALOG_PAD) {
+            g_C2ButtonState = ControllerRemapAnalogJoystickState(g_C2ButtonState);
+            goto controller2_analog_stick;
+        } else if (g_ControllerType == CONTROLLER_INTERNAL_TYPE_ANALOG_STICK) {
+            controller2_analog_stick:
+            g_C2RightStickXAxis = D_80062622;
+            g_C2RightStickYAxis = D_80062623;
+            g_C2LeftStickXAxis = D_80062624;
+            g_C2LeftStickYAxis = D_80062625;
+        } else {
+            g_C2RightStickYAxis = 0;
+            g_C2RightStickXAxis = 0;
+            g_C2LeftStickXAxis = g_ControllerStickToAnalogX[(u16) g_C2ButtonState >> 0xC];
+            g_C2LeftStickYAxis = g_ControllerStickToAnalogY[(u16) g_C2ButtonState >> 0xC];
+        }
+    } else {
+        g_C2RightStickYAxis = 0;
+        g_C2RightStickXAxis = 0;
+        g_C2LeftStickYAxis = 0;
+        g_C2LeftStickXAxis = 0;   
+    }
+    
+    g_C2ButtonStateReleased = g_C2ButtonState ^ g_C2PrevButtonState;
+    g_C2ButtonStateReleased &= g_C2ButtonState;
+    g_C2PrevButtonState = g_C2ButtonState;
+    
+    if (g_C2ButtonStateReleased)
+        D_80050230 = 0;
+    
+    g_C2ButtonStatePressedOnce = g_C2ButtonState;
+    if (D_80050230 < 0x20) {
+        D_80050230 += 1;
+        g_C2ButtonStatePressedOnce = g_C2ButtonStateReleased;
+    } else if (D_80059488 & 3) {
+        g_C2ButtonStatePressedOnce = g_C2ButtonStateReleased;
+    }
+}
 
 void ControllerPushState(void) {
     int i;
