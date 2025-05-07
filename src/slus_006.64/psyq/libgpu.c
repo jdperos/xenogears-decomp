@@ -1,4 +1,6 @@
 #include "common.h"
+#include "psyq/libgpu.h"
+
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetDefDrawEnv);
 
@@ -22,55 +24,127 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043B84);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043BC0);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", TermPrim);
+void TermPrim(void *p) {
+    termPrim(p);
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043BFC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043C24);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetPolyF3);
+void SetPolyF3(POLY_F3 *p) {
+    setlen(p, 4);
+    setcode(p, 0x20);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043C60);
+void SetPolyFT3(POLY_FT3 *p) {
+    setlen(p, 7);
+    setcode(p, 0x24);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043C74);
+void SetPolyG3(POLY_G3 *p) {
+    setlen(p, 6);
+    setcode(p, 0x30);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043C88);
+void SetPolyGT3(POLY_GT3 *p) {
+    setlen(p, 9);
+    setcode(p, 0x34);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043C9C);
+void SetPolyF4(POLY_F4 *p) {
+    setlen(p, 5);
+    setcode(p, 0x28);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043CB0);
+void SetPolyFT4(POLY_FT4 *p) {
+    setlen(p, 9);
+    setcode(p, 0x2C);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043CC4);
+void SetPolyG4(POLY_G4 *p) {
+    setlen(p, 8);
+    setcode(p, 0x38);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043CD8);
+void SetPolyGT4(POLY_GT4 *p) {
+    setlen(p, 12);
+    setcode(p, 0x3C);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043CEC);
+void SetSprt8(SPRT_8 *p) {
+    setlen(p, 3);
+    setcode(p, 0x74);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043D00);
+void SetSprt16(SPRT_16 *p) {
+    setlen(p, 3);
+    setcode(p, 0x7C);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043D14);
+void SetSprt(SPRT *p) {
+    setlen(p, 4);
+    setcode(p, 0x64);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043D28);
+void SetTile1(TILE_1 *p) {
+    setlen(p, 2);
+    setcode(p, 0x68);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043D3C);
+void SetTile8(TILE_8 *p) {
+    setlen(p, 2);
+    setcode(p, 0x70);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043D50);
+void SetTile16(TILE_16 *p) {
+    setlen(p, 2);
+    setcode(p, 0x78);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043D64);
+void SetTile(TILE *p) {
+    setlen(p, 3);
+    setcode(p, 0x60);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043D78);
+void SetLineF2(LINE_F2 *p) {
+    setlen(p, 3);
+    setcode(p, 0x40);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043D8C);
+void SetLineG2(LINE_G2 *p) {
+    setlen(p, 4);
+    setcode(p, 0x50);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043DA0);
+void SetLineF3(LINE_F3 *p) {
+    setlen(p, 5);
+    setcode(p, 0x48);
+    p->pad = 0x55555555;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043DC0);
+void SetLineG3(LINE_G3 *p) {
+    setlen(p, 7);
+    setcode(p, 0x58);
+    p->pad = 0x55555555;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043DE0);
+void SetLineF4(LINE_F4 *p) {
+    setlen(p, 6);
+    setcode(p, 0x4c);
+    p->pad = 0x55555555;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043E00);
+void SetLineG4(LINE_G4 *p) {
+    setlen(p, 9);
+    setcode(p, 0x5c);
+    p->pad = 0x55555555;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetDrawTPage);
+void SetDrawTPage(DR_TPAGE *p, int dfe, int dtd, int tpage) {
+    setlen(p, 1);
+    ((u_long *)(p))[1] = _get_mode(dfe, dtd, tpage);
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043E4C);
 
