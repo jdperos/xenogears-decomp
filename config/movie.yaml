@@ -1,17 +1,17 @@
-name: Introduction and Debug Kernel Overlay
+name: Movie Overlay
 sha1: e7ff2568b918b75e290050597c86584f3499ebdf
 options:
-  basename: overlay6.bin
-  target_path: disc/OVERLAY_0x6.BIN
+  basename: movie.bin
+  target_path: disc/MOVIE.BIN
   base_path: ../
   platform: psx
   compiler: PSYQ
 
-  asm_path: asm/overlay6
-  src_path: src/overlay6
+  asm_path: asm/movie
+  src_path: src/movie
   build_path: build/
 
-  ld_script_path: linker/overlay6.ld
+  ld_script_path: linker/movie.ld
 
   find_file_boundaries: False
   gp_value: 0x80059170
@@ -27,13 +27,13 @@ options:
   section_order: [".rodata", ".text", ".data", ".bss"]
 
   symbol_addrs_path:
-    - config/symbol_addrs.overlay6.txt
+    - config/symbol_addrs.movie.txt
     - config/symbol_addrs.slus_006.64.txt
   reloc_addrs_path:
-    - configs/reloc_addrs.overlay6.txt
+    - configs/reloc_addrs.movie.txt
 
-  undefined_funcs_auto_path: linker/undefined_funcs_auto.overlay6.txt
-  undefined_syms_auto_path: linker/undefined_syms_auto.overlay6.txt
+  undefined_funcs_auto_path: linker/undefined_funcs_auto.movie.txt
+  undefined_syms_auto_path: linker/undefined_syms_auto.movie.txt
 
   extensions_path: tools/splat_ext
 
@@ -44,7 +44,7 @@ options:
   rodata_string_guesser_level: 2
   data_string_guesser_level: 2
 segments:
-  - name: overlay6
+  - name: movie
     type: code
     start: 0x0
     vram: 0x8006faf0

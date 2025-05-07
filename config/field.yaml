@@ -1,17 +1,17 @@
-name: Main Game Logic Overlay
+name: Field Overlay
 sha1: 7bdc0e2be7797ab821fb7d0ce10438a0e91f4c7b
 options:
-  basename: overlay1.bin
-  target_path: disc/OVERLAY_0x1.BIN
+  basename: field.bin
+  target_path: disc/FIELD.BIN
   base_path: ../
   platform: psx
   compiler: PSYQ
 
-  asm_path: asm/overlay1
-  src_path: src/overlay1
+  asm_path: asm/field
+  src_path: src/field
   build_path: build/
 
-  ld_script_path: linker/overlay1.ld
+  ld_script_path: linker/field.ld
 
   find_file_boundaries: False
   gp_value: 0x80059170
@@ -27,13 +27,13 @@ options:
   section_order: [".rodata", ".text", ".data", ".bss"]
 
   symbol_addrs_path:
-    - config/symbol_addrs.overlay1.txt
+    - config/symbol_addrs.field.txt
     - config/symbol_addrs.slus_006.64.txt
   reloc_addrs_path:
-    - configs/reloc_addrs.overlay1.txt
+    - configs/reloc_addrs.field.txt
 
-  undefined_funcs_auto_path: linker/undefined_funcs_auto.overlay1.txt
-  undefined_syms_auto_path: linker/undefined_syms_auto.overlay1.txt
+  undefined_funcs_auto_path: linker/undefined_funcs_auto.field.txt
+  undefined_syms_auto_path: linker/undefined_syms_auto.field.txt
 
   extensions_path: tools/splat_ext
 
@@ -44,7 +44,7 @@ options:
   rodata_string_guesser_level: 2
   data_string_guesser_level: 2
 segments:
-  - name: overlay1
+  - name: field
     type: code
     start: 0x0
     vram: 0x006faf0

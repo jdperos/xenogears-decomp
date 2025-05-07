@@ -148,7 +148,7 @@ endif
 TARGET_MAIN := slus_006.64
 
 ifeq ($(BUILD_OVERLAYS), 1)
-TARGET_OVERLAYS := overlay1 overlay6
+TARGET_OVERLAYS := field movie
 endif
 
 # Source Definitions

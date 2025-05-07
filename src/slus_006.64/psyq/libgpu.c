@@ -16,7 +16,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043B10);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043B2C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043B48);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", AddPrim);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043B84);
 
@@ -28,7 +28,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043BFC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043C24);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043C4C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetPolyF3);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043C60);
 

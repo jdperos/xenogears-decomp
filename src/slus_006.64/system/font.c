@@ -305,7 +305,7 @@ void FontDrawLetters(void* ot) {
             nNumLetters--;
         }
 
-        func_80043B48(pOtag, &pFont->texpageSettings[nContext]);
+        AddPrim(pOtag, &pFont->texpageSettings[nContext]);
 
         if (pFont->flags & 0x10) {
             func_80031804(pOtag, &pFont->bgTiles[nContext]);

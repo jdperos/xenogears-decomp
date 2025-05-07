@@ -5,6 +5,8 @@
 
 // Should probably be moved to something like system/graphics.h at some point
 #define setXY0Fast(p,_x0,_y0) *(int*)&(p)->x0 = (_x0) | ((_y0) << 0x10)
+#define setXY1Fast(p,_x1,_y1) *(int*)&(p)->x1 = (_x1) | ((_y1) << 0x10)
+#define setXY2Fast(p,_x2,_y2) *(int*)&(p)->x2 = (_x2) | ((_y2) << 0x10)
 #define setWHFast(p,_w,_h) *(int*)&(p)->w = (_w) | ((_h) << 0x10)
 #define setUV0Fast(p,_u0,_v0) *(short*)&(p)->u0 = (_u0) | ((_v0) << 0x8)
 

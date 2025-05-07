@@ -9,6 +9,12 @@ GameShowSplashScreen = 0x80019D48;
 GameHandleError = 0x80019EF8;
 printf = 0x80019964;
 
+// Kernel
+KernelMenuInitializeCursor = 0x8001A1E4;
+KernelMenuInitialize = 0x8001A250;
+KernelMenuUpdate = 0x8001A344;
+KernelMenuMain = 0x8001A4B4;
+
 // Archive / Filesystem
 ArchiveInit = 0x80028230;
 ArchiveReset = 0x800283D4;
@@ -206,6 +212,8 @@ SetDefDrawEnv = 0x80043928;
 SetDefDispEnv = 0x800439E0;
 GetTexturePage = 0x80043A1C;
 GetClut = 0x80043A58;
+AddPrim = 0x80043B48;
+SetPolyF3 = 0x80043C4C;
 SetDrawTPage = 0x80043E20;
 ResetGraph = 0x80044110;
 SetGraphDebug = 0x800443A8;
@@ -343,6 +351,13 @@ g_spu_memList = 0x80058E6C;
 
 // Main
 g_KernelErrorDescriptions = 0x8004F2C0;
+
+// Kernel
+g_KernelMenuCurChoice = 0x8004F2D8;
+g_KernelMenuIsRunning = 0x800592D0;
+g_KernelMenuCurRenderEnvironment = 0x800592CC;
+g_KernelMenuRenderEnvironments = 0x800595E8;
+
 
 // Heap
 g_HeapContentTypeNames = 0x80050140;

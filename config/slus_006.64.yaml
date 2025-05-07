@@ -75,7 +75,8 @@ segments:
       - [0x9D78, c, main/main] # main
       - [0xA164, asm]
       - [0xA16C, c, main/main_loop]
-      - [0xA9E4, asm]
+      - [0xA9E4, c, system/kernel_menu]
+      - [0xADCC, asm]
       - [0x18A30, c, system/libarchive]
       - [0x19E90, c, system/archive]
       - [0x1B424, asm]
