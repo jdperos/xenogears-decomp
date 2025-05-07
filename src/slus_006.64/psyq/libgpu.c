@@ -1,36 +1,101 @@
 #include "common.h"
+#include "psyq/libetc.h"
 #include "psyq/libgpu.h"
 
+extern int (*g_GpuPrintf)(char*, ...);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetDefDrawEnv);
+DRAWENV* SetDefDrawEnv(DRAWENV* env, int x, int y, int w, int h) {
+    int nVideoMode;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetDefDispEnv);
+    nVideoMode = GetVideoMode();
+    env->clip.x = x;
+    env->clip.y = y;
+    env->clip.w = w;
+    env->clip.h = h;
+    env->tw.x = 0;
+    env->tw.y = 0;
+    env->tw.w = 0;
+    env->tw.h = 0;
+    env->r0 = 0;
+    env->g0 = 0;
+    env->b0 = 0;
+    env->dtd = 1;
+    
+    if (nVideoMode != MODE_NTSC)
+        env->dfe  = h < 0x121;
+    else
+        env->dfe  = h < 0x101;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", GetTexturePage);
+    env->ofs[0] = x;
+    env->ofs[1] = y;
+    env->tpage = 0xA;
+    env->isbg = 0;
+    return env;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", GetClut);
+DISPENV* SetDefDispEnv(DISPENV* env, int x, int y, int w, int h) {
+    env->disp.x = x;
+    env->disp.y = y;
+    env->disp.w = w;
+    env->disp.h = h;
+    env->screen.x = 0;
+    env->screen.y = 0;
+    env->screen.w = 0;
+    env->screen.h = 0;
+    env->isrgb24 = 0;
+    env->isinter = 0;
+    env->pad1 = 0;
+    env->pad0 = 0;
+    return env;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043A70);
+u_short GetTPage(int tp, int abr, int x, int y) {
+    return getTPage(tp, abr, x, y);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043AD0);
+u_short GetClut(int x, int y) {
+    return getClut(x, y);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043B10);
+void DumpTPage(u_short tpage) {
+    dumpTPage(tpage);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043B2C);
+void DumpClut(u_short clut) {
+    dumpClut(clut);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", AddPrim);
+void* NextPrim(void *p) {
+    return nextPrim(p);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043B84);
+int IsEndPrim(void *p) {
+    return isendprim(p);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043BC0);
+void AddPrim(void *ot, void *p) {
+    addPrim(ot, p);
+}
+
+void AddPrims(void *ot, void *p0, void *p1) {
+    addPrims(ot, p0, p1);
+}
+
+void CatPrim(void *p0, void *p1) {
+    setaddr(p0, p1);
+}
 
 void TermPrim(void *p) {
     termPrim(p);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043BFC);
+void SetSemiTrans(void *p, int abe) {
+    setSemiTrans(p, abe);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043C24);
+void SetShadeTex(void *p, int tge) {
+    setShadeTex(p, tge);
+}
 
 void SetPolyF3(POLY_F3 *p) {
     setlen(p, 4);
@@ -152,9 +217,21 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043EAC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043F18);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043F50);
+void DumpDrawEnv(DRAWENV *env) {
+    g_GpuPrintf("clip (%3d,%3d)-(%d,%d)\n", env->clip.x, env->clip.y, env->clip.w, env->clip.h);
+    g_GpuPrintf("ofs  (%3d,%3d)\n", env->ofs[0], env->ofs[1]);
+    g_GpuPrintf("tw   (%d,%d)-(%d,%d)\n", env->tw.x, env->tw.y, env->tw.w, env->tw.h);
+    g_GpuPrintf("dtd   %d\n", env->dtd);
+    g_GpuPrintf("dfe   %d\n", env->dfe);
+    dumpTPage(env->tpage);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80044064);
+void DumpDispEnv(DISPENV *env) {
+    g_GpuPrintf("disp   (%3d,%3d)-(%d,%d)\n", env->disp.x, env->disp.y, env->disp.w, env->disp.h);
+    g_GpuPrintf("screen (%3d,%3d)-(%d,%d)\n", env->screen.x, env->screen.y, env->screen.w, env->screen.h);
+    g_GpuPrintf("isinter %d\n", env->isinter);
+    g_GpuPrintf("isrgb24 %d\n", env->isrgb24);
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", ResetGraph);
 
@@ -178,8 +255,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_8004463C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", ClearImage);
 
-// Clear Image, 2nd version
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_800447F8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", ClearImage2);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", LoadImage);
 

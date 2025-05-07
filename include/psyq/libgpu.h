@@ -67,7 +67,7 @@
 /*
  *	Externals
  */
-extern	int (*GPU_printf)();	/* printf() object */
+ extern int (*g_GpuPrintf)(char*, ...);
 
 /*
  *	Time-out Cycle
@@ -97,12 +97,12 @@ extern	int (*GPU_printf)();	/* printf() object */
 	(v0)->vz += (v1)->vz	
 	
 #define dumpVector(str, v)	\
-	GPU_printf("%s=(%d,%d,%d)\n", str, (v)->vx, (v)->vy, (v)->vz)
+	g_GpuPrintf("%s=(%d,%d,%d)\n", str, (v)->vx, (v)->vy, (v)->vz)
 
 #define dumpMatrix(x)	\
-	GPU_printf("\t%5d,%5d,%5d\n",(x)->m[0][0],(x)->m[0][1],(x)->m[0][2]),\
-	GPU_printf("\t%5d,%5d,%5d\n",(x)->m[1][0],(x)->m[1][1],(x)->m[1][2]),\
-	GPU_printf("\t%5d,%5d,%5d\n",(x)->m[2][0],(x)->m[2][1],(x)->m[2][2])
+	g_GpuPrintf("\t%5d,%5d,%5d\n",(x)->m[0][0],(x)->m[0][1],(x)->m[0][2]),\
+	g_GpuPrintf("\t%5d,%5d,%5d\n",(x)->m[1][0],(x)->m[1][1],(x)->m[1][2]),\
+	g_GpuPrintf("\t%5d,%5d,%5d\n",(x)->m[2][0],(x)->m[2][1],(x)->m[2][2])
 
 #define setRECT(r, _x, _y, _w, _h) \
 	(r)->x = (_x),(r)->y = (_y),(r)->w = (_w),(r)->h = (_h)
@@ -191,47 +191,47 @@ extern	int (*GPU_printf)();	/* printf() object */
  * Dump Primivie Parameters
  */
 #define dumpRECT(r)	\
-	GPU_printf("(%d,%d)-(%d,%d)\n", (r)->x,(r)->y,(r)->w,(r)->h)
+	g_GpuPrintf("(%d,%d)-(%d,%d)\n", (r)->x,(r)->y,(r)->w,(r)->h)
 
-#define dumpWH(p)	GPU_printf("(%d,%d)\n", (p)->w,  (p)->h ) 
-#define dumpXY0(p)	GPU_printf("(%d,%d)\n", (p)->x0, (p)->y0) 
-#define dumpUV0(p)	GPU_printf("(%d,%d)\n", (p)->u0, (p)->v0) 
+#define dumpWH(p)	g_GpuPrintf("(%d,%d)\n", (p)->w,  (p)->h ) 
+#define dumpXY0(p)	g_GpuPrintf("(%d,%d)\n", (p)->x0, (p)->y0) 
+#define dumpUV0(p)	g_GpuPrintf("(%d,%d)\n", (p)->u0, (p)->v0) 
 
 #define dumpXY2(p)							\
-	GPU_printf("(%d,%d)-(%d,%d)\n",					\
+	g_GpuPrintf("(%d,%d)-(%d,%d)\n",					\
 	(p)->x0, (p)->y0, (p)->x1, (p)->y1)
 
 #define dumpXY3(p)							\
-	GPU_printf("(%d,%d)-(%d,%d)-(%d,%d)\n",				\
+	g_GpuPrintf("(%d,%d)-(%d,%d)-(%d,%d)\n",				\
 	(p)->x0, (p)->y0, (p)->x1, (p)->y1,				\
 	(p)->x2, (p)->y2)
 
 #define dumpUV3(p)							\
-	GPU_printf("(%d,%d)-(%d,%d)-(%d,%d)\n",				\
+	g_GpuPrintf("(%d,%d)-(%d,%d)-(%d,%d)\n",				\
 	(p)->u0, (p)->v0, (p)->u1, (p)->v1,				\
 	(p)->u2, (p)->v2)
 
 #define dumpXY4(p)							\
-	GPU_printf("(%d,%d)-(%d,%d)-(%d,%d)-(%d,%d)\n",			\
+	g_GpuPrintf("(%d,%d)-(%d,%d)-(%d,%d)-(%d,%d)\n",			\
 	(p)->x0, (p)->y0, (p)->x1, (p)->y1,				\
 	(p)->x2, (p)->y2, (p)->x3, (p)->y3)
 
 #define dumpUV4(p)							\
-	GPU_printf("(%d,%d)-(%d,%d)-(%d,%d)-(%d,%d)\n",			\
+	g_GpuPrintf("(%d,%d)-(%d,%d)-(%d,%d)-(%d,%d)\n",			\
 	(p)->u0, (p)->v0, (p)->u1, (p)->v1,				\
 	(p)->u2, (p)->v2, (p)->u3, (p)->v3)			
 
 #define dumpRGB0(p)							\
-	GPU_printf("(%3d,%3d,%3d)\n", (p)->r0, (p)->g0, (p)->b0) 	
+	g_GpuPrintf("(%3d,%3d,%3d)\n", (p)->r0, (p)->g0, (p)->b0) 	
 		   
 #define dumpRGB1(p)							\
-	GPU_printf("(%3d,%3d,%3d)\n", (p)->r1, (p)->g1, (p)->b1)	
+	g_GpuPrintf("(%3d,%3d,%3d)\n", (p)->r1, (p)->g1, (p)->b1)	
 		   
 #define dumpRGB2(p)							\
-	GPU_printf("(%3d,%3d,%3d)\n", (p)->r2, (p)->g2, (p)->b2) 
+	g_GpuPrintf("(%3d,%3d,%3d)\n", (p)->r2, (p)->g2, (p)->b2) 
 		   
 #define dumpRGB3(p)							\
-	GPU_printf("(%3d,%3d,%3d)\n", (p)->r3, (p)->g3, (p)->b3) 	
+	g_GpuPrintf("(%3d,%3d,%3d)\n", (p)->r3, (p)->g3, (p)->b3) 	
 
 /*
  * Primitive Handling Macros
@@ -267,13 +267,13 @@ extern	int (*GPU_printf)();	/* printf() object */
 	((y<<6)|((x>>4)&0x3f))
 
 #define dumpTPage(tpage)						\
-	GPU_printf("tpage: (%d,%d,%d,%d)\n",				\
+	g_GpuPrintf("tpage: (%d,%d,%d,%d)\n",				\
 			   ((tpage)>>7)&0x003,((tpage)>>5)&0x003,	\
 			   ((tpage)<<6)&0x7c0,				\
 			   (((tpage)<<4)&0x100)+(((tpage)>>2)&0x200))
 
 #define dumpClut(clut) \
-	GPU_printf("clut: (%d,%d)\n", (clut&0x3f)<<4, (clut>>6))
+	g_GpuPrintf("clut: (%d,%d)\n", (clut&0x3f)<<4, (clut>>6))
 
 #define _get_mode(dfe, dtd, tpage)	\
 		((0xe1000000)|((dtd)?0x0200:0)| \

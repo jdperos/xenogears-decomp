@@ -68,6 +68,8 @@ segments:
       - [0x9144, rodata]
       - [0x9258, .rodata, system/memory]
       - [0x927C, rodata]
+      - [0x9788, .rodata, psyq/libgpu]
+      - [0x9858, rodata]
       #- [0x9BD4, .rodata, psyq/libetc]
       #- [0x9C08, rodata]
       - [0x9CE0, asm] 
