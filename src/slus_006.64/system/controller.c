@@ -229,4 +229,22 @@ unsigned int ControllerGetNumStates() {
     return g_ControllerNumStates;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/controller", ControllerResetState);
+void ControllerResetState(void) {
+    g_ControllerNumStates = 0;
+    g_ControllerCurStateWriteIndex = 0;
+    g_ControllerCurStateReadIndex = 0;
+    g_ControllerIsStateStackFull = 0;
+    D_80050200 = 1;
+    D_800594EC = 0;
+    D_800594E8 = 0;
+    D_800594E0 = 0;
+    D_800594DC = 0;
+    D_800595CC = 0;
+    D_800595C8 = 0;
+    g_C2ButtonStatePressedOnce = 0;
+    g_C1ButtonStatePressedOnce = 0;
+    g_C2ButtonStateReleased = 0;
+    g_C1ButtonStateReleased = 0;
+    g_C2ButtonState = 0;
+    g_C1ButtonState = 0;
+}

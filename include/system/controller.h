@@ -137,6 +137,14 @@ extern u8 D_80062623;
 extern u8 D_80062624;
 extern u8 D_80062625;
 
+extern int D_80050200;
+extern short D_800594EC;
+extern short D_800594E8;
+extern short D_800594E0;
+extern short D_800594DC;
+extern short D_800595CC;
+extern short D_800595C8;
+
 extern u_char g_ControllerStickToAnalogX[0x10];
 /*
 u_char g_ControllerStickToAnalogX[0x10] = {

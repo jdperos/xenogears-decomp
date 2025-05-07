@@ -62,6 +62,8 @@ segments:
     align: 4
     subsegments:
       - [0x800, rodata]
+      #- [0x88FC, .rodata, main/main_loop]
+      #- [0x8A6C, rodata]
       - [0x90F4, .rodata, system/archive]
       - [0x9144, rodata]
       - [0x9258, .rodata, system/memory]

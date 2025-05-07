@@ -52,6 +52,7 @@ CC_FLAGS := $(OPT_FLAGS) $(DL_FLAGS) -mips1 -mcpu=3000 -w -funsigned-char -fpeep
 
 # PSY-Q libraries uses ASPSX 2.56 (PSQ 4.0)
 # Archive library code uses GCC 2.6.0.
+# Main-related code seems to use -G0 instead of -G8
 define DL_FlagsSwitch
 	$(if
 		$(or 
@@ -69,7 +70,19 @@ define DL_FlagsSwitch
 		),
 		$(eval CC = $(TOOLS_DIR)/gcc-2.6.0-psx/cc1),
 		$(eval CC = $(TOOLS_DIR)/gcc-2.7.2-psx/cc1)
-	)	
+	)
+
+	$(if
+		$(or 
+			$(filter MAIN,$(patsubst build/src/slus_006.64/main/main_loop%,MAIN,$(1))), 
+			$(filter MAIN,$(patsubst build/asm/slus_006.64/main/main_loop%,MAIN,$(1)))
+		),
+		$(eval DL_FLAGS := -G0),
+		$(eval DL_FLAGS := -G8)
+	)
+
+	$(eval AS_FLAGS := $(ENDIAN) $(INCLUDE_FLAGS) $(OPT_FLAGS) $(DL_FLAGS) -march=r3000 -mtune=r3000 -no-pad-sections)
+	$(eval CC_FLAGS := $(OPT_FLAGS) $(DL_FLAGS) -mips1 -mcpu=3000 -w -funsigned-char -fpeephole -ffunction-cse -fpcc-struct-return -fcommon -fverbose-asm -msoft-float -mgas -fgnu-linker -quiet)
 endef
 
 ifeq ($(NON_MATCHING),1)
