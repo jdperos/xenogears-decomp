@@ -15,6 +15,8 @@ KernelMenuInitialize = 0x8001A250;
 KernelMenuUpdate = 0x8001A344;
 KernelMenuMain = 0x8001A4B4;
 
+GraphicsDrawPauseLetters = 0x8001FAB4;
+
 // Archive / Filesystem
 ArchiveInit = 0x80028230;
 ArchiveReset = 0x800283D4;
@@ -131,10 +133,16 @@ FontLoadFont = 0x800374E8;
 
 // Sound
 SoundInitialize = 0x80037B88;
+SoundEnableAllSpuChannels = 0x80037E8C;
+SoundMuteAllSpuChannels = 0x80037EE4;
 SoundHandleError = 0x8003F6B0;
 
 // PSY-Q Standard Library
+bzero = 0x8003F8E8;
+memchr = 0x8003F918;
+memcpy = 0x8003F968;
 memmove = 0x8003F99C;
+memset = 0x8003FA08;
 rand = 0x8003FA38;
 srand = 0x8003FA68;
 strlen = 0x8003FBC8;
@@ -247,7 +255,9 @@ SetDrawTPage = 0x80043E20;
 DumpDrawEnv = 0x80043F50;
 DumpDispEnv = 0x80044064;
 ResetGraph = 0x80044110;
+SetGraphReverse = 0x80044294;
 SetGraphDebug = 0x800443A8;
+GetGraphDebug = 0x800444C8;
 DrawSyncCallback = 0x800444D8;
 SetDispMask = 0x80044534;
 DrawSync = 0x800445D0;
@@ -261,7 +271,50 @@ ClearOTagR = 0x80044AD8;
 DrawPrim = 0x80044B70;
 DrawOTag = 0x80044BD0;
 PutDrawEnv = 0x80044C44;
+DrawOTagEnv = 0x80044D48;
+GetDrawEnv = 0x80044E64;
 PutDispEnv = 0x80044E9C;
+GetDispEnv = 0x80045344;
+
+// PSY-Q Libgte
+InitGeom = 0x80048BC4;
+LoadAverage12 = 0x80048F7C;
+LoadAverageByte = 0x8004912C;
+LoadAverageCol = 0x8004918C;
+MulMatrix0 = 0x8004920C;
+CompMatrix = 0x8004931C;
+PushMatrix = 0x8004960C;
+PopMatrix = 0x800496AC;
+ScaleMatrix = 0x80049DCC;
+SetRotMatrix = 0x80049EFC;
+SetLightMatrix = 0x80049F2C;
+SetColorMatrix = 0x80049F5C;
+SetTransMatrix = 0x80049F8C;
+SetVertex0 = 0x80049FAC;
+SetVertex1 = 0x80049FBC;
+SetVertex2 = 0x80049FCC;
+SetVertexTri = 0x80049FDC;
+ReadGeomOffset = 0x8004A0BC;
+ReadGeomScreen = 0x8004A0DC;
+SetBackColor = 0x8004A0EC;
+SetFarColor = 0x8004A10C;
+SetGeomOffset = 0x8004A12C;
+SetGeomScreen = 0x8004A14C;
+SquareSL12 = 0x8004A5EC;
+SquareSL0 = 0x8004A61C;
+RotTransPers = 0x8004A64C;
+RotTransPers3 = 0x8004A67C;
+RotTrans = 0x8004A6DC;
+NormalClip = 0x8004A70C;
+RotTransPers4 = 0x8004A73C;
+RotAverage4 = 0x8004A7BC;
+RotAverageNclip4 = 0x8004A83C;
+TransposeMatrix = 0x8004A8EC;
+RotMatrixYXZ = 0x8004A92C;
+RotMatrixZYX = 0x8004ABBC;
+RotMatrixX = 0x8004AE4C;
+RotMatrixY = 0x8004AFEC;
+RotMatrixZ = 0x8004B18C;
 
 // PSY-Q Interrupts (libetc)
 Vsync = 0x8004B54C;
@@ -376,6 +429,8 @@ g_RandomSeed = 0x8005A1FC;
 
 // PSY-Q Libgpu
 g_GpuPrintf = 0x800568CC;
+g_GraphDebugLevel = 0x800568D2;
+g_DrawSyncCallbackFn = 0x800568DC;
 
 // PSY-Q SPU
 g_SpuTransferCallback = 0x80058E40;

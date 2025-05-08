@@ -1,0 +1,29 @@
+
+
+
+FieldInitializeControllersAndMouse = 0x80071EE8;
+
+FieldPollControllers = 0x80074700;
+
+FieldInitializeControllers = 0x800775C0;
+FieldRenderSync = 0x800775F8;
+FieldLoadUITextures = 0x80077620;
+FieldUpdateDeltaTime = 0x8007781C;
+FieldMain = 0x80077E88;
+
+FieldRenderSyncAndFlush = 0x8007999C;
+
+FieldSetControllerBuffers = 0x8007AD8C;
+
+// Script / Event
+FieldEventLoop = 0x800A1EC8;
+FieldScriptMemoryWriteU16 = 0x800A3074;
+
+g_FrameDeltaTime = 0x800ADBA4;
+
+g_pFieldControllerBuffer1 = 0x800B0054;
+g_pFieldControllerBuffer2 = 0x800B0058;
+
+g_FieldSystemMode = 0x800C268C; // CD or PC HDD
+
+g_FieldScriptMemory = 0x800C3A68;

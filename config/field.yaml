@@ -47,12 +47,14 @@ segments:
   - name: field
     type: code
     start: 0x0
-    vram: 0x006faf0
+    vram: 0x8006faf0
     align: 4
     subalign: 4
     subsegments:
       - [0x0, rodata]
       - [0x2FC, asm]
+      - [0x7AD0, c, main/main]
+      - [0x906C, asm]
       - [0x3DF78, data]
   - [0x3FAFC, databin]
   - [0x3FAFE]

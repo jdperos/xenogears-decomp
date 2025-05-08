@@ -7,6 +7,10 @@ categories:
     name: Main Executable
     paths:
       - slus_006.64
+  - id: field
+    name: Field Overlay
+    paths:
+      - field
 
 expected_paths:
   asm: expected/asm

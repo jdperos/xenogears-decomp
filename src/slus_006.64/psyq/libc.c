@@ -2,6 +2,10 @@
 
 extern u_long g_RandomSeed;
 
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libc", bzero);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libc", memchr);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libc", memcpy);
+
 void* memmove(u_char* pDst, u_char* pSrc, int size) {
     if (pDst >= pSrc) {
         while (size-- > 0) {
@@ -16,7 +20,7 @@ void* memmove(u_char* pDst, u_char* pSrc, int size) {
     return pDst;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libc", func_8003FA08);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libc", memset);
 
 int rand(void) {
     u_long nNext;

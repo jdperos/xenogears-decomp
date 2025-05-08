@@ -1,7 +1,7 @@
 # Adapted from https://github.com/Vatuu/silent-hill-decomp/tree/master
 
 # Configuration
-BUILD_OVERLAYS ?= 0
+BUILD_OVERLAYS ?= 1
 NON_MATCHING   ?= 0
 SKIP_ASM       ?= 0
 
@@ -148,7 +148,7 @@ endif
 TARGET_MAIN := slus_006.64
 
 ifeq ($(BUILD_OVERLAYS), 1)
-TARGET_OVERLAYS := field movie
+TARGET_OVERLAYS := field
 endif
 
 # Source Definitions

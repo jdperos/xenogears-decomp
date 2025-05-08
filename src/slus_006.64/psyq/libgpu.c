@@ -2,7 +2,11 @@
 #include "psyq/libetc.h"
 #include "psyq/libgpu.h"
 
+extern char g_GraphDebugLevel;
+extern void (*g_DrawSyncCallbackFn)();
 extern int (*g_GpuPrintf)(char*, ...);
+
+// D_800568C8 : Sys func ptrs
 
 DRAWENV* SetDefDrawEnv(DRAWENV* env, int x, int y, int w, int h) {
     int nVideoMode;
@@ -235,21 +239,56 @@ void DumpDispEnv(DISPENV *env) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", ResetGraph);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80044294);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetGraphReverse);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetGraphDebug);
+/*
+int SetGraphDebug(int level) {
+    char nPrev;
 
+    nPrev = g_GraphDebugLevel;
+    g_GraphDebugLevel = level;
+
+    if (level != '\0') {
+        g_GpuPrintf("SetGraphDebug:level:%d,type:%d reverse:%d\n", level, DAT_800568d0, DAT_800568d3);
+    }
+
+    return nPrev;
+}
+*/
+
+// SetGrapQue ?
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_8004440C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_800444B8);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_800444C8);
+int GetGraphDebug(void) {
+    return g_GraphDebugLevel;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", DrawSyncCallback);
+extern char D_80019118; // "DrawSyncCallback(%08x)...\n"
+u_long DrawSyncCallback(void (*pCallbackFn)()) {
+    void (*pPrevCallbackFn)();
+
+    if (g_GraphDebugLevel >= 2)
+        g_GpuPrintf(&D_80019118, pCallbackFn);
+
+    pPrevCallbackFn = g_DrawSyncCallbackFn;
+    g_DrawSyncCallbackFn = pCallbackFn;
+    return (u_long) pPrevCallbackFn;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetDispMask);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", DrawSync);
+/*
+int DrawSync(int mode) {
+    if (g_GraphDebugLevel >= 2)
+        g_GpuPrintf("DrawSync(%d)...\n", mode);
+
+    return func_80046DB4(mode);
+}
+*/
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_8004463C);
 
@@ -273,8 +312,10 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", DrawOTag);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", PutDrawEnv);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80044D48);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", DrawOTagEnv);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80044E64);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", GetDrawEnv);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", PutDispEnv);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", GetDispEnv);

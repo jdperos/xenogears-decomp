@@ -5,9 +5,9 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundInitialize);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037DC0);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037E8C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundEnableAllSpuChannels);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037EE4);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundMuteAllSpuChannels);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037F44);
 

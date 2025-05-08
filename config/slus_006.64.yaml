@@ -92,13 +92,15 @@ segments:
       - [0x28078, asm]
       - [0x28388, c, system/sound]
       - [0x2FF38, asm]
-      - [0x3019C, c, psyq/libc]
+      - [0x300E8, c, psyq/libc]
       - [0x30C54, c, psyq/libapi]
       - [0x3137C, asm] # Likely part of libapi
       - [0x31508, c, psyq/libcd]
       - [0x3358C, asm]
       - [0x34128, c, psyq/libgpu]
-      - [0x35B44, asm]
+      - [0x35B7C, asm]
+      - [0x393C4, c, psyq/libgte]
+      - [0x3BB2C, asm] # Part of libetc?
       - [0x3BD4C, c, psyq/libetc]
       - [0x3CB18, c, psyq/libsn]
       - [0x3CD30, asm]
