@@ -2,20 +2,22 @@
 #include "psyq/libgpu.h"
 #include "psyq/libetc.h"
 
+extern int g_FrameDeltaTime;
+
 INCLUDE_ASM("asm/field/nonmatchings/main/main", FieldInitializeControllers);
 
-//INCLUDE_ASM("asm/field/nonmatchings/main/main", FieldRenderSync);
 void FieldRenderSync(void) {
     DrawSync(0);
     Vsync(0);
 }
 
-
 INCLUDE_ASM("asm/field/nonmatchings/main/main", FieldLoadUITextures);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/main", func_800777DC);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/main", FieldUpdateDeltaTime);
+void FieldUpdateDeltaTime(void) {
+    g_FrameDeltaTime = Vsync(1);
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/main", func_80077844);
 

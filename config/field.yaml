@@ -53,8 +53,12 @@ segments:
     subsegments:
       - [0x0, rodata]
       - [0x2FC, asm]
+      - [0x23F8, c, main/init]
+      - [0x2650, asm]
       - [0x7AD0, c, main/main]
       - [0x906C, asm]
+      - [0x32384, c, scripts/virtual_machine]
+      - [0x3D334, asm]
       - [0x3DF78, data]
   - [0x3FAFC, databin]
   - [0x3FAFE]

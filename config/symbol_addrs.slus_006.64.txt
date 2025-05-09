@@ -474,7 +474,7 @@ g_FontClutDest = 0x80059398;
 // Sound
 g_SoundSpuErrorId = 0x80059500;
 g_SoundControlFlags = 0x8005957C;
-g_SoundSpuCommonAttr = 0x8005A3C0;
+g_SoundSpuCommonAttr = 0x8005A3C0; // type:SpuCommonAttr size:0x28
 g_SoundSpuMemoryTableStart = 0x8006FAC8;
 
 // Controller

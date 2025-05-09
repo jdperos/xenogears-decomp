@@ -57,15 +57,12 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038C68);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038D18);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038DB4);
-/*
 void func_80038DB4(long reverb, long mix) {
-    g_SoundSpuCommonAttr.mask = g_SoundSpuCommonAttr.mask | SPU_COMMON_CDREV | SPU_COMMON_CDMIX;
     g_SoundSpuCommonAttr.cd.reverb = reverb;
     g_SoundSpuCommonAttr.cd.mix = mix;
+    g_SoundSpuCommonAttr.mask = g_SoundSpuCommonAttr.mask | SPU_COMMON_CDREV | SPU_COMMON_CDMIX;
     SpuSetCommonAttr(&g_SoundSpuCommonAttr);
 }
-*/
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038DF4);
 
