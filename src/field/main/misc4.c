@@ -113,10 +113,10 @@ void func_8007A7F4(Quad* pPart, int x, int y, int tex) {
     pPart->polys[0].clut = GetClut(D_800ADE08[nIndexTex], D_800ADE0A[nIndexTex]);
     
     func_8007A44C(&pPart->polys[0], 
-        D_800ADD70[x].x, D_800ADDB8[y], 
-        D_800ADD70[x].y, D_800ADDB8[y], 
-        D_800ADD70[x].z, D_800ADDB8[y], 
-        D_800ADD70[x].w, D_800ADDB8[y]
+        D_800ADD70[x].x, D_800ADDB8[y].x, 
+        D_800ADD70[x].y, D_800ADDB8[y].y, 
+        D_800ADD70[x].z, D_800ADDB8[y].z, 
+        D_800ADD70[x].w, D_800ADDB8[y].w
     );
 
     *pNextPoly = pPart->polys[0];
