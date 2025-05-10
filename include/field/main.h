@@ -2,6 +2,7 @@
 #define _XENO_FIELD_MAIN_H
 
 #include "psyq/libgpu.h"
+#include "psyq/libgte.h"
 
 typedef struct {
     DRAWENV drawEnvs[2];
@@ -14,18 +15,32 @@ typedef struct {
 } RenderContext;
 
 typedef struct {
+    SVECTOR vecs[4];
+    POLY_FT4 polys[2];
+} Quad;
+
+typedef struct {
+    short x;
+    short y;
+    short z;
+    short w;
+} SVec4;
+
+typedef struct {
     // 0x800b11ac
-    DR_MODE drawModes[5][2];
+    DR_MODE drawModes[10];
     
     // 0x800b1224
-    RECT rects[5][2];
+    RECT rects[10];
 
     // 0x800b1274
-    POLY_FT4 prims[5][2];
+    POLY_FT4 polygons[10];
 
     // 0x800b1404
-    SVECTOR vecs[5][4]; // Vectors for RotAverage4
+    SVECTOR vectors[20]; // Vectors for RotAverage4
 } ZoomFadeEffect;
+
+extern ZoomFadeEffect g_FieldZoomFadeEffect;
 
 extern int D_80059198; // Has initialized render contexts?
 

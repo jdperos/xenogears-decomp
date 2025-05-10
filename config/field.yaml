@@ -43,23 +43,26 @@ options:
   data_string_encoding: ASCII
   rodata_string_guesser_level: 2
   data_string_guesser_level: 2
+  ld_bss_is_noload: true
 segments:
   - name: field
     type: code
     start: 0x0
     vram: 0x8006faf0
+    bss_size: 0x20000 # yolo
     align: 4
     subalign: 4
     subsegments:
       - [0x0, rodata]
-      - [0x2FC, asm]
+      - [0x2FC, c, main/misc3]
       - [0x23F8, c, main/init]
       - [0x2650, c, main/misc2]
       - [0x7AD0, c, main/main]
-      - [0x906C, asm]
+      - [0x906C, c, main/misc4]
       - [0x1729C, c, main/misc]
       - [0x32384, c, scripts/virtual_machine]
       - [0x3D334, asm]
       - [0x3DF78, data]
+      - { vram: 0x800af5f0, type: bss }
   - [0x3FAFC, databin]
   - [0x3FAFE]

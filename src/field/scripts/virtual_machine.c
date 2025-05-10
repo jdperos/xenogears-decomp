@@ -79,7 +79,19 @@ INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A55B8);
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A55C8);
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A5600);
+// Set PolyFT4 color for PolyFT4s of next swap chain
+void func_800A5600(u_char color) {
+    int i;
+    POLY_FT4* pPoly;
+    int nOffset;
+    
+    for (i = 0; i < 5; i++) {
+        nOffset = i * 2;
+        (g_FieldZoomFadeEffect.polygons + nOffset + ((g_FieldCurRenderContextIndex + 1) & 1))->r0 = color;
+        (g_FieldZoomFadeEffect.polygons + nOffset + ((g_FieldCurRenderContextIndex + 1) & 1))->g0 = color;
+        (g_FieldZoomFadeEffect.polygons + nOffset + ((g_FieldCurRenderContextIndex + 1) & 1))->b0 = color;
+    }
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A56A8);
 
@@ -131,7 +143,7 @@ void func_800A5884(void) {
         FieldDisplay();
     }
 
-    nCurX= 0x2C0;
+    nCurX = 0x2C0;
     for (i = 0; i < 5; i++) {
         func_800A5774(nCurX, 0x100, 0xE0);
         nCurX += 0x40;
@@ -193,7 +205,7 @@ u_int FieldImageConvert24BitColorTo15Bit(void) {
     u_long nPixel;
     u_int nLSB;
 
-    // Are we dong reading RGB channels?
+    // Are we done reading RGB channels?
     if (!(g_FieldPixelIndex & 3)) {
         nPixel = *g_Field24BitImageData;
         g_Field24BitImageData += 1;
