@@ -1,5 +1,6 @@
 #include "common.h"
 #include "field/main.h"
+#include "psyq/libetc.h"
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80078B5C);
 
@@ -16,7 +17,12 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007954C);
 void func_800796F4(void) {
 }
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", FieldSwapRenderContext);
+void FieldSwapRenderContext(void) {
+    g_FieldCurRenderContextIndex = (g_FieldCurRenderContextIndex + 1) % 2;
+    g_FieldCurRenderContext = &g_FieldRenderContexts[g_FieldCurRenderContextIndex];
+    PutDispEnv(&g_FieldCurRenderContext->dispEnv);
+    PutDrawEnv(&g_FieldCurRenderContext->drawEnvs[0]);
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80079784);
 
@@ -24,10 +30,20 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_800798BC);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007995C);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", FieldRenderSyncAndFlush);
+void FieldRenderSyncAndFlush(void) {
+    FieldRenderSync();
+    EnterCriticalSection();
+    FlushCache();
+    ExitCriticalSection();
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_800799D4);
 
+
+// Quad rendering
+// --------------------
+
+// Set POLY_FT4 UVs
 void func_8007A44C(POLY_FT4* poly, short u0, short v0, short u1, short v1, short u2, short v2, short u3, short v3) {
     if (u0 < 0) u0 = 0;
     if (u1 < 0) u1 = 0;
@@ -59,7 +75,6 @@ void func_8007A44C(POLY_FT4* poly, short u0, short v0, short u1, short v1, short
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007A5C4);
 
-//INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007A7F4);
 
 extern SVec4 D_800ADCE0[]; // X0 -> X3 positions
 extern SVec4 D_800ADD28[]; // Y0 -> Y3 positions
@@ -74,6 +89,7 @@ extern short D_800ADE06[];
 extern short D_800ADE08[];
 extern short D_800ADE0A[];
 
+// Compass primitive initialization?
 void func_8007A7F4(Quad* pPart, int x, int y, int tex) {
     int nIndexTex;
     POLY_FT4* pNextPoly;
@@ -122,18 +138,98 @@ void func_8007A7F4(Quad* pPart, int x, int y, int tex) {
     *pNextPoly = pPart->polys[0];
 }
 
+// Actor primitive initialization
+void func_8007AA44(Quad* pQuad) {
+    POLY_FT4* pPoly;
+    POLY_FT4* pPoly2;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007AA44);
+    pPoly = &pQuad->polys[0];
+    pPoly2 = &pQuad->polys[1];
+    
+    SetPolyFT4(pPoly);
+    pQuad->vecs[3].vx = -0x18;
+    pQuad->vecs[3].vz = -0x18;
+    pQuad->vecs[3].vy = 0;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007AB6C);
+    pQuad->vecs[2].vx = 0x18;
+    pQuad->vecs[2].vy = 0;
+    pQuad->vecs[2].vz = -0x18;
+
+    pQuad->vecs[1].vx = -0x18;
+    pQuad->vecs[1].vy = 0;
+    pQuad->vecs[1].vz = 0x18;
+
+    pQuad->vecs[0].vx = 0x18;
+    pQuad->vecs[0].vy = 0;
+    pQuad->vecs[0].vz = 0x18;
+
+    setRGB0(pPoly, 0x80, 0x80, 0x80);
+    pPoly->tpage = GetTPage(0, 2, 0x280, 0x1E0);
+    pPoly->clut = GetClut(0x100, 0xF3);
+    SetSemiTrans(pPoly, 1);
+
+    pPoly->v0 = 0xE0;
+    pPoly->v1 = 0xE0;
+    pPoly->u0 = 0;
+    pPoly->u1 = 0xF;
+    pPoly->u2 = 0;
+    pPoly->v2 = 0xEF;
+    pPoly->u3 = 0xF;
+    pPoly->v3 = 0xEF;
+    
+    *pPoly2 = *pPoly;
+}
+
+// Draw Quad / Actor primitive
+void func_8007AB6C(u_long* ot, Quad* pQuad, MATRIX* matrix, int renderContext) {
+    long nInterpolation;
+    long nFlag;
+    POLY_FT4* pPoly;
+
+    pPoly = &pQuad->polys[renderContext];
+    PushMatrix();
+    SetRotMatrix(matrix);
+    SetTransMatrix(matrix);
+    RotAverage4(
+        &pQuad->vecs[0], &pQuad->vecs[1], &pQuad->vecs[2], &pQuad->vecs[3], 
+        &pPoly->x0, &pPoly->x1, &pPoly->x2, &pPoly->x3, 
+        &nInterpolation, &nFlag
+    );
+    addPrim(ot + 1, pPoly);
+    PopMatrix();
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007AC58);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", FieldSetControllerBuffers);
+// Controller stuff
+// --------------------
+extern s32 g_pFieldControllerBuffer1;
+extern s32 g_pFieldControllerBuffer2;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007ADA4);
+extern u_short g_FieldMouseSpeedX;
+extern u_short g_FieldMouseSpeedY;
+extern s32 D_800C3A44;
+extern s32 D_800C3A4C;
+extern s32 D_800C3A50;
+extern s32 D_800C3A54;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007AE14);
+void FieldSetControllerBuffers(void* controllerBuffer1, void* controllerBuffer2) {
+    g_pFieldControllerBuffer1 = controllerBuffer1;
+    g_pFieldControllerBuffer2 = controllerBuffer2;
+}
+
+void func_8007ADA4(int arg0, int arg1, int arg2, int arg3) {
+    D_800C3A44 = arg0 * g_FieldMouseSpeedX;
+    D_800C3A50 = arg1 * g_FieldMouseSpeedX;
+    D_800C3A4C = arg2 * g_FieldMouseSpeedY;
+    D_800C3A54 = arg3 * g_FieldMouseSpeedY;
+}
+
+void func_8007AE14(u_short xSpeed, u_short ySpeed) {
+    g_FieldMouseSpeedX = xSpeed;
+    g_FieldMouseSpeedY = ySpeed;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007AE2C);
 
