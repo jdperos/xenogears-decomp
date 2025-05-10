@@ -1,4 +1,5 @@
 #include "common.h"
+#include "field/main.h"
 #include "field/actor.h"
 #include "system/memory.h"
 #include "psyq/libgpu.h"
@@ -48,9 +49,23 @@ INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A3C8C);
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A3F4C);
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A4748);
+//INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A4748);
+void func_800A4748(void) {
+    func_800A476C(0x2c0,0x100);
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A476C);
+//INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A476C);
+void func_800A476C(int x, int y) {
+    RECT rect;
+
+    rect.w = 0x140;
+    rect.y = 0;
+    rect.x = 0;
+    rect.h = 0xe0;
+    SetGeomScreen(0x200);
+    MoveImage(&rect, x, y);
+    FieldRenderSync();
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A47D4);
 
@@ -70,19 +85,82 @@ INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A56A8);
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A5710);
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A5774);
+void func_800A5774(int x, int y, int h) {
+    RECT rect;
+    int nSize;
+    int i;
+    u_long* pImageBuffer;
+    u_long* pWorkBuffer;
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A5884);
+    rect.x = x;
+    rect.y = y;
+    rect.w = 0x40;
+    rect.h = h;
+    pImageBuffer = HeapAlloc(h * 0x80, 0x1);
+    StoreImage( &rect, pImageBuffer);
+    DrawSync(0);
+    
+    pWorkBuffer = pImageBuffer;
+    nSize = h * (0x80 / sizeof(u_long));
+    for (i = 0; i < nSize; i += 8) {
+        pWorkBuffer[0] |= 0x80008000;
+        pWorkBuffer[1] |= 0x80008000;
+        pWorkBuffer[2] |= 0x80008000;
+        pWorkBuffer[3] |= 0x80008000;
+        pWorkBuffer[4] |= 0x80008000;
+        pWorkBuffer[5] |= 0x80008000;
+        pWorkBuffer[6] |= 0x80008000;
+        pWorkBuffer[7] |= 0x80008000; 
+        pWorkBuffer += 8;
+    }
+    
+    LoadImage(&rect, pImageBuffer);
+    DrawSync(0);
+    HeapFree(pImageBuffer);
+}
+
+// Zoom fade effect stuff
+void func_800A5884(void) {
+    int i;
+    int nCurX;
+
+    FieldZoomFadeEffectInitialize();
+    for (i = 0; i < 2; i++) {
+        FieldClearAndSwapOTag();
+        FieldZoomFadeEffectUpdate();
+        FieldDisplay();
+    }
+
+    nCurX= 0x2C0;
+    for (i = 0; i < 5; i++) {
+        func_800A5774(nCurX, 0x100, 0xE0);
+        nCurX += 0x40;
+    }
+
+    for (i = 0; i < 2; i++) {
+        FieldClearAndSwapOTag();
+        FieldZoomFadeEffectUpdate();
+        FieldDisplay();
+    }
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A5924);
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A5C40);
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A6408);
+// Or Draw?
+INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", FieldZoomFadeEffectUpdate);
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A663C);
+INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", FieldZoomFadeEffectInitialize);
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", FieldDisplay);
+void FieldDisplay(void) {
+    DrawSync(0);
+    Vsync(2);
+    ClearImage(&g_FieldCurRenderContext->drawEnvs[0].clip, 0x0, 0x0, 0x0);
+    PutDrawEnv(&g_FieldCurRenderContext->drawEnvs[0]);
+    PutDispEnv(&g_FieldCurRenderContext->dispEnv);
+    DrawOTag(g_FieldCurRenderContext->ot3 + 7);
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A6998);
 

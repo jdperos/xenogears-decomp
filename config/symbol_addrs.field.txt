@@ -1,8 +1,12 @@
 
-
+FieldSetScreenDimensions = 0x80086D8C;
 
 FieldInitializeControllersAndMouse = 0x80071EE8;
+FieldSetClipDimensions = 0x80071F64;
 FieldInitializeRenderContexts = 0x80071FB0;
+
+FieldClearAndSwapOTagInternal = 0x80073F50;
+FieldClearAndSwapOTag = 0x80073FE0;
 
 FieldPollControllers = 0x80074700;
 
@@ -25,14 +29,22 @@ FieldScriptVMHandlerJmp = 0x800A1E74;
 FieldScriptVMRun = 0x800A1EC8;
 FieldScriptMemoryWriteU16 = 0x800A3074;
 
+FieldZoomFadeEffectUpdate = 0x800A6408;
+FieldZoomFadeEffectInitialize = 0x800A663C;
+
 FieldDisplay = 0x800A6924;
+
 
 FieldImageConvert24BitColorTo15Bit = 0x800A7744;
 FieldImageConvert24BitTo15Bit = 0x800A77C4;
 
 FieldScriptVMGetInstructionArgument = 0x800ACDB8;
 
+g_FieldCurRenderContextIndex = 0x800ADB08;
+g_FieldRenderContextUseOT2 = 0x800ADB4C;
+
 g_FrameDeltaTime = 0x800ADBA4;
+
 
 g_FieldScriptVMCurScriptData = 0x800ADC00;
 
@@ -57,3 +69,5 @@ g_Field24BitImageData = 0x800C3904;
 g_Field15BitImageData = 0x800C390C;
 
 g_FieldScriptMemory = 0x800C3A68;
+
+g_FieldCurRenderContext = 0x800C426C;

@@ -7,7 +7,16 @@
 
 INCLUDE_ASM("asm/field/nonmatchings/main/init", FieldInitializeControllersAndMouse);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/init", func_80071F64);
+void FieldSetClipDimensions(short x, short y, short w, short h) {
+    g_FieldRenderContexts[0].drawEnvs[0].clip.y = y;
+    g_FieldRenderContexts[0].drawEnvs[0].clip.x = x;
+    g_FieldRenderContexts[0].drawEnvs[0].clip.w = w;
+    g_FieldRenderContexts[0].drawEnvs[0].clip.h = h;
+    g_FieldRenderContexts[1].drawEnvs[0].clip.x = x;
+    g_FieldRenderContexts[1].drawEnvs[0].clip.y = y + 0x100;
+    g_FieldRenderContexts[1].drawEnvs[0].clip.w = w;
+    g_FieldRenderContexts[1].drawEnvs[0].clip.h = h;
+}
 
 void FieldInitializeRenderContexts(void) {
     D_80059198 = 1;
@@ -21,8 +30,8 @@ void FieldInitializeRenderContexts(void) {
     SetDefDrawEnv(&g_FieldRenderContexts[1].drawEnvs[1], 0, 0x100, 0x140, 0xE0);
     SetDefDispEnv(&g_FieldRenderContexts[0].dispEnv, 0, 0x100, 0x140, 0xE0);
     SetDefDispEnv(&g_FieldRenderContexts[1].dispEnv, 0, 0, 0x140, 0xE0);
-    func_80071F64(0, 0, 0x140, 0xE0);
-    func_80086D8C();
+    FieldSetClipDimensions(0x0, 0x0, 0x140, 0xE0);
+    FieldSetScreenDimensions();
 
     g_FieldRenderContexts[0].drawEnvs[0].r0 = 0;
     g_FieldRenderContexts[0].drawEnvs[0].g0 = 0;
