@@ -31,6 +31,8 @@ FieldSetControllerBuffers = 0x8007AD8C;
 FieldScriptVMHandlerJmp = 0x800A1E74;
 
 FieldScriptVMRun = 0x800A1EC8;
+
+FieldScriptVMReadArgumentFromMemory = 0x800A3018;
 FieldScriptMemoryWriteU16 = 0x800A3074;
 
 FieldZoomFadeEffectUpdate = 0x800A6408;

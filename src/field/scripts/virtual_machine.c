@@ -7,6 +7,8 @@
 extern Actor* g_FieldScriptVMCurActor;
 extern void* g_FieldScriptVMCurScriptData;
 extern int g_FieldScriptMaxInstructionCount;
+extern void* g_FieldScriptMemory;
+extern u32* D_800ADBF8;
 
 void FieldScriptVMHandlerJmp(void) {
     g_FieldScriptVMCurActor->scriptInstructionPointer = FieldScriptVMGetInstructionArgument(1);
@@ -36,7 +38,14 @@ INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A2FC0);
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A2FE0);
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A3018);
+// Read argument from script memory
+int FieldScriptVMReadArgumentFromMemory(int index) {
+    if (!(D_800ADBF8[index >> 6] & (1 << ((index >> 1) & 0x1F)))) {
+        return ((short*)&g_FieldScriptMemory)[index >> 1];
+    } else {
+        return ((u_short*)&g_FieldScriptMemory)[index >> 1];
+    }
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", FieldScriptMemoryWriteU16);
 
