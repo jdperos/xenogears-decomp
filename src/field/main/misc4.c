@@ -25,10 +25,46 @@ void FieldSwapRenderContext(void) {
 }
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80079784);
+/*
+Almost matches, some weird stuff going on when setting color
+
+extern RECT D_800AFE4C;
+extern TILE D_800AFE54[];
+extern DR_MODE D_800AFE24[];
+
+void func_80079784(int color) {
+    u_char nColor;
+    TILE* pTile;
+
+    FieldClearAndSwapOTag();
+    pTile = &D_800AFE54[g_FieldCurRenderContextIndex];
+    nColor = color * 4;
+    
+    setRGB0(pTile, nColor, nColor, nColor);
+
+    addPrim(g_FieldCurRenderContext->ot1, &D_800AFE54[g_FieldCurRenderContextIndex]);
+    addPrim(g_FieldCurRenderContext->ot1, &D_800AFE24[g_FieldCurRenderContextIndex]);
+
+    FieldRenderSync();
+    MoveImage(&D_800AFE4C, 0, g_FieldCurRenderContextIndex * 0x100);
+    PutDispEnv(&g_FieldCurRenderContext->dispEnv);
+    PutDrawEnv(&g_FieldCurRenderContext->drawEnvs[0]);
+    DrawOTag(g_FieldCurRenderContext->ot1 + 1);
+}
+*/
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_800798BC);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007995C);
+void func_8007995C(short w, short h, short x, short y, int destX, int destY) {
+    RECT rect;
+
+    rect.w = w;
+    rect.h = h;
+    rect.x = x;
+    rect.y = y;
+    MoveImage(&rect, destX, destY);
+    DrawSync(0);
+}
 
 void FieldRenderSyncAndFlush(void) {
     FieldRenderSync();

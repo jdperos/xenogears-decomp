@@ -6,12 +6,17 @@
 
 extern Actor* g_FieldScriptVMCurActor;
 extern void* g_FieldScriptVMCurScriptData;
+extern int g_FieldScriptMaxInstructionCount;
 
 void FieldScriptVMHandlerJmp(void) {
     g_FieldScriptVMCurActor->scriptInstructionPointer = FieldScriptVMGetInstructionArgument(1);
 }
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A1E9C);
+//INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A1E9C);
+void func_800A1E9C(void) {
+    g_FieldScriptMaxInstructionCount += 0x20;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", FieldScriptVMRun);
 
@@ -49,12 +54,10 @@ INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A3C8C);
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A3F4C);
 
-//INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A4748);
 void func_800A4748(void) {
     func_800A476C(0x2c0,0x100);
 }
 
-//INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A476C);
 void func_800A476C(int x, int y) {
     RECT rect;
 
@@ -290,7 +293,10 @@ INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A8EAC);
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A90B4);
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A915C);
+
 /*
+Almost matches
+
 extern int D_800ADB34;
 extern RECT g_FieldStoredImageDest;
 extern u_long* D_800AFC70;

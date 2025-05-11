@@ -1,6 +1,7 @@
 #include "common.h"
 #include "field/main.h"
 #include "psyq/libgpu.h"
+#include "psyq/libgte.h"
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_80072140);
 
@@ -57,12 +58,28 @@ void FieldClearAndSwapOTag(void) {
     }
 }
 
+void FieldMatrixCopy(MATRIX* dest, MATRIX* source) {
+    FieldMatrixCopyTransform(dest, source);
+    FieldMatrixCopyTranslation(dest, source);
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_80074038);
+void FieldMatrixCopyTranslation(MATRIX* dest, MATRIX* source) {
+    dest->t[0] = source->t[0];
+    dest->t[1] = source->t[1];
+    dest->t[2] = source->t[2];
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_80074078);
-
-INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_8007409C);
+void FieldMatrixCopyTransform(MATRIX* dest, MATRIX* source) {
+    dest->m[0][0] = source->m[0][0];
+    dest->m[0][1] = source->m[0][1];
+    dest->m[0][2] = source->m[0][2];
+    dest->m[1][0] = source->m[1][0];
+    dest->m[1][1] = source->m[1][1];
+    dest->m[1][2] = source->m[1][2];
+    dest->m[2][0] = source->m[2][0];
+    dest->m[2][1] = source->m[2][1];
+    dest->m[2][2] = source->m[2][2];
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_80074108);
 
