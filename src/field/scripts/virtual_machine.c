@@ -34,11 +34,15 @@ INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A2714);
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A28D4);
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A2FC0);
+// NOP
+void func_800A2FC0(void) {
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A2FE0);
+int func_800A2FE0(int index) {
+    return -((D_800ADBF8[index >> 6] & (1 << ((index >> 1) & 0x1F))) != 0);
+}
 
-// Read argument from script memory
 int FieldScriptVMReadArgumentFromMemory(int index) {
     if (!(D_800ADBF8[index >> 6] & (1 << ((index >> 1) & 0x1F)))) {
         return ((short*)&g_FieldScriptMemory)[index >> 1];
@@ -408,11 +412,19 @@ INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800ACCF4);
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800ACD7C);
 
-u_short FieldScriptVMGetInstructionArgument(int argumentIndex) {
+int FieldScriptVMGetInstructionArgument(int argumentIndex) {
     u_char* pData;
 
     pData = g_FieldScriptVMCurScriptData + (g_FieldScriptVMCurActor->scriptInstructionPointer + argumentIndex);
     return *pData | *(pData + 1) <<  8;
 }
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800ACDEC);
+// Get argument
+int func_800ACDEC(int index) {
+    int nArgument;
+
+    nArgument = FieldScriptVMGetInstructionArgument(index);
+    if (!(nArgument & 0x8000)) 
+        return FieldScriptVMReadArgumentFromMemory(nArgument & 0xFFFF);
+    return nArgument & 0x7FFF;
+}
