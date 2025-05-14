@@ -8,13 +8,12 @@ extern Actor* g_FieldScriptVMCurActor;
 extern void* g_FieldScriptVMCurScriptData;
 extern int g_FieldScriptMaxInstructionCount;
 extern void* g_FieldScriptMemory;
-extern u32* D_800ADBF8;
+extern u32* g_FieldCurScriptFile;
 
 void FieldScriptVMHandlerJmp(void) {
     g_FieldScriptVMCurActor->scriptInstructionPointer = FieldScriptVMGetInstructionArgument(1);
 }
 
-//INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A1E9C);
 void func_800A1E9C(void) {
     g_FieldScriptMaxInstructionCount += 0x20;
     g_FieldScriptVMCurActor->scriptInstructionPointer++;
@@ -34,17 +33,16 @@ INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A2714);
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A28D4);
 
-// NOP
-void func_800A2FC0(void) {
+void FieldScriptVMHandlerNop(void) {
     g_FieldScriptVMCurActor->scriptInstructionPointer++;
 }
 
-int func_800A2FE0(int index) {
-    return -((D_800ADBF8[index >> 6] & (1 << ((index >> 1) & 0x1F))) != 0);
+int FieldScriptVMGetVariableSign(int index) {
+    return -((g_FieldCurScriptFile[index >> 6] & (1 << ((index >> 1) & 0x1F))) != 0);
 }
 
 int FieldScriptVMReadArgumentFromMemory(int index) {
-    if (!(D_800ADBF8[index >> 6] & (1 << ((index >> 1) & 0x1F)))) {
+    if (!(g_FieldCurScriptFile[index >> 6] & (1 << ((index >> 1) & 0x1F)))) {
         return ((short*)&g_FieldScriptMemory)[index >> 1];
     } else {
         return ((u_short*)&g_FieldScriptMemory)[index >> 1];
@@ -419,8 +417,7 @@ int FieldScriptVMGetInstructionArgument(int argumentIndex) {
     return *pData | *(pData + 1) <<  8;
 }
 
-// Get argument
-int func_800ACDEC(int index) {
+int FieldScriptVMGetArgument(int index) {
     int nArgument;
 
     nArgument = FieldScriptVMGetInstructionArgument(index);

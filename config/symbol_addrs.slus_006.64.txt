@@ -17,6 +17,9 @@ KernelMenuMain = 0x8001A4B4;
 
 GraphicsDrawPauseLetters = 0x8001FAB4;
 
+GfxLoadImageAccelerated = 0x80022A0C;
+GfxLoadClutsAccelerated = 0x80022A70;
+
 // Archive / Filesystem
 ArchiveInit = 0x80028230;
 ArchiveReset = 0x800283D4;
@@ -276,6 +279,11 @@ GetDrawEnv = 0x80044E64;
 PutDispEnv = 0x80044E9C;
 GetDispEnv = 0x80045344;
 
+SetDrawMode = 0x800454DC;
+
+OpenTIM = 0x800471B4;
+ReadTIM = 0x800471C4;
+
 // PSY-Q Libgte
 InitGeom = 0x80048BC4;
 LoadAverage12 = 0x80048F7C;
@@ -431,6 +439,8 @@ g_RandomSeed = 0x8005A1FC;
 g_GpuPrintf = 0x800568CC;
 g_GraphDebugLevel = 0x800568D2;
 g_DrawSyncCallbackFn = 0x800568DC;
+
+g_GpuCurTIMHandle = 0x8005A37C;
 
 // PSY-Q SPU
 g_SpuTransferCallback = 0x80058E40;

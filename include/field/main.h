@@ -4,6 +4,8 @@
 #include "psyq/libgpu.h"
 #include "psyq/libgte.h"
 
+#define setRGB(obj, _color) obj.r0 = obj.g0 = obj.b0 = _color
+
 typedef struct {
     DRAWENV drawEnvs[2];
     DISPENV dispEnv;

@@ -66,4 +66,76 @@ typedef struct {
     u_short scaleZ;
 } Actor;
 
+
+typedef struct {
+    short L11;
+    short L12;
+    short L13;
+    short LR1;
+    short LR2;
+    short LR3;
+    short L21;
+    short L22;
+    short L23;
+    short LG1;
+    short LG2;
+    short LG3;
+    short L31;
+    short L32;
+    short L33;
+    short LB1;
+    short LB2;
+    short LB3;
+    short RBK;
+    short GBK;
+    short BBK;
+} FieldLightFileData;
+
+typedef struct {
+    short flags;
+    short rotationX;
+    short rotationY;
+    short rotationZ;
+    short positionX;
+    short positionY;
+    short positionZ;
+    short modelID;
+} FieldActorFileData;
+
+typedef struct {
+
+    // Decompressed sizes
+    /* 0x10C */ u_int timPackageSize;
+    /* 0x110 */ u_int walkmeshSize;
+    /* 0x114 */ u_int modelDataSize;
+    /* 0x118 */ u_int spriteDataSize;
+    /* 0x11C */ u_int clutDataSize;
+    /* 0x120 */ u_int scriptsSize;
+    /* 0x124 */ u_int unk3Size;
+    /* 0x128 */ u_int dialogsSize;
+    /* 0x12C */ u_int triggersSize;
+
+    // Offsets to compressed data
+    /* 0x130 */ u_int timPackageOffset;
+    /* 0x134 */ u_int walkmeshDataOffset;
+    /* 0x138 */ u_int modelDataOffset;
+    /* 0x13C */ u_int pCompressedSpriteData;
+    /* 0x140 */ u_int clutDataOffset;
+    /* 0x144 */ u_int scriptsOffset;
+    /* 0x148 */ u_int pUnk3Data;
+    /* 0x14C */ u_int dialogsOffset;
+    /* 0x150 */ u_int triggersOffset;
+    /* 0x154 */ FieldLightFileData lightData;
+    /* 0x18C */ u_int numEntitites;
+    /* 0x190 */ void* actorData; // Start of entitiy data
+} ActorFile;
+
+
+typedef struct {
+    u_int signBits[0x20]; // Sign bits for variables
+    /* 0x80 */ u_int numScripts;
+    /* 0x84 */ void* metadata; // numScripts * 0x40 size of script metadata
+    // script instructions
+} ScriptsFile;
+
 #endif

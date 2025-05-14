@@ -115,7 +115,20 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_80076AC0);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_800771B0);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_800771F8);
+void FieldLoadTIM(u_long* pTimData) {
+    TIM_IMAGE timImage;
+
+    OpenTIM(pTimData);
+    while (ReadTIM(&timImage) ) {
+        if (timImage.caddr != NULL) {
+            LoadImage(timImage.crect, timImage.caddr);
+        }
+        if (timImage.paddr != NULL) {
+            LoadImage(timImage.prect, timImage.paddr);
+        }
+    }
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_80077268);
 

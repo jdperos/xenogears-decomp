@@ -1,5 +1,7 @@
 #include "common.h"
 #include "field/main.h"
+#include "field/text_box.h"
+#include "field/fade_effect.h"
 #include "psyq/libetc.h"
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80078B5C);
@@ -14,8 +16,7 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80079288);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007954C);
 
-void func_800796F4(void) {
-}
+void func_800796F4(void) {}
 
 void FieldSwapRenderContext(void) {
     g_FieldCurRenderContextIndex = (g_FieldCurRenderContextIndex + 1) % 2;
@@ -24,34 +25,22 @@ void FieldSwapRenderContext(void) {
     PutDrawEnv(&g_FieldCurRenderContext->drawEnvs[0]);
 }
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80079784);
-/*
-Almost matches, some weird stuff going on when setting color
-
 extern RECT D_800AFE4C;
 extern TILE D_800AFE54[];
 extern DR_MODE D_800AFE24[];
-
+	
 void func_80079784(int color) {
-    u_char nColor;
-    TILE* pTile;
-
     FieldClearAndSwapOTag();
-    pTile = &D_800AFE54[g_FieldCurRenderContextIndex];
-    nColor = color * 4;
-    
-    setRGB0(pTile, nColor, nColor, nColor);
-
+    setRGB(D_800AFE54[g_FieldCurRenderContextIndex], color * 4);
     addPrim(g_FieldCurRenderContext->ot1, &D_800AFE54[g_FieldCurRenderContextIndex]);
     addPrim(g_FieldCurRenderContext->ot1, &D_800AFE24[g_FieldCurRenderContextIndex]);
-
     FieldRenderSync();
     MoveImage(&D_800AFE4C, 0, g_FieldCurRenderContextIndex * 0x100);
     PutDispEnv(&g_FieldCurRenderContext->dispEnv);
     PutDrawEnv(&g_FieldCurRenderContext->drawEnvs[0]);
     DrawOTag(g_FieldCurRenderContext->ot1 + 1);
 }
-*/
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_800798BC);
 
@@ -235,8 +224,41 @@ void func_8007AB6C(u_long* ot, Quad* pQuad, MATRIX* matrix, int renderContext) {
     PopMatrix();
 }
 
+//INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007AC58);
+void func_8007AC58(u_long* ot, Quad* pQuad, MATRIX* matrix, int renderContext) {
+    int nInterpolation;
+    int nFlag;
+    int nPosY;
+    int nPosX1;
+    POLY_FT4* pPoly;
+    int nPosX2;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007AC58);
+    pPoly = &pQuad->polys[renderContext];
+    PushMatrix();
+    SetRotMatrix(matrix);
+    SetTransMatrix(matrix);
+    RotAverage4(
+        &pQuad->vecs[0], &pQuad->vecs[1], &pQuad->vecs[2], &pQuad->vecs[3], 
+        &pPoly->x0, &pPoly->x1, &pPoly->x2, &pPoly->x3, 
+        &nInterpolation, &nFlag
+    );
+    
+    nPosX1 = (pPoly->x3 + pPoly->x2) / 2;
+    nPosY = pPoly->y3;
+
+    nPosX2 = nPosX1 + 8;
+    nPosX1 = nPosX1 - 8;
+    setXY4(pPoly,
+        nPosX1, nPosY - 10,
+        nPosX2, nPosY - 10,
+        nPosX1, nPosY,
+        nPosX2, nPosY
+    );
+    
+    addPrim(ot + 1, pPoly);
+    PopMatrix();
+}
+
 
 // Controller stuff
 // --------------------
@@ -307,13 +329,69 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007D818);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007D8B4);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007D93C);
+// Fade Effect
+// --------------------
+void FieldFadeInitialize(int index) {
+    SetTile(&g_FieldFadeEffect.fades[index].tiles[0]);
+    SetSemiTrans(&g_FieldFadeEffect.fades[index].tiles[0], 1);
+    g_FieldFadeEffect.fades[index].tiles[0].w = 0x140;
+    g_FieldFadeEffect.fades[index].tiles[0].h = 0xE0;
+    g_FieldFadeEffect.fades[index].tiles[0].x0 = 0x0;
+    g_FieldFadeEffect.fades[index].tiles[0].y0 = 0x0;
+    g_FieldFadeEffect.fades[index].tiles[1] = g_FieldFadeEffect.fades[index].tiles[0];
+    g_FieldFadeEffect.fades[index].isVisible = 0;
+    g_FieldFadeEffect.fades[index].duration = 0;
+    setRGB(g_FieldFadeEffect.fades[index], 0x0);
+    g_FieldFadeEffect.fades[index].semitransparency = 2;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007DA44);
+extern RECT D_800AFE3C[];
+void FieldFadeDraw(u_long* ot, int renderContext) {
+    int i;
+    int ctx;
+
+    for (i = 0; i < 2; i++) {
+        if (g_FieldFadeEffect.fades[i].isVisible) {
+            D_800AFE3C[i].w = 0x140;
+            D_800AFE3C[i].x = 0x0;
+            D_800AFE3C[i].y = 0x0;
+            D_800AFE3C[i].h = 0xE0;
+
+            SetDrawMode(
+                &g_FieldFadeEffect.fades[i].drawModes[renderContext], 
+                0, 0, 
+                GetTPage(0, g_FieldFadeEffect.fades[i].semitransparency, 0, 0), 
+                &D_800AFE3C[i]
+            );
+
+            setRGB0(&g_FieldFadeEffect.fades[i].tiles[renderContext],
+                g_FieldFadeEffect.fades[i].r0 >> 8,
+                g_FieldFadeEffect.fades[i].g0 >> 8, 
+                g_FieldFadeEffect.fades[i].b0 >> 8
+            );
+
+            ctx = (i == 1);
+            addPrim(ot + ctx, &g_FieldFadeEffect.fades[i].tiles[renderContext]);
+            addPrim(ot + ctx, &g_FieldFadeEffect.fades[i].drawModes[renderContext]);
+
+            if (
+                (g_FieldFadeEffect.fades[i].r0 >> 8 == 0) && 
+                (g_FieldFadeEffect.fades[i].g0 >> 8 == 0) &&
+                (g_FieldFadeEffect.fades[i].b0 >> 8 == 0)
+            ) {
+                g_FieldFadeEffect.fades[i].isVisible = 0;
+                g_FieldFadeEffect.fades[i].duration = 0;
+            }
+        }
+    }
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007DCF8);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007DECC);
+// Text Box stuff
+// --------------------
+INCLUDE_ASM("asm/field/nonmatchings/main/misc4", FieldTextBoxInitialize);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007E114);
 
@@ -321,7 +399,125 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007E16C);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007E1C0);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007EE0C);
+INCLUDE_ASM("asm/field/nonmatchings/main/misc4", FieldTextBoxInitializePrimitives);
+/*
+extern u8 D_800594D4;
+extern u8 D_800594D5;
+extern u8 D_800594D6;
+extern RECT D_800ADE9C[];
+extern RECT D_800ADEDC;
+extern RECT D_800ADF04;
+
+void FieldTextBoxInitializePrimitives(int index) {
+    int i;
+    RECT rect;
+    POLY_FT4* pPoly;
+    POLY_FT4* pPoly2;
+    TILE* pBackgroundTile;
+    TILE* pBackgroundTile2;
+    SPRT* pBorderSprite1;
+    SPRT* pBorderSprite2;
+    SPRT* pArrowSprite;
+    SPRT* pArrowSprite2;
+    SPRT* pCursorSprite2;
+    u16* pWidth;
+    u16* pHeight;
+
+    FieldTextBoxBackground* pBackground;
+    FieldTextBoxCursor* pCursor;
+    FieldTextBoxContinueArrow* pArrow;
+    FieldTextBoxBorders* pBorders;
+    FieldTextBoxPortrait* pPortrait;
+
+    // Background
+    pBackground = &g_FieldTextBoxes[index].background;
+    SetDrawMode(&pBackground->drawModes[0], NULL, 0, GetTPage(0, 2, 0x280, 0x1F0), NULL);
+    SetDrawMode(&pBackground->drawModes[1], NULL, 0, GetTPage(0, 2, 0x280, 0x1F0), NULL);
+    pBackgroundTile = &pBackground->tiles[0];
+    SetTile(pBackgroundTile);
+    setRGB0(pBackgroundTile, D_800594D4, D_800594D5, D_800594D6);
+    SetSemiTrans(pBackgroundTile, 1);
+    pBackgroundTile2 =  &pBackground->tiles[1];
+    *pBackgroundTile2 = *pBackgroundTile;
+
+    // Arrow
+    pArrow = &g_FieldTextBoxes[index].continueArrow;
+    rect.x = D_800ADF04.x;
+    rect.y = D_800ADF04.y;
+    rect.w = D_800ADF04.w;
+    rect.h = D_800ADF04.h;
+    SetDrawMode(&pArrow->drawModes[0], NULL, 0, GetTPage(0, 0, 0x298, 0x1C0), &rect);
+    SetDrawMode(&pArrow->drawModes[1], NULL, 0, GetTPage(0, 0, 0x298, 0x1C0), &rect);
+    SetSprt(&pArrow->sprites[0]);
+    pArrowSprite = &pArrow->sprites[0];
+    setRGB0(pArrowSprite, 0x80, 0x80, 0x80);
+    setWH0(pArrowSprite, 0xC, 0x8);
+    pArrowSprite->clut = GetClut(0x100, 0xF6);
+    pArrowSprite2 = &pArrow->sprites[1];
+    setUV0(pArrowSprite, 0x80, 0xC0);
+    setXY0(pArrowSprite, 0x0, 0x0);
+    *pArrowSprite2 = *pArrowSprite;
+
+    // Cursor
+    pCursor = &g_FieldTextBoxes[index].cursor;
+    rect.x = D_800ADEDC.x;
+    rect.y = D_800ADEDC.y;
+    rect.w = D_800ADEDC.w;
+    rect.h = D_800ADEDC.h;
+    SetDrawMode(&pCursor->drawModes[0], NULL, 0, GetTPage(0, 0, 0x288, 0x1C0), &rect);
+    SetDrawMode(&pCursor->drawModes[1], NULL, 0, GetTPage(0, 0, 0x288, 0x1C0), &rect);
+    SetSprt(&pCursor->sprites[0]);
+    setRGB0(&pCursor->sprites[0], 0x80, 0x80, 0x80);
+    pCursor->sprites[0].clut = GetClut(0x100, 0xF6);
+    pCursorSprite2 = &pCursor->sprites[1];
+    setWH0(&pCursor->sprites[0], 0x8, 0xC);
+    setUV0(&pCursor->sprites[0], 0x80, 0xC0);
+    setXY0(&pCursor->sprites[0], 0x0, 0x0);
+    *pCursorSprite2 = pCursor->sprites[0];
+    g_FieldTextBoxes[index].continueArrowTimer = 2;
+
+    // Borders
+    pBorders = &g_FieldTextBoxes[index].borders;
+    for (i = 0; i < 8; i++) {
+        pWidth = &D_800ADE9C[i].w;
+        pHeight = &D_800ADE9C[i].h;
+        
+        rect.x = D_800ADE9C[i].x;
+        rect.y = D_800ADE9C[i].y;
+        rect.w = *pWidth;
+        rect.h = *pHeight;
+        
+        SetDrawMode(&pBorders->drawModes1[i], NULL, 0, GetTPage(0, 2, 0x280, 0x1F0), &rect);
+        SetDrawMode(&pBorders->drawModes2[i], NULL, 0, GetTPage(0, 2, 0x280, 0x1F0), &rect);
+        pBorderSprite1 = &pBorders->sprites1[i];
+        SetSprt(pBorderSprite1);
+        setRGB0(pBorderSprite1, 0x80, 0x80, 0x80);
+        pBorderSprite1->clut = GetClut(0x100, 0xF4);
+        SetSemiTrans(pBorderSprite1, 1);
+        setUV0(pBorderSprite1, 0x80, 0xC0);
+        setWH0(pBorderSprite1, *pWidth, *pHeight);
+        setXY0(pBorderSprite1, 0x0, 0x0);
+        pBorderSprite2 =  &pBorders->sprites2[i];
+        *pBorderSprite2 = *pBorderSprite1;
+    }
+
+    // Portrait
+    pPortrait = &g_FieldTextBoxes[index].portrait;
+    rect.y = 0;
+    rect.x = 0;
+    rect.h = 0xFF;
+    rect.w = 0xFF;
+    SetDrawMode(&pPortrait->drawModes[0], NULL, 0, GetTPage(1, 0, 0x2C0, 0x100), &rect);
+    SetDrawMode(&pPortrait->drawModes[1], NULL, 0, GetTPage(1, 0, 0x2C0, 0x100), &rect);
+    pPoly = &pPortrait->polys[0];
+    SetPolyFT4(pPoly);
+    setRGB0(pPoly, 0x80, 0x80, 0x80);
+    pPoly->clut = GetClut(0, 0xE0);
+    pPoly2 = &pPortrait->polys[1];
+    pPoly->tpage = GetTPage(1, 0, 0x2C0, 0x100);
+    *pPoly2 = *pPoly;
+}
+*/
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007F5AC);
 
