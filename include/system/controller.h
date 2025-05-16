@@ -125,8 +125,12 @@ extern u_char g_ControllerStickToAnalogY[];
 extern u_char g_ControllerType;
 
 // Controller buffer start
-extern u_char D_800625FC[];
+extern u_char g_C1Buffer[];
 extern u_char D_800625FD[];
+
+// Controller buffer 2
+extern u_char g_C2Buffer[];
+
 // Indexes into raw controller data buffers for C1 and C2 stick values
 extern u8 D_80062600;
 extern u8 D_80062601;

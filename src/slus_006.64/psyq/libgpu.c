@@ -215,7 +215,7 @@ void SetDrawTPage(DR_TPAGE *p, int dfe, int dtd, int tpage) {
     ((u_long *)(p))[1] = _get_mode(dfe, dtd, tpage);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043E4C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetDrawMove);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", func_80043EAC);
 

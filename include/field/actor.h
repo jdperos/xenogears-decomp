@@ -131,6 +131,8 @@ typedef struct {
 } ActorFile;
 
 
+#define SCRIPT_SIZE 0x40
+
 typedef struct {
     u_int signBits[0x20]; // Sign bits for variables
     /* 0x80 */ u_int numScripts;

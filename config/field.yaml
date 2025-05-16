@@ -55,12 +55,15 @@ segments:
     subsegments:
       - [0x0, rodata]
       - [0x2FC, c, main/misc3]
+      - [0x1F74, c, effects/fade]
       - [0x23F8, c, main/init]
       - [0x2650, c, main/misc2]
       - [0x7AD0, c, main/main]
       - [0x906C, c, main/misc4]
       - [0x1729C, c, main/misc]
       - [0x32384, c, scripts/virtual_machine]
+      - [0x34CE4, c, effects/distortion]
+      - [0x35AC8, c, main/misc5]
       - [0x3D334, asm]
       - [0x3DF78, data]
       - { vram: 0x800af5f0, type: bss }

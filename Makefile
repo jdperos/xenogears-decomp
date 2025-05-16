@@ -189,7 +189,7 @@ clean:
 reset: clean
 	rm -rf $(ASM_DIR)
 	rm -rf $(LINKER_DIR)
-#	rm -rf $(EXPECTED_DIR)
+	rm -rf $(EXPECTED_DIR)
 
 regenerate: reset
 	$(MAKE) generate

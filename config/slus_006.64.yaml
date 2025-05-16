@@ -57,7 +57,7 @@ segments:
     type: code
     start: 0x800
     vram: 0x80010000
-    bss_size: 0x544
+    bss_size: 0x40000 # yolo
     bss_contains_common: True
     align: 4
     subsegments:

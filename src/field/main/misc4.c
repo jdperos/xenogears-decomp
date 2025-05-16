@@ -1,7 +1,7 @@
 #include "common.h"
 #include "field/main.h"
 #include "field/text_box.h"
-#include "field/fade_effect.h"
+#include "field/effects.h"
 #include "psyq/libetc.h"
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80078B5C);
@@ -99,7 +99,6 @@ void func_8007A44C(POLY_FT4* poly, short u0, short v0, short u1, short v1, short
 }
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007A5C4);
-
 
 extern SVec4 D_800ADCE0[]; // X0 -> X3 positions
 extern SVec4 D_800ADD28[]; // Y0 -> Y3 positions
@@ -224,7 +223,6 @@ void func_8007AB6C(u_long* ot, Quad* pQuad, MATRIX* matrix, int renderContext) {
     PopMatrix();
 }
 
-//INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007AC58);
 void func_8007AC58(u_long* ot, Quad* pQuad, MATRIX* matrix, int renderContext) {
     int nInterpolation;
     int nFlag;
@@ -331,18 +329,18 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007D8B4);
 
 // Fade Effect
 // --------------------
-void FieldFadeInitialize(int index) {
-    SetTile(&g_FieldFadeEffect.fades[index].tiles[0]);
-    SetSemiTrans(&g_FieldFadeEffect.fades[index].tiles[0], 1);
-    g_FieldFadeEffect.fades[index].tiles[0].w = 0x140;
-    g_FieldFadeEffect.fades[index].tiles[0].h = 0xE0;
-    g_FieldFadeEffect.fades[index].tiles[0].x0 = 0x0;
-    g_FieldFadeEffect.fades[index].tiles[0].y0 = 0x0;
-    g_FieldFadeEffect.fades[index].tiles[1] = g_FieldFadeEffect.fades[index].tiles[0];
-    g_FieldFadeEffect.fades[index].isVisible = 0;
-    g_FieldFadeEffect.fades[index].duration = 0;
-    setRGB(g_FieldFadeEffect.fades[index], 0x0);
-    g_FieldFadeEffect.fades[index].semitransparency = 2;
+void FieldFadeInitializePrimitives(int index) {
+    SetTile(&g_FieldEffects.fades[index].tiles[0]);
+    SetSemiTrans(&g_FieldEffects.fades[index].tiles[0], 1);
+    g_FieldEffects.fades[index].tiles[0].w = 0x140;
+    g_FieldEffects.fades[index].tiles[0].h = 0xE0;
+    g_FieldEffects.fades[index].tiles[0].x0 = 0x0;
+    g_FieldEffects.fades[index].tiles[0].y0 = 0x0;
+    g_FieldEffects.fades[index].tiles[1] = g_FieldEffects.fades[index].tiles[0];
+    g_FieldEffects.fades[index].isVisible = 0;
+    g_FieldEffects.fades[index].duration = 0;
+    setRGB(g_FieldEffects.fades[index], 0x0);
+    g_FieldEffects.fades[index].semitransparency = 2;
 }
 
 extern RECT D_800AFE3C[];
@@ -351,46 +349,46 @@ void FieldFadeDraw(u_long* ot, int renderContext) {
     int ctx;
 
     for (i = 0; i < 2; i++) {
-        if (g_FieldFadeEffect.fades[i].isVisible) {
+        if (g_FieldEffects.fades[i].isVisible) {
             D_800AFE3C[i].w = 0x140;
             D_800AFE3C[i].x = 0x0;
             D_800AFE3C[i].y = 0x0;
             D_800AFE3C[i].h = 0xE0;
 
             SetDrawMode(
-                &g_FieldFadeEffect.fades[i].drawModes[renderContext], 
+                &g_FieldEffects.fades[i].drawModes[renderContext], 
                 0, 0, 
-                GetTPage(0, g_FieldFadeEffect.fades[i].semitransparency, 0, 0), 
+                GetTPage(0, g_FieldEffects.fades[i].semitransparency, 0, 0), 
                 &D_800AFE3C[i]
             );
 
-            setRGB0(&g_FieldFadeEffect.fades[i].tiles[renderContext],
-                g_FieldFadeEffect.fades[i].r0 >> 8,
-                g_FieldFadeEffect.fades[i].g0 >> 8, 
-                g_FieldFadeEffect.fades[i].b0 >> 8
+            setRGB0(&g_FieldEffects.fades[i].tiles[renderContext],
+                g_FieldEffects.fades[i].r0 >> 8,
+                g_FieldEffects.fades[i].g0 >> 8, 
+                g_FieldEffects.fades[i].b0 >> 8
             );
 
             ctx = (i == 1);
-            addPrim(ot + ctx, &g_FieldFadeEffect.fades[i].tiles[renderContext]);
-            addPrim(ot + ctx, &g_FieldFadeEffect.fades[i].drawModes[renderContext]);
+            addPrim(ot + ctx, &g_FieldEffects.fades[i].tiles[renderContext]);
+            addPrim(ot + ctx, &g_FieldEffects.fades[i].drawModes[renderContext]);
 
             if (
-                (g_FieldFadeEffect.fades[i].r0 >> 8 == 0) && 
-                (g_FieldFadeEffect.fades[i].g0 >> 8 == 0) &&
-                (g_FieldFadeEffect.fades[i].b0 >> 8 == 0)
+                (g_FieldEffects.fades[i].r0 >> 8 == 0) && 
+                (g_FieldEffects.fades[i].g0 >> 8 == 0) &&
+                (g_FieldEffects.fades[i].b0 >> 8 == 0)
             ) {
-                g_FieldFadeEffect.fades[i].isVisible = 0;
-                g_FieldFadeEffect.fades[i].duration = 0;
+                g_FieldEffects.fades[i].isVisible = 0;
+                g_FieldEffects.fades[i].duration = 0;
             }
         }
     }
 }
 
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007DCF8);
-
 // Text Box stuff
 // --------------------
+INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007DCF8);
+
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", FieldTextBoxInitialize);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007E114);

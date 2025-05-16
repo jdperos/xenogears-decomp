@@ -140,6 +140,9 @@ SoundEnableAllSpuChannels = 0x80037E8C;
 SoundMuteAllSpuChannels = 0x80037EE4;
 SoundHandleError = 0x8003F6B0;
 
+
+RotMatrix = 0x8003F738;
+
 // PSY-Q Standard Library
 bzero = 0x8003F8E8;
 memchr = 0x8003F918;
@@ -255,6 +258,7 @@ SetLineG3 = 0x80043DC0;
 SetLineF4 = 0x80043DE0;
 SetLineG4 = 0x80043E00;
 SetDrawTPage = 0x80043E20;
+SetDrawMove = 0x80043E4C;
 DumpDrawEnv = 0x80043F50;
 DumpDispEnv = 0x80044064;
 ResetGraph = 0x80044110;
@@ -522,5 +526,8 @@ g_C1ButtonStatesReleased = 0x8005A13C;
 g_C2ButtonStatesReleased = 0x8005A15C;
 g_C1ButtonStatesPressedOnce = 0x8005A17C;
 g_C2ButtonStatesPressedOnce = 0x8005A19C;
+
+g_C1Buffer = 0x800625FC;
+g_C2Buffer = 0x8006261E;
 
 g_pTMR_HRETRACE_MODE = 0x80058964;

@@ -3,6 +3,9 @@ FieldSetScreenDimensions = 0x80086D8C;
 
 FieldLZSSDecompress = 0x8007008C;
 
+FieldLoadTIMWithClut = 0x80070340;
+
+FieldFadeInitialize = 0x80071A64;
 FieldFadeUpdate = 0x80071A8C;
 FieldFadeUpdateAndDraw = 0x80071CB4;
 
@@ -34,7 +37,7 @@ FieldRenderSyncAndFlush = 0x8007999C;
 
 FieldSetControllerBuffers = 0x8007AD8C;
 
-FieldFadeInitialize = 0x8007D93C;
+FieldFadeInitializePrimitives = 0x8007D93C;
 FieldFadeDraw = 0x8007DA44;
 
 FieldTextBoxInitialize = 0x8007DECC;
@@ -49,6 +52,11 @@ FieldScriptVMGetVariableSign = 0x800A2FE0;
 
 FieldScriptVMReadArgumentFromMemory = 0x800A3018;
 FieldScriptMemoryWriteU16 = 0x800A3074;
+
+FieldDistortionFree = 0x800A47D4;
+FieldDistortionInitialize = 0x800A484C;
+FieldDistortionSetTarget = 0x800A4CC4;
+FieldDistortionDraw = 0x800A4DAC;
 
 FieldZoomFadeEffectUpdate = 0x800A6408;
 FieldZoomFadeEffectInitialize = 0x800A663C;
@@ -97,7 +105,7 @@ g_FieldZoomFadeEffect = 0x800B11AC; // size:0x2F8
 
 g_FieldPixelIndex = 0x800B14A8;
 
-g_FieldFadeEffect = 0x800B2078; // size:0xFC
+g_FieldEffects = 0x800B2078; // size:0xFC
 
 g_FieldRenderContexts = 0x800B249C; // size:0x101E8
 
