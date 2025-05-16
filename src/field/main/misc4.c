@@ -646,7 +646,17 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80086590);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80086908);
 
+// Call function from second handler table
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_800869B8);
+/*
+void func_800869B8(void) {
+    u_short handlerIndex;
+
+    handlerIndex = g_FieldScriptVMCurActor->scriptInstructionPointer + 1;
+    g_FieldScriptVMCurActor->scriptInstructionPointer = handlerIndex;
+    &gEventHandlers2[g_FieldScriptVMCurScriptData + handlerIndex]();
+}
+*/
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80086A1C);
 

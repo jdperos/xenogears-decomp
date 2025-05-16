@@ -1,14 +1,126 @@
 #include "common.h"
 #include "field/main.h"
 #include "field/actor.h"
+#include "field/script_vm.h"
 #include "system/memory.h"
 #include "psyq/libgpu.h"
 
-extern Actor* g_FieldScriptVMCurActor;
-extern void* g_FieldScriptVMCurScriptData;
-extern int g_FieldScriptMaxInstructionCount;
-extern void* g_FieldScriptMemory;
-extern ScriptsFile* g_FieldCurScriptFile;
+extern s32 D_800AFFEC;
+extern s32 D_800AFD1C;
+extern s32 D_800B00C0;
+
+void func_800A1A8C(void) {
+    int i;
+
+    for (i = 0; i < 8; i++) {
+        if ( ((g_FieldScriptVMCurActor->eventSlots[i].flags >> 0x12) & 0xF) == 7) {
+            g_FieldScriptVMCurActor->eventSlots[i].reqEvent = func_800A3090(D_800AFD1C, 1);
+        }
+    }
+
+    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags |=  0x3C0000;
+    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].eventId = 0xFF;
+    D_800B00C0 = 1;
+}
+
+void func_800A1B70(void) {
+    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags |= 0x3C0000;
+    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].eventId = 0xFF;
+    D_800AFFEC = 1;
+    D_800B00C0 = 1;
+}
+
+void FieldScriptVMHandlerConditionalJmp(void) {
+    int nValue2;
+    int nValue1;
+    int nArgumentsType;
+    int nCondCheck;
+    int nCondResult;
+    int nConditionType;
+
+    nValue2 = 0;
+    nValue1 = 0;
+    nArgumentsType = ((u_char*)g_FieldScriptVMCurScriptData)[g_FieldScriptVMCurActor->scriptInstructionPointer + 5] & 0xF0;
+    switch (nArgumentsType) {
+    case 0x0:
+        nValue1 = FieldScriptVMReadArgumentFromMemory(FieldScriptVMGetInstructionArgument(1) & 0xFFFF);
+        nValue2 = FieldScriptVMReadArgumentFromMemory(FieldScriptVMGetInstructionArgument(3) & 0xFFFF);
+        if (FieldScriptVMGetVariableSign(FieldScriptVMGetInstructionArgument(1) & 0xFFFF) != FIELD_SCRIPT_VM_VAR_SIGNED) {
+            nValue2 = (u_short)nValue2;
+        } else {
+            nValue2 = (short)nValue2;
+        }
+        break;
+    case 0x40:
+        nValue1 = FieldScriptVMReadArgumentFromMemory(FieldScriptVMGetInstructionArgument(1) & 0xFFFF);
+        nValue2 = func_800ACD7C(3);
+        if (FieldScriptVMGetVariableSign(FieldScriptVMGetInstructionArgument(1) & 0xFFFF) != FIELD_SCRIPT_VM_VAR_SIGNED) {
+            nValue2 = (u_short)nValue2;
+        }
+        break;
+    case 0x80:
+        nValue1 = func_800ACD7C(1);
+        nValue2 = FieldScriptVMReadArgumentFromMemory(FieldScriptVMGetInstructionArgument(3) & 0xFFFF);
+        if (FieldScriptVMGetVariableSign(FieldScriptVMGetInstructionArgument(3) & 0xFFFF) != FIELD_SCRIPT_VM_VAR_SIGNED) {
+            nValue1 = (u_short)nValue1;
+        }
+        break;
+    case 0xC0:
+        nValue1 = func_800ACD7C(1);
+        nValue2 = func_800ACD7C(3);
+        break;
+    }
+    
+    nCondResult = 0;
+    nConditionType = ((u_char*)g_FieldScriptVMCurScriptData)[g_FieldScriptVMCurActor->scriptInstructionPointer + 5] & 0xF;
+    switch (nConditionType) {
+        case FIELD_SCRIPT_VM_COND_EQUAL:
+            if (nValue1 == nValue2) nCondResult++;
+            break;
+        case FIELD_SCRIPT_VM_COND_NOT_EQUAL2:
+            if (nValue1 != nValue2) nCondResult++;
+            break;
+        case FIELD_SCRIPT_VM_COND_LT:
+            nCondCheck = nValue2 < nValue1;
+            if (nCondCheck) nCondResult++;
+            break;
+        case FIELD_SCRIPT_VM_COND_LT2:
+            nCondCheck = nValue1 < nValue2;
+            if (nCondCheck) nCondResult++;
+            break;
+        case FIELD_SCRIPT_VM_COND_GTE:
+            if (nValue1 >= nValue2) nCondResult++;
+            break;
+        case FIELD_SCRIPT_VM_COND_GTE2:
+            if (nValue2 >= nValue1) nCondResult++;
+            break;
+        case FIELD_SCRIPT_VM_COND_AND:
+            nCondCheck = nValue1 & nValue2;
+            if (nCondCheck) nCondResult++;
+            break;
+        case FIELD_SCRIPT_VM_COND_NOT_EQUAL:
+            if (nValue1 != nValue2) nCondResult++;
+            break;
+        case FIELD_SCRIPT_VM_COND_OR:
+            nCondCheck = nValue1 | nValue2;
+            if (nCondCheck) nCondResult++;
+            break;
+        case FIELD_SCRIPT_VM_COND_AND2:
+            nCondCheck = nValue1 & nValue2;
+            if (nCondCheck) nCondResult++;
+            break;
+        case FIELD_SCRIPT_VM_COND_NAND:
+            nCondCheck = ~nValue1 & nValue2;
+            if (nCondCheck) nCondResult++;
+            break;
+    }
+    
+    if (nCondResult == 1) {
+        g_FieldScriptVMCurActor->scriptInstructionPointer = g_FieldScriptVMCurActor->scriptInstructionPointer + 8;
+    } else {
+        g_FieldScriptVMCurActor->scriptInstructionPointer = FieldScriptVMGetInstructionArgument(6);
+    }
+}
 
 void FieldScriptVMHandlerJmp(void) {
     g_FieldScriptVMCurActor->scriptInstructionPointer = FieldScriptVMGetInstructionArgument(1);

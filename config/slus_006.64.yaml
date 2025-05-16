@@ -80,7 +80,7 @@ segments:
       - [0xA9E4, c, system/kernel_menu]
       - [0xADCC, asm]
       - [0x1320C, c, system/graphics]
-      - [0x1332C, asm]
+      - [0x1332C, c, system/temp1]
       - [0x18A30, c, system/libarchive]
       - [0x19E90, c, system/archive]
       - [0x1B424, asm]

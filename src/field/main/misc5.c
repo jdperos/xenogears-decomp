@@ -394,12 +394,6 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc5", func_800ACCB0);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc5", func_800ACCF4);
 
-extern Actor* g_FieldScriptVMCurActor;
-extern void* g_FieldScriptVMCurScriptData;
-extern int g_FieldScriptMaxInstructionCount;
-extern void* g_FieldScriptMemory;
-extern ScriptsFile* g_FieldCurScriptFile;
-
 short func_800ACD7C(int offset) {
     u_char* pData;
 

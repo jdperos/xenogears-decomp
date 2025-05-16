@@ -9,7 +9,7 @@ void FieldLZSSDecompress(void* _unused, void* pCompressed, void* pDecompressed) 
     LZSSDecompress(pCompressed, pDecompressed);
 }
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc3", func_800700B0);
+INCLUDE_ASM("asm/field/nonmatchings/main/misc3", FieldFree);
 
 void FieldLoadTIMWithClut(u_long *pTimData, short x, short y, short clutX, short clutY, short clutWidth, short clutHeight) {
     TIM_IMAGE* pTIM;
@@ -64,6 +64,5 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc3", func_800705DC);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc3", func_80070C84);
 
-// Yolo
-INCLUDE_ASM("asm/field/nonmatchings/main/misc3", func_80070CC8);
+INCLUDE_ASM("asm/field/nonmatchings/main/misc3", FieldLoad);
 

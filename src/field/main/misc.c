@@ -1,5 +1,7 @@
 #include "common.h"
 #include "field/main.h"
+#include "field/actor.h"
+
 
 void FieldSetScreenDimensions(void) {
     g_FieldRenderContexts[0].dispEnv.screen.x = 0;
@@ -150,29 +152,14 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008A2A0);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008A2E8);
 
-void func_8008A4E0(void) {
-}
-
-void func_8008A4E8(void) {
-}
-
-void func_8008A4F0(void) {
-}
-
-void func_8008A4F8(void) {
-}
-
-void func_8008A500(void) {
-}
-
-void func_8008A508(void) {
-}
-
-void func_8008A510(void) {
-}
-
-void func_8008A518(void) {
-}
+void func_8008A4E0(void) {}
+void func_8008A4E8(void) {}
+void func_8008A4F0(void) {}
+void func_8008A4F8(void) {}
+void func_8008A500(void) {}
+void func_8008A508(void) {}
+void func_8008A510(void) {}
+void func_8008A518(void) {}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008A520);
 
@@ -1169,9 +1156,3 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800A17F4);
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800A18B8);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800A19B0);
-
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800A1A8C);
-
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800A1B70);
-
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800A1BD0);

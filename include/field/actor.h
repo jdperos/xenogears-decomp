@@ -64,8 +64,20 @@ typedef struct {
     u_short scaleX;
     u_short scaleY;
     u_short scaleZ;
-} Actor;
+} ActorData;
 
+
+typedef struct {
+    void* pModelData; // 0x24 size, model related data
+    void* pSpriteData; // 0x164 size
+    void* pShadow; // 0x70 size
+    MATRIX transformMatrix;
+    MATRIX childMatrix;
+    void* pActorData; // 0x138 size
+    SVEC rotation;
+    short flags;
+    short status;
+} FieldActor;
 
 typedef struct {
     short L11;
@@ -139,5 +151,15 @@ typedef struct {
     /* 0x84 */ void* metadata; // numScripts * 0x40 size of script metadata
     // script instructions
 } ScriptsFile;
+
+extern int g_FieldNumActors;
+extern FieldActor* g_FieldActors;
+
+extern ActorData* g_FieldScriptVMCurActor;
+extern void* g_FieldScriptVMCurScriptData;
+extern int g_FieldScriptMaxInstructionCount;
+extern void* g_FieldScriptMemory;
+extern ScriptsFile* g_FieldCurScriptFile;
+extern int D_800B00C0; // Stop script VM exection?
 
 #endif

@@ -3,7 +3,11 @@
 #include "psyq/libgpu.h"
 #include "psyq/libgte.h"
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_80072140);
+void FieldMatrixResetTranslation(MATRIX *matrix) {
+    matrix->t[2] = 0;
+    matrix->t[1] = 0;
+    matrix->t[0] = 0;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_80072150);
 
@@ -93,7 +97,9 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_8007520C);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_800752C8);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_80075458);
+void func_80075458(u_long* ot, u_long* pPrimList, int size) {
+    AddPrims(ot, pPrimList + size, pPrimList);
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc2", func_80075484);
 
