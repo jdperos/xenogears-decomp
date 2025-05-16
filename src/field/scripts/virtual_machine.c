@@ -6,8 +6,78 @@
 #include "psyq/libgpu.h"
 
 extern s32 D_800AFFEC;
-extern s32 D_800AFD1C;
+extern s32 D_800AFD1C; // Current actor index
 extern s32 D_800B00C0;
+
+extern void func_800379C8(char*, ...);
+extern char D_8006FD44; // "STACKERR ACT=%d\n"
+
+void func_800A1730(void) {
+    u_int nFlags;
+    u_int nNewFlags;
+
+    nFlags = g_FieldScriptVMCurActor->flags12C;
+    if ((nFlags & 0x1C0) != 0x100) {
+        g_FieldScriptVMCurActor->scriptPointersStack[(nFlags >> 6) & 0x7] = g_FieldScriptVMCurActor->scriptInstructionPointer + 5;
+        g_FieldScriptVMCurActor->scriptInstructionPointer = FieldScriptVMGetInstructionArgument(1);
+        nNewFlags = g_FieldScriptVMCurActor->flags12C;
+        g_FieldScriptVMCurActor->flags12C = (nNewFlags & ~0x1C0) | (((((nNewFlags >> 6) & 7) + 1) & 7) << 6);
+        return;
+    }
+
+    // Error
+    if (g_FieldSystemMode == 0) {
+        func_800379C8(&D_8006FD44, D_800AFD1C, nFlags);
+    }
+    D_800B00C0 = 1;
+}
+
+void func_800A17F4(void) {
+    u_int nFlags;
+    u_int nCurFlags;
+
+    nFlags = g_FieldScriptVMCurActor->flags12C;
+    if ((nFlags & 0x1C0) != 0x100) {
+        g_FieldScriptVMCurActor->scriptPointersStack[(nFlags >> 6) & 0x7] = g_FieldScriptVMCurActor->scriptInstructionPointer + 3;
+        g_FieldScriptVMCurActor->scriptInstructionPointer = FieldScriptVMGetInstructionArgument(1);
+        nCurFlags = g_FieldScriptVMCurActor->flags12C;
+        g_FieldScriptVMCurActor->flags12C =  ((nCurFlags & ~0x1C0) | (((((nCurFlags >> 6) & 7) + 1) & 7) << 6));
+        return;
+    }
+    
+    // Error
+    if (g_FieldSystemMode == 0) {
+        func_800379C8(&D_8006FD44, D_800AFD1C);
+    }
+    
+    D_800B00C0 = 1;
+}
+
+void func_800A18B8(void) {
+    u_int nNewFlags;
+    u_int nFlags;
+
+    nFlags = g_FieldScriptVMCurActor->flags12C;
+
+    // Error, invalid stack value
+    if (!(nFlags & 0x1C0)) {
+        if (g_FieldSystemMode == 0) {
+            func_800379C8(&D_8006FD44, D_800AFD1C);
+        }
+        g_FieldScriptVMCurActor->eventSlots[ g_FieldScriptVMCurActor->curEventSlotId].flags |= 0x3C0000;
+        g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].eventId = 0xFF;
+        D_800AFFEC = 1;
+        D_800B00C0 = 1;
+        return;
+    }
+    
+    nNewFlags = (nFlags & ~0x1C0) | (((((nFlags >> 6) & 7) - 1) & 7) << 6);
+    g_FieldScriptVMCurActor->flags12C = nNewFlags;
+    g_FieldScriptVMCurActor->scriptInstructionPointer = g_FieldScriptVMCurActor->scriptPointersStack[(nNewFlags >> 6) & 0x7];
+}
+
+INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A19B0);
+
 
 void func_800A1A8C(void) {
     int i;

@@ -39,7 +39,7 @@ typedef struct {
     u_char canInteract;
     u_char parentActorId;
     u_short moveSpeed;
-    u_int scriptPointersStack[2];
+    short scriptPointersStack[4];
     u_char faceId;
     u_char unk81;
     u_char dialogWidth;
@@ -59,13 +59,39 @@ typedef struct {
     u_short defaultAnimationId;
     u_short curAnimationId;
     u_short unkAnimationId;
-    u_short unkEC;
-    u_short unkF0;
+    int unkEC;
+    int unkF0;
     u_short scaleX;
     u_short scaleY;
     u_short scaleZ;
+    short unkFA;
+    u_char unkFC;
+    u_char unkFD;
+    u_char unkFE;
+    u_char unkFF;
+    u_char unk100;
+    u_char unk101;
+    short unk102;
+    short rotationX; // 0xFFF mask: rotation
+    short rotationY;
+    short rotationZ; // 0x108
+    short unk10A;
+    u_char unk10C;
+    u_char unk10D;
+    void* unk110;
+    void* unk114;
+    void* unk118;
+    short unk11C;
+    short unk11E;
+    void* unk120;
+    short unk124;
+    u_char unk126;
+    u_char spriteId;
+    u_int modelAnimation;
+    u_int flags12C;
+    int flags130;
+    int flags134;
 } ActorData;
-
 
 typedef struct {
     void* pModelData; // 0x24 size, model related data
