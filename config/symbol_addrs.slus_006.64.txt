@@ -15,6 +15,29 @@ KernelMenuInitialize = 0x8001A250;
 KernelMenuUpdate = 0x8001A344;
 KernelMenuMain = 0x8001A4B4;
 
+// Work List
+WorkListsFreeAllEntries = 0x8001C8DC;
+WorkListsReset = 0x8001C944;
+TimerWorkListUpdate = 0x8001C964;
+WorkListUpdate = 0x8001C9F8;
+WorkListAddTask = 0x8001CA58;
+WorkListAllocateTask = 0x8001CAF0;
+WorkListRemoveTask = 0x8001CB48;
+WorkListDeleteTask = 0x8001CBE8;
+TimerWorkListAddTask = 0x8001CC18;
+TimerWorkListAllocateTask = 0x8001CD08;
+WorkListSetTaskCallback = 0x8001CD64;
+TimerWorkListSetTaskCallback = 0x8001CD6C;
+WorkListTaskSetOnFreeCallback = 0x8001CD74;
+WorkListTaskGetTaskCallback = 0x8001CD7C;
+WorkListTaskGetOnFreeCallback = 0x8001CD88;
+TimerWorkListRemoveTask = 0x8001CD94;
+TimerWorkListDeleteTask = 0x8001CE44;
+
+WorkListsDeleteTasks = 0x8001D19C;
+WorkListsAddTasks = 0x8001D1D8;
+
+// Rendering / Graphics
 GraphicsDrawPauseLetters = 0x8001FAB4;
 
 GfxLoadImageAccelerated = 0x80022A0C;
@@ -462,6 +485,12 @@ g_KernelMenuIsRunning = 0x800592D0;
 g_KernelMenuCurRenderEnvironment = 0x800592CC;
 g_KernelMenuRenderEnvironments = 0x800595E8;
 
+// Work List
+g_NumTimerWorkListEntries = 0x80059188;
+g_NumWorkListEntries = 0x8005918C;
+g_WorkListCurTimer = 0x80059428;
+g_TimerWorkList = 0x8005958C;
+g_WorkList = 0x80059594;
 
 // Heap
 g_HeapContentTypeNames = 0x80050140;

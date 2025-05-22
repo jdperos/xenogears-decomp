@@ -12,6 +12,7 @@ extern s32 D_800B00C0;
 extern void func_800379C8(char*, ...);
 extern char D_8006FD44; // "STACKERR ACT=%d\n"
 
+// Store instruction pointer + 5 on stack
 void func_800A1730(void) {
     u_int nFlags;
     u_int nNewFlags;
@@ -32,6 +33,7 @@ void func_800A1730(void) {
     D_800B00C0 = 1;
 }
 
+// Store instruction pointer + 3 on stack
 void func_800A17F4(void) {
     u_int nFlags;
     u_int nCurFlags;
@@ -53,6 +55,7 @@ void func_800A17F4(void) {
     D_800B00C0 = 1;
 }
 
+// Restore instruction pointer from stack
 void func_800A18B8(void) {
     u_int nNewFlags;
     u_int nFlags;

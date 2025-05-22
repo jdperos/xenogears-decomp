@@ -88,10 +88,23 @@ typedef struct {
     u_char unk126;
     u_char spriteId;
     u_int modelAnimation;
+
+
+    // 0x1C0 => Stack index, bit 0x100 is not used since there's only four elements in the stack
     u_int flags12C;
+
+
     int flags130;
     int flags134;
 } ActorData;
+
+/*
+SpritePackage / File:
+0x0
+0x4: Offset to section 0 (Animations)
+0x8: Offset to section 1 (Frame data)
+0xC: Offset to section 2 (Palette)
+*/
 
 typedef struct {
     void* pModelData; // 0x24 size, model related data
@@ -99,7 +112,7 @@ typedef struct {
     void* pShadow; // 0x70 size
     MATRIX transformMatrix;
     MATRIX childMatrix;
-    void* pActorData; // 0x138 size
+    ActorData* pActorData;
     SVEC rotation;
     short flags;
     short status;
@@ -157,7 +170,7 @@ typedef struct {
     /* 0x130 */ u_int timPackageOffset;
     /* 0x134 */ u_int walkmeshDataOffset;
     /* 0x138 */ u_int modelDataOffset;
-    /* 0x13C */ u_int pCompressedSpriteData;
+    /* 0x13C */ u_int spriteDataOffset;
     /* 0x140 */ u_int clutDataOffset;
     /* 0x144 */ u_int scriptsOffset;
     /* 0x148 */ u_int pUnk3Data;

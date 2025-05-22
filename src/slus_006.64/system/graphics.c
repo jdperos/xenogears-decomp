@@ -2,7 +2,7 @@
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/graphics", GfxLoadImageAccelerated);
 /*
-Matches under ASPSX 2.56, GCC 2.6.0?
+Matches on ASPSX 2.56, GCC 2.6.0
 
 void GfxLoadImageAccelerated(void) {
     char* pBuffer;
