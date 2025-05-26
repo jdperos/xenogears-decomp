@@ -16,9 +16,12 @@
 #define FIELD_SCRIPT_VM_COND_AND2 0x9
 #define FIELD_SCRIPT_VM_COND_NAND 0xA
 
+// Is Yielding maybe?
+extern int D_800B00C0;
+
 extern int FieldScriptVMGetInstructionArgument(int);
 extern int FieldScriptVMGetVariableSign(int);
-extern int FieldScriptVMReadArgumentFromMemory(int);
-extern short func_800ACD7C(int);
+extern int FieldScriptVMGetVariableValue(int);
+extern short FieldScriptVMGetInstructionArgumentS16(int);
 
 #endif

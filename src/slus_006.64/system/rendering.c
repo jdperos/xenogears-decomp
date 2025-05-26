@@ -37,6 +37,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/rendering", func_8001F6B0);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/rendering", func_8001F750);
 
+// Animation frame and tile data stuff
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/rendering", func_8001F8E8)
 
 

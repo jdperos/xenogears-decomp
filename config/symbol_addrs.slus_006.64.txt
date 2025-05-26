@@ -40,8 +40,20 @@ WorkListsAddTasks = 0x8001D1D8;
 // Rendering / Graphics
 GraphicsDrawPauseLetters = 0x8001FAB4;
 
+// Animation Stuff
+AnimScriptStackPopU8 = 0x80021C20;
+AnimScriptStackPopU16 = 0x80021C3C;
+AnimScriptStackPopU24 = 0x80021C6C;
+AnimScriptStackPushU8 = 0x80021CA0;
+AnimScriptStackPushU16 = 0x80021CC4;
+AnimScriptStackPushU24 = 0x80021CF8;
+
 GfxLoadImageAccelerated = 0x80022A0C;
 GfxLoadClutsAccelerated = 0x80022A70;
+
+GfxAllocateWorkBuffers = 0x80024F64;
+GfxFreeWorkBuffers = 0x80024FB8;
+GfxSetCurrentOT = 0x80024FE4;
 
 // Archive / Filesystem
 ArchiveInit = 0x80028230;
@@ -320,6 +332,13 @@ MulMatrix0 = 0x8004920C;
 CompMatrix = 0x8004931C;
 PushMatrix = 0x8004960C;
 PopMatrix = 0x800496AC;
+ScaleMatrixL = 0x8004974C;
+SetMulMatrix = 0x8004987C;
+MulMatrix = 0x80049ACC;
+MulMatrix2 = 0x80049BDC;
+ApplyMatrix = 0x80049CEC;
+ApplyMatrixSV = 0x80049D3C;
+TransMatrix = 0x80049D9C;
 ScaleMatrix = 0x80049DCC;
 SetRotMatrix = 0x80049EFC;
 SetLightMatrix = 0x80049F2C;
@@ -491,6 +510,20 @@ g_NumWorkListEntries = 0x8005918C;
 g_WorkListCurTimer = 0x80059428;
 g_TimerWorkList = 0x8005958C;
 g_WorkList = 0x80059594;
+
+// Rendering
+g_GfxCurContext = 0x800592F8; // Possibly only for the image list stuff
+
+g_GfxWorkBufferSize = 0x800592FC;
+g_GfxCurWorkBufferEnd = 0x80059534;
+
+g_GfxWorkBuffers = 0x800594B4;
+g_GfxWorkBuffer2 = 0x800594B8;
+
+g_GfxImageList = 0x800594C4;
+
+g_GfxCurOT = 0x8005956C;
+g_GfxCurWorkBuffer = 0x80059580;
 
 // Heap
 g_HeapContentTypeNames = 0x80050140;

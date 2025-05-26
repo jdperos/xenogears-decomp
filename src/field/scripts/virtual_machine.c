@@ -116,8 +116,8 @@ void FieldScriptVMHandlerConditionalJmp(void) {
     nArgumentsType = ((u_char*)g_FieldScriptVMCurScriptData)[g_FieldScriptVMCurActor->scriptInstructionPointer + 5] & 0xF0;
     switch (nArgumentsType) {
     case 0x0:
-        nValue1 = FieldScriptVMReadArgumentFromMemory(FieldScriptVMGetInstructionArgument(1) & 0xFFFF);
-        nValue2 = FieldScriptVMReadArgumentFromMemory(FieldScriptVMGetInstructionArgument(3) & 0xFFFF);
+        nValue1 = FieldScriptVMGetVariableValue(FieldScriptVMGetInstructionArgument(1) & 0xFFFF);
+        nValue2 = FieldScriptVMGetVariableValue(FieldScriptVMGetInstructionArgument(3) & 0xFFFF);
         if (FieldScriptVMGetVariableSign(FieldScriptVMGetInstructionArgument(1) & 0xFFFF) != FIELD_SCRIPT_VM_VAR_SIGNED) {
             nValue2 = (u_short)nValue2;
         } else {
@@ -125,22 +125,22 @@ void FieldScriptVMHandlerConditionalJmp(void) {
         }
         break;
     case 0x40:
-        nValue1 = FieldScriptVMReadArgumentFromMemory(FieldScriptVMGetInstructionArgument(1) & 0xFFFF);
-        nValue2 = func_800ACD7C(3);
+        nValue1 = FieldScriptVMGetVariableValue(FieldScriptVMGetInstructionArgument(1) & 0xFFFF);
+        nValue2 = FieldScriptVMGetInstructionArgumentS16(3);
         if (FieldScriptVMGetVariableSign(FieldScriptVMGetInstructionArgument(1) & 0xFFFF) != FIELD_SCRIPT_VM_VAR_SIGNED) {
             nValue2 = (u_short)nValue2;
         }
         break;
     case 0x80:
-        nValue1 = func_800ACD7C(1);
-        nValue2 = FieldScriptVMReadArgumentFromMemory(FieldScriptVMGetInstructionArgument(3) & 0xFFFF);
+        nValue1 = FieldScriptVMGetInstructionArgumentS16(1);
+        nValue2 = FieldScriptVMGetVariableValue(FieldScriptVMGetInstructionArgument(3) & 0xFFFF);
         if (FieldScriptVMGetVariableSign(FieldScriptVMGetInstructionArgument(3) & 0xFFFF) != FIELD_SCRIPT_VM_VAR_SIGNED) {
             nValue1 = (u_short)nValue1;
         }
         break;
     case 0xC0:
-        nValue1 = func_800ACD7C(1);
-        nValue2 = func_800ACD7C(3);
+        nValue1 = FieldScriptVMGetInstructionArgumentS16(1);
+        nValue2 = FieldScriptVMGetInstructionArgumentS16(3);
         break;
     }
     
@@ -226,7 +226,7 @@ int FieldScriptVMGetVariableSign(int index) {
     return -((g_FieldCurScriptFile->signBits[index >> 6] & (1 << ((index >> 1) & 0x1F))) != 0);
 }
 
-int FieldScriptVMReadArgumentFromMemory(int index) {
+int FieldScriptVMGetVariableValue(int index) {
     if (!(g_FieldCurScriptFile->signBits[index >> 6] & (1 << ((index >> 1) & 0x1F)))) {
         return ((short*)&g_FieldScriptMemory)[index >> 1];
     } else {

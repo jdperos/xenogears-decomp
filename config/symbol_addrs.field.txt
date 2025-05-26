@@ -51,13 +51,37 @@ FieldTextBoxInitialize = 0x8007DECC;
 FieldTextBoxInitializePrimitives = 0x8007EE0C;
 
 // Script / Event
+
+FieldScriptVMCheckControllerInput = 0x80096078;
+
+FieldScriptVMHandlerRandVariable = 0x8009D198;
+FieldScriptVMHandlerMulVariableWithRand = 0x8009D1F0;
+FieldScriptVMHandlerRShiftVariable = 0x8009D260;
+FieldScriptVMHandlerLShiftVariable = 0x8009D2D0;
+FieldScriptVMHandlerIncVariable = 0x8009D340;
+FieldScriptVMHandlerDecVariable = 0x8009D3A4;
+FieldScriptVMHandlerVariableUnsetBit = 0x8009D408;
+FieldScriptVMHandlerVariableXOR = 0x8009D4A0;
+FieldScriptVMHandlerVariableOR = 0x8009D52C;
+FieldScriptVMHandlerVariableAND = 0x8009D5B8;
+FieldScriptVMHandlerVariableSetBit = 0x8009D644;
+FieldScriptVMHandlerVariableMul = 0x8009D6D8;
+FieldScriptVMHandlerVariableDiv = 0x8009D768;
+FieldScriptVMHandlerVariableSub = 0x8009D804;
+FieldScriptVMHandlerVariableAdd = 0x8009D890;
+FieldScriptVMHandlerVariableSetFalse = 0x8009D91C;
+FieldScriptVMHandlerVariableSetTrue = 0x8009D960;
+FieldScriptVMHandlerVariableAssign = 0x8009D9A4;
+
+FieldScriptVMHandlerSleep = 0x8009DD34;
+
 FieldScriptVMHandlerConditionalJmp = 0x800A1BD0;
 FieldScriptVMHandlerJmp = 0x800A1E74;
 FieldScriptVMRun = 0x800A1EC8;
 FieldScriptVMHandlerNop = 0x800A2FC0;
 FieldScriptVMGetVariableSign = 0x800A2FE0;
 
-FieldScriptVMReadArgumentFromMemory = 0x800A3018;
+FieldScriptVMGetVariableValue = 0x800A3018;
 FieldScriptMemoryWriteU16 = 0x800A3074;
 
 FieldDistortionFree = 0x800A47D4;
@@ -74,6 +98,7 @@ FieldDisplay = 0x800A6924;
 FieldImageConvert24BitColorTo15Bit = 0x800A7744;
 FieldImageConvert24BitTo15Bit = 0x800A77C4;
 
+FieldScriptVMGetInstructionArgumentS16 = 0x800ACD7C;
 FieldScriptVMGetInstructionArgument = 0x800ACDB8;
 FieldScriptVMGetArgument = 0x800ACDEC;
 

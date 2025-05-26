@@ -26,17 +26,29 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021B
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021C00);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021C20);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", AnimScriptStackPopU8);
+/*
+Matches on GCC 2.7.2-970404, ASPSX 2.67
+Co-Authored-By: Mc-muffin <Mc-muffin@users.noreply.github.com>
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021C3C);
+u_char AnimScriptStackPopU8(SpriteData* pSpriteData) {
+    u_char nStackValue;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021C6C);
+    nStackValue = pSpriteData->stack[pSpriteData->stackIndex];
+    pSpriteData->stackIndex++;
+    return nStackValue;
+}
+*/
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021CA0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", AnimScriptStackPopU16);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021CC4);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", AnimScriptStackPopU24);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021CF8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", AnimScriptStackPushU8);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", AnimScriptStackPushU16);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", AnimScriptStackPushU24);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021D3C);
 
@@ -54,8 +66,10 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_800220
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80022038);
 
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80022090);
 
+// Set animation package
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80022224);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_800222BC);

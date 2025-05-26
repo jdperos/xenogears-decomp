@@ -38,21 +38,21 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", PushMatrix);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", PopMatrix);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", func_8004974C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", ScaleMatrixL);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", func_8004987C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", SetMulMatrix);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", func_8004998C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", func_80049ACC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", MulMatrix);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", func_80049BDC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", MulMatrix2);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", func_80049CEC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", ApplyMatrix);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", func_80049D3C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", ApplyMatrixSV);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", func_80049D9C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", TransMatrix);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgte", ScaleMatrix);
 

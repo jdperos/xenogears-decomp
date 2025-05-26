@@ -8,5 +8,6 @@ linker/
 __pycache__/
 permuter/
 expected/
+notes/
 .venv/
 objdiff.json

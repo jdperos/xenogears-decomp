@@ -394,7 +394,7 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc5", func_800ACCB0);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc5", func_800ACCF4);
 
-short func_800ACD7C(int offset) {
+short FieldScriptVMGetInstructionArgumentS16(int offset) {
     u_char* pData;
 
     pData = g_FieldScriptVMCurScriptData + (g_FieldScriptVMCurActor->scriptInstructionPointer + offset);
@@ -413,6 +413,6 @@ int FieldScriptVMGetArgument(int index) {
 
     nArgument = FieldScriptVMGetInstructionArgument(index);
     if (!(nArgument & 0x8000)) 
-        return FieldScriptVMReadArgumentFromMemory(nArgument & 0xFFFF);
+        return FieldScriptVMGetVariableValue(nArgument & 0xFFFF);
     return nArgument & 0x7FFF;
 }

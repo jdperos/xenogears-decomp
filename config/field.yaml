@@ -63,6 +63,8 @@ segments:
       - [0x7AD0, c, main/main]
       - [0x906C, c, main/misc4]
       - [0x1729C, c, main/misc]
+      - [0x2D480, c, scripts/variable_handlers]
+      - [0x2DF2C, c, main/misc6]
       - [0x31C40, c, scripts/virtual_machine]
       - [0x34CE4, c, effects/distortion]
       - [0x35AC8, c, main/misc5]

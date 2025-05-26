@@ -5,7 +5,7 @@
 
 typedef struct {
     u_short reqEvent;
-    u_char shouldWait;
+    u_char waitTimer;
     u_char eventId;
     u_int flags;
 } ActorEventSlot;
@@ -98,14 +98,6 @@ typedef struct {
     int flags134;
 } ActorData;
 
-/*
-SpritePackage / File:
-0x0
-0x4: Offset to section 0 (Animations)
-0x8: Offset to section 1 (Frame data)
-0xC: Offset to section 2 (Palette)
-*/
-
 typedef struct {
     void* pModelData; // 0x24 size, model related data
     void* pSpriteData; // 0x164 size
@@ -178,7 +170,7 @@ typedef struct {
     /* 0x150 */ u_int triggersOffset;
     /* 0x154 */ FieldLightFileData lightData;
     /* 0x18C */ u_int numEntitites;
-    /* 0x190 */ void* actorData; // Start of entitiy data
+    /* 0x190 */ void* actorData; // Start of entity data
 } ActorFile;
 
 
