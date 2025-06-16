@@ -193,4 +193,6 @@ extern void* g_FieldScriptMemory;
 extern ScriptsFile* g_FieldCurScriptFile;
 extern int D_800B00C0; // Stop script VM exection?
 
+extern void* g_FieldSpriteData;
+
 #endif
