@@ -2,6 +2,10 @@
 #include "field/script_vm.h"
 #include "field/actor.h"
 
+extern void func_80076AC0(s32, s32, void*, s32, s32, s32, s32);
+extern void func_800A0C94();
+extern s32 D_800AFD1C;
+
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009DA1C);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009DA44);
@@ -127,7 +131,13 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_800A0C4C);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_800A0C94);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_800A0D3C);
+void func_800A0D3C(void) {
+    func_80076AC0(D_800AFD1C, 0, (void*)((*(s32*)(g_FieldSpriteData + 4)) + (s32)g_FieldSpriteData), 0, 0, 0x80, 1);
+    func_800A0C94();
+    g_FieldScriptVMCurActor->scriptFlags |= 0x100;
+    g_FieldScriptVMCurActor->flags |= 0x800;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_800A0DC0);
 
