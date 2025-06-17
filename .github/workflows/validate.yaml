@@ -1,0 +1,45 @@
+name: Validate
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        game_id: [ SLUS_006.64 ]
+      fail-fast: true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -U -r requirements.txt
+          sudo apt-get update
+          sudo apt-get install make binutils-mips-linux-gnu cpp-mips-linux-gnu
+
+      - name: Setup build environment
+        run: |
+          curl -L -o disc/SLUS_006.64 "${{ secrets.FILE_URL }}"
+          curl -L -o disc/MOVIE.BIN "${{ secrets.FILE_URL_2 }}"
+          curl -L -o disc/FIELD.BIN "${{ secrets.FILE_URL_3 }}"
+      
+      - name: Build
+        run: |
+          make generate
+          make build
+
+      - name: Check match
+        run: make check
