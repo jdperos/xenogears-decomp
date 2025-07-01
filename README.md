@@ -23,5 +23,8 @@ This project leans on the work of a lot of work done by others before.
 ## Progress
 Progress is tracked and visualized on [decomp.dev](https://decomp.dev/ladysilverberg/xenogears-decomp).
 
-## Contributing
+***
+
+<a href="https://github.com/ladysilverberg/xenogears-decomp/wiki"><img src="https://i.imgur.com/0tvDzYB.png" /></a>
+
 For a lot more information on how you can help and get started, please have a look at the [wiki](https://github.com/ladysilverberg/xenogears-decomp/wiki).
