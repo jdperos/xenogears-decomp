@@ -67,4 +67,4 @@ Additional Make commands:
 ## Contributing
 After building the project you are very welcome to start decompiling and contributing!
 
-More detailed information will probably end up here soon.
+For a lot more information on how you can help and get started, please have a look at the [wiki](https://github.com/ladysilverberg/xenogears-decomp/wiki).
