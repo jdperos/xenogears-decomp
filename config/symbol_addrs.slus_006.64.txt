@@ -494,6 +494,10 @@ g_SpuIRQCallback = 0x80058E44;
 g_spu_AllocBlockNum = 0x80058E64;
 g_spu_AllocLastNum = 0x80058E68;
 g_spu_memList = 0x80058E6C;
+g_SpuReverbFlag = 0x800589A8;
+g_bSpuReserveWorkArea = 0x800589AC;
+g_SpuReverbOffsetAddress = 0x800589B0;
+g_pSpuRegisters = 0x80058E08;
 
 // Main
 g_KernelErrorDescriptions = 0x8004F2C0;
