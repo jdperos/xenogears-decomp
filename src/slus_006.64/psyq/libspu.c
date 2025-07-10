@@ -117,7 +117,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetTransferCallback);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetCommonAttr);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004DD1C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverbModeType);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004DEF8);
 
