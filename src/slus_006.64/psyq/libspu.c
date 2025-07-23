@@ -2,10 +2,14 @@
 #include "psyq/libspu.h"
 
 typedef struct {
-    u32 Data1; // Volume
-    u32 Data2; // Pitch/loop
-    u32 Data3; // ADSR
-    u32 Data4; // Misc
+    u16 m_VolumeL;
+    u16 m_VolumeR;
+    u16 m_SampleRate;
+    u16 m_StartAddress;
+    u16 m_Adsr1;
+    u16 m_Adsr2;
+    u16 m_CurrentAdsrVol;
+    u16 m_LoopAddress;
 } VoiceData;
 
 // TODO(jperos): Fill out this big ol struct
@@ -27,6 +31,7 @@ typedef struct {
 #define SPU_CONTROL_FLAG_MUTE_SPU           (1u << 14)
 #define SPU_CONTROL_FLAG_SPU_ENABLE         (1u << 15)
 
+extern long g_SpuTransferMode;
 extern long g_SpuReverbFlag;
 extern long g_bSpuReserveWorkArea;
 extern long g_SpuReverbOffsetAddress;
@@ -40,7 +45,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004CFC0);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D028);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D070);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetRXXa);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D114);
 
@@ -58,7 +63,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D294);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuInitMalloc);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D364);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetNoiseClock);
 
 // INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverb);
 long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2.56)
@@ -103,7 +108,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetIRQCallback);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D784);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D7A8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuGetVoiceEnvelopeAttr);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D818);
 
@@ -111,7 +116,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D878);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D8D8);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D930);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetTransferMode);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetTransferCallback);
 

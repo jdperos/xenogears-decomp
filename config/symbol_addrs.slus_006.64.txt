@@ -411,11 +411,15 @@ PCwrite = 0x8004c470;
 
 // PSY-Q SPU (libspu)
 _spu_t = 0x8004CCA8;
+_spu_FsetRXXa = 0x8004D070;
 SpuInitMalloc = 0x8004D310;
+SpuSetNoiseClock = 0x8004D364;
 SpuSetReverb = 0x8004d3b4;
 _SpuIsInAllocateArea_ = 0x8004D504;
 SpuSetIRQ = 0x8004D600;
 SpuSetIRQCallback = 0x8004D740;
+SpuGetVoiceEnvelopeAttr = 0x8004D7A8;
+SpuSetTransferMode = 0x8004D930;
 SpuSetTransferCallback = 0x8004D964;
 SpuSetCommonAttr = 0x8004D988;
 SpuSetReverbModeType = 0x8004DD1C;
@@ -495,6 +499,7 @@ g_SpuIRQCallback = 0x80058E44;
 g_spu_AllocBlockNum = 0x80058E64;
 g_spu_AllocLastNum = 0x80058E68;
 g_spu_memList = 0x80058E6C;
+g_SpuTransferMode = 0x800589A4;
 g_SpuReverbFlag = 0x800589A8;
 g_bSpuReserveWorkArea = 0x800589AC;
 g_SpuReverbOffsetAddress = 0x800589B0;
