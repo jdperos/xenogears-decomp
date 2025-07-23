@@ -225,8 +225,15 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuClearReverbWorkArea);
 // Probable WaitEvent()
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004E564);
 
-// TODO(jperos): This one should be very easy once I fill out the SpuRegisters struct
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverbModeDepth);
+void SpuSetReverbModeDepth(short DepthL, short DepthR)
+{
+    short* RL = &g_pSpuRegisters->m_ReverbOutVolumeL;
+    short* RR = &g_pSpuRegisters->m_ReverbOutVolumeR;
+    *RL = DepthL;
+    *RR = DepthR;
+    g_ReverbVolumeLeft = DepthL;
+    g_ReverbVolumeRight = DepthR;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverbModeDelayTime);
 
