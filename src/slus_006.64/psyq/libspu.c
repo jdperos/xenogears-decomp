@@ -66,7 +66,6 @@ typedef struct {
     s16 m_vRIN;
 } ReverbRegisters;
 
-// TODO(jperos): Fill out this big ol struct
 typedef struct {
     VoiceData voiceData[24];
     // Volumes
@@ -83,15 +82,17 @@ typedef struct {
     u32 m_ReverbFlags;
     u32 m_EndxFlags;
 
+    u16 m_Unknown;
+
     // Memory
     u16 m_ReverbWorkStartAddr;
     u16 m_IrqAddress;
     u16 m_TransferAddress;
-    u16 m_TransferData;
-    u16 m_TransferControl;
+    u16 m_TransferFifo;
 
     // Control
     u16 controlRegister;
+    u16 m_TransferControl;
     u16 m_StatusRegister;
 
     // Aux volumes
@@ -100,8 +101,46 @@ typedef struct {
     s16 m_ExtInputVolumeL;
     s16 m_ExtInputVolumeR;
 
+    s16 m_CurrentMainVolL;
+    s16 m_CurrentMainVolR;
+
+    u32 m_Unknown2;
+
     ReverbRegisters m_Reverb;
 } SpuRegisters;
+
+#define SPU_REV_MASK_dAPF1       (1U <<  0)
+#define SPU_REV_MASK_dAPF2       (1U <<  1)
+#define SPU_REV_MASK_vIIR        (1U <<  2)
+#define SPU_REV_MASK_vCOMB1      (1U <<  3)
+#define SPU_REV_MASK_vCOMB2      (1U <<  4)
+#define SPU_REV_MASK_vCOMB3      (1U <<  5)
+#define SPU_REV_MASK_vCOMB4      (1U <<  6)
+#define SPU_REV_MASK_vWALL       (1U <<  7)
+#define SPU_REV_MASK_vAPF1       (1U <<  8)
+#define SPU_REV_MASK_vAPF2       (1U <<  9)
+#define SPU_REV_MASK_mLSAME      (1U << 10)
+#define SPU_REV_MASK_mRSAME      (1U << 11)
+#define SPU_REV_MASK_mLCOMB1     (1U << 12)
+#define SPU_REV_MASK_mRCOMB1     (1U << 13)
+#define SPU_REV_MASK_mLCOMB2     (1U << 14)
+#define SPU_REV_MASK_mRCOMB2     (1U << 15)
+#define SPU_REV_MASK_dLSAME      (1U << 16)
+#define SPU_REV_MASK_dRSAME      (1U << 17)
+#define SPU_REV_MASK_mLDIFF      (1U << 18)
+#define SPU_REV_MASK_mRDIFF      (1U << 19)
+#define SPU_REV_MASK_mLCOMB3     (1U << 20)
+#define SPU_REV_MASK_mRCOMB3     (1U << 21)
+#define SPU_REV_MASK_mLCOMB4     (1U << 22)
+#define SPU_REV_MASK_mRCOMB4     (1U << 23)
+#define SPU_REV_MASK_dLDIFF      (1U << 24)
+#define SPU_REV_MASK_dRDIFF      (1U << 25)
+#define SPU_REV_MASK_mLAPF1      (1U << 26)
+#define SPU_REV_MASK_mRAPF1      (1U << 27)
+#define SPU_REV_MASK_mLAPF2      (1U << 28)
+#define SPU_REV_MASK_mRAPF2      (1U << 29)
+#define SPU_REV_MASK_vLIN        (1U << 30)
+#define SPU_REV_MASK_vRIN        (1U << 31)
 
 typedef struct {
     u32 m_Mask;
@@ -218,7 +257,109 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetCommonAttr);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverbModeType);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_setReverbAttr);
+void _spu_setReverbAttr(ReverbPreset* preset) {
+    s32 Mask;
+    s32 bSetAllAttribues;
+
+    Mask = preset->m_Mask;
+    bSetAllAttribues = Mask == 0;
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_dAPF1)) {
+        g_pSpuRegisters->m_Reverb.m_dAPF1 = preset->m_Regs.m_dAPF1;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_dAPF2)) {
+        g_pSpuRegisters->m_Reverb.m_dAPF2 = preset->m_Regs.m_dAPF2;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_vIIR)) {
+        g_pSpuRegisters->m_Reverb.m_vIIR = preset->m_Regs.m_vIIR;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_vCOMB1)) {
+        g_pSpuRegisters->m_Reverb.m_vCOMB1 = preset->m_Regs.m_vCOMB1;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_vCOMB2)) {
+        g_pSpuRegisters->m_Reverb.m_vCOMB2 = preset->m_Regs.m_vCOMB2;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_vCOMB3)) {
+        g_pSpuRegisters->m_Reverb.m_vCOMB3 = preset->m_Regs.m_vCOMB3;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_vCOMB4)) {
+        g_pSpuRegisters->m_Reverb.m_vCOMB4 = preset->m_Regs.m_vCOMB4;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_vWALL)) {
+        g_pSpuRegisters->m_Reverb.m_vWALL = preset->m_Regs.m_vWALL;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_vAPF1)) {
+        g_pSpuRegisters->m_Reverb.m_vAPF1 = preset->m_Regs.m_vAPF1;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_vAPF2)) {
+        g_pSpuRegisters->m_Reverb.m_vAPF2 = preset->m_Regs.m_vAPF2;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLSAME)) {
+        g_pSpuRegisters->m_Reverb.m_mLSAME = preset->m_Regs.m_mLSAME;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRSAME)) {
+        g_pSpuRegisters->m_Reverb.m_mRSAME = preset->m_Regs.m_mRSAME;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLCOMB1)) {
+        g_pSpuRegisters->m_Reverb.m_mLCOMB1 = preset->m_Regs.m_mLCOMB1;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRCOMB1)) {
+        g_pSpuRegisters->m_Reverb.m_mRCOMB1 = preset->m_Regs.m_mRCOMB1;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLCOMB2)) {
+        g_pSpuRegisters->m_Reverb.m_mLCOMB2 = preset->m_Regs.m_mLCOMB2;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRCOMB2)) {
+        g_pSpuRegisters->m_Reverb.m_mRCOMB2 = preset->m_Regs.m_mRCOMB2;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_dLSAME)) {
+        g_pSpuRegisters->m_Reverb.m_dLSAME = preset->m_Regs.m_dLSAME;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_dRSAME)) {
+        g_pSpuRegisters->m_Reverb.m_dRSAME = preset->m_Regs.m_dRSAME;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLDIFF)) {
+        g_pSpuRegisters->m_Reverb.m_mLDIFF = preset->m_Regs.m_mLDIFF;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRDIFF)) {
+        g_pSpuRegisters->m_Reverb.m_mRDIFF = preset->m_Regs.m_mRDIFF;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLCOMB3)) {
+        g_pSpuRegisters->m_Reverb.m_mLCOMB3 = preset->m_Regs.m_mLCOMB3;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRCOMB3)) {
+        g_pSpuRegisters->m_Reverb.m_mRCOMB3 = preset->m_Regs.m_mRCOMB3;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLCOMB4)) {
+        g_pSpuRegisters->m_Reverb.m_mLCOMB4 = preset->m_Regs.m_mLCOMB4;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRCOMB4)) {
+        g_pSpuRegisters->m_Reverb.m_mRCOMB4 = preset->m_Regs.m_mRCOMB4;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_dLDIFF)) {
+        g_pSpuRegisters->m_Reverb.m_dLDIFF = preset->m_Regs.m_dLDIFF;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_dRDIFF)) {
+        g_pSpuRegisters->m_Reverb.m_dRDIFF = preset->m_Regs.m_dRDIFF;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLAPF1)) {
+        g_pSpuRegisters->m_Reverb.m_mLAPF1 = preset->m_Regs.m_mLAPF1;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRAPF1)) {
+        g_pSpuRegisters->m_Reverb.m_mRAPF1 = preset->m_Regs.m_mRAPF1;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLAPF2)) {
+        g_pSpuRegisters->m_Reverb.m_mLAPF2 = preset->m_Regs.m_mLAPF2;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRAPF2)) {
+        g_pSpuRegisters->m_Reverb.m_mRAPF2 = preset->m_Regs.m_mRAPF2;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_vLIN)) {
+        g_pSpuRegisters->m_Reverb.m_vLIN = preset->m_Regs.m_vLIN;
+    }
+    if (bSetAllAttribues || (Mask & SPU_REV_MASK_vRIN)) {
+        g_pSpuRegisters->m_Reverb.m_vRIN = preset->m_Regs.m_vRIN;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuClearReverbWorkArea);
 
