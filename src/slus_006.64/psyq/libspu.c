@@ -12,16 +12,7 @@ typedef struct {
     u16 m_LoopAddress;
 } VoiceData;
 
-// TODO(jperos): Fill out this big ol struct
 typedef struct {
-    VoiceData voiceData[24];
-    u8 padding[0x2A];
-    u16 controlRegister;
-} SpuRegisters;
-
-typedef struct {
-    u32 m_Mask;
-
     // APF Displacement registers (1F801DC0h - 1F801DC2h)
     u16 m_dAPF1;
     u16 m_dAPF2;
@@ -73,6 +64,48 @@ typedef struct {
     // Input Volume registers (1F801DFCh - 1F801DFEh)
     s16 m_vLIN;
     s16 m_vRIN;
+} ReverbRegisters;
+
+// TODO(jperos): Fill out this big ol struct
+typedef struct {
+    VoiceData voiceData[24];
+    // Volumes
+    s16 m_MainVolumeL; // 1-bit for Volume Mode, 15-bits for Volume
+    s16 m_MainVolumeR; // 1-bit for Volume Mode, 15-bits for Volume
+    s16 m_ReverbOutVolumeL; // Full 16 bits for volume
+    s16 m_ReverbOutVolumeR; // Full 16 bits for volume
+
+    // Voice Flags
+    u32 m_KeyOnFlags;
+    u32 m_KeyOffFlags;
+    u32 m_PitchModFlags;
+    u32 m_NoiseFlags;
+    u32 m_ReverbFlags;
+    u32 m_EndxFlags;
+
+    // Memory
+    u16 m_ReverbWorkStartAddr;
+    u16 m_IrqAddress;
+    u16 m_TransferAddress;
+    u16 m_TransferData;
+    u16 m_TransferControl;
+
+    // Control
+    u16 controlRegister;
+    u16 m_StatusRegister;
+
+    // Aux volumes
+    s16 m_CdInputVolumeL;
+    s16 m_CdInputVolumeR;
+    s16 m_ExtInputVolumeL;
+    s16 m_ExtInputVolumeR;
+
+    ReverbRegisters m_Reverb;
+} SpuRegisters;
+
+typedef struct {
+    u32 m_Mask;
+    ReverbRegisters m_Regs;
 } ReverbPreset;
 
 #define SPU_CONTROL_FLAG_CD_AUDIO_ENABLE    (1u <<  0)
