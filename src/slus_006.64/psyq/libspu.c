@@ -2,10 +2,14 @@
 #include "psyq/libspu.h"
 
 typedef struct {
-    u32 Data1; // Volume
-    u32 Data2; // Pitch/loop
-    u32 Data3; // ADSR
-    u32 Data4; // Misc
+    u16 m_VolumeL;
+    u16 m_VolumeR;
+    u16 m_SampleRate;
+    u16 m_StartAddress;
+    u16 m_Adsr1;
+    u16 m_Adsr2;
+    u16 m_CurrentAdsrVol;
+    u16 m_LoopAddress;
 } VoiceData;
 
 // TODO(jperos): Fill out this big ol struct
@@ -14,6 +18,62 @@ typedef struct {
     u8 padding[0x2A];
     u16 controlRegister;
 } SpuRegisters;
+
+typedef struct {
+    u32 m_Mask;
+
+    // APF Displacement registers (1F801DC0h - 1F801DC2h)
+    u16 m_dAPF1;
+    u16 m_dAPF2;
+
+    // Volume registers (1F801DC4h - 1F801DD2h)
+    s16 m_vIIR;
+    s16 m_vCOMB1;
+    s16 m_vCOMB2;
+    s16 m_vCOMB3;
+    s16 m_vCOMB4;
+    s16 m_vWALL;
+    s16 m_vAPF1;
+    s16 m_vAPF2;
+
+    // Same Side Reflection Address registers (1F801DD4h - 1F801DD6h)
+    u16 m_mLSAME;
+    u16 m_mRSAME;
+
+    // Comb Address registers (1F801DD8h - 1F801DDEh)
+    u16 m_mLCOMB1;
+    u16 m_mRCOMB1;
+    u16 m_mLCOMB2;
+    u16 m_mRCOMB2;
+
+    // Same Side Reflection Address 2 registers (1F801DE0h - 1F801DE2h)
+    u16 m_dLSAME;
+    u16 m_dRSAME;
+
+    // Different Side Reflection Address registers (1F801DE4h - 1F801DE6h)
+    u16 m_mLDIFF;
+    u16 m_mRDIFF;
+
+    // Comb Address registers 3-4 (1F801DE8h - 1F801DEEh)
+    u16 m_mLCOMB3;
+    u16 m_mRCOMB3;
+    u16 m_mLCOMB4;
+    u16 m_mRCOMB4;
+
+    // Different Side Reflection Address 2 registers (1F801DF0h - 1F801DF2h)
+    u16 m_dLDIFF;
+    u16 m_dRDIFF;
+
+    // APF Address registers (1F801DF4h - 1F801DFAh)
+    u16 m_mLAPF1;
+    u16 m_mRAPF1;
+    u16 m_mLAPF2;
+    u16 m_mRAPF2;
+
+    // Input Volume registers (1F801DFCh - 1F801DFEh)
+    s16 m_vLIN;
+    s16 m_vRIN;
+} ReverbPreset;
 
 #define SPU_CONTROL_FLAG_CD_AUDIO_ENABLE    (1u <<  0)
 #define SPU_CONTROL_FLAG_EXT_AUDIO_ENABLE   (1u <<  1)
@@ -27,10 +87,17 @@ typedef struct {
 #define SPU_CONTROL_FLAG_MUTE_SPU           (1u << 14)
 #define SPU_CONTROL_FLAG_SPU_ENABLE         (1u << 15)
 
+extern long g_SpuTransferMode;
 extern long g_SpuReverbFlag;
 extern long g_bSpuReserveWorkArea;
 extern long g_SpuReverbOffsetAddress;
+extern long g_ReverbMode;
+extern short g_ReverbVolumeLeft;
+extern short g_ReverbVolumeRight;
+extern long g_ReverbDelay;
+extern long g_ReverbFeedback;
 extern SpuRegisters* g_pSpuRegisters;
+extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_t);
 
@@ -40,7 +107,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004CFC0);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D028);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D070);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetRXXa);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D114);
 
@@ -58,9 +125,8 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D294);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuInitMalloc);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D364);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetNoiseClock);
 
-// INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverb);
 long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2.56)
 {
     long spuControlRegister;
@@ -103,7 +169,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetIRQCallback);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D784);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D7A8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuGetVoiceEnvelopeAttr);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D818);
 
@@ -111,7 +177,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D878);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D8D8);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D930);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetTransferMode);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetTransferCallback);
 
@@ -119,6 +185,21 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetCommonAttr);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverbModeType);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004DEF8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_setReverbAttr);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuClearReverbWorkArea);
+
+// Probable WaitEvent()
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004E564);
+
+// TODO(jperos): This one should be very easy once I fill out the SpuRegisters struct
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverbModeDepth);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverbModeDelayTime);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverbModeFeedback);
+
+void SpuGetReverbModeType(long* type)
+{
+    *type = g_ReverbMode;
+}
