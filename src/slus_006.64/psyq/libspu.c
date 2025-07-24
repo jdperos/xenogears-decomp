@@ -173,9 +173,11 @@ extern long g_ReverbFeedback;
 extern SpuRegisters* g_pSpuRegisters;
 extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuInit);
+void SpuInit(void) {
+    _SpuInit(0);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004C568);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuInit);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004C660);
 
