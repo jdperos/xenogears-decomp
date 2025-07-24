@@ -410,6 +410,7 @@ PCread = 0x8004c398;
 PCwrite = 0x8004c470;
 
 // PSY-Q SPU (libspu)
+SpuInit = 0x8004C548;
 _spu_t = 0x8004CCA8;
 _spu_Fw = 0x8004CF38;
 _spu_Fr = 0x8004CFC0;
