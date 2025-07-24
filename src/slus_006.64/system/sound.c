@@ -67,6 +67,35 @@ void func_80038DB4(long reverb, long mix) {
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038DF4);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038E6C);
+/*
+Matches on GCC 2.7.2-970404 + ASPSX 2.63
+
+void func_80038E6C(s16 volume, SpuVolume* pVolume, u16 arg2) {
+    s16 var_v0;
+    s32 temp_a2;
+
+    pVolume->right = volume;
+    pVolume->left = volume;
+    
+    if (g_SoundControlFlags & 0x600) {
+        temp_a2 = arg2 & 0xFF;
+        if (!(g_SoundControlFlags & 0x200)) {
+            if ((temp_a2 ^ 1) != 0) {
+                pVolume->left = -volume;
+            } else {
+                pVolume->right = -volume;
+            }
+            return;
+        }
+
+        if (temp_a2) {
+            pVolume->left = -volume;
+        } else {
+            pVolume->right = -volume;
+        }
+    }  
+}
+*/
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038EC0);
 

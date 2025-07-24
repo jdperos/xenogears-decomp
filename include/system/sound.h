@@ -2,6 +2,7 @@
 #define _XENO_SOUND_INPUT_H
 
 #include "psyq/libspu.h"
+#include "psyq/libcd.h"
 
 #define NUM_VOICES 24
 
@@ -30,5 +31,9 @@ typedef struct {
 } SoundVoiceData;
 
 extern SoundVoiceData g_SoundVoiceDataPointerArray;
+
+extern SpuVolume g_SoundUnkVolume;
+
+extern CdlATV g_SoundCdRomAttenuation;
 
 #endif
