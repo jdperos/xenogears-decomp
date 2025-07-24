@@ -2,9 +2,14 @@
 #include "psyq/libetc.h"
 #include "psyq/libgpu.h"
 
+extern void memcpy(u8*, u8*, int);
+
 extern char g_GraphDebugLevel;
 extern void (*g_DrawSyncCallbackFn)();
 extern int (*g_GpuPrintf)(char*, ...);
+
+extern DRAWENV g_GpuDrawEnv;
+extern DISPENV g_GpuDispEnv;
 
 // D_800568C8 : Sys func ptrs
 
@@ -244,12 +249,10 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetGraphReverse);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", SetGraphDebug);
 /*
 int SetGraphDebug(int level) {
-    char nPrev;
+    int nPrev = g_GraphDebugLevel;
 
-    nPrev = g_GraphDebugLevel;
     g_GraphDebugLevel = level;
-
-    if (level != '\0') {
+    if (level) {
         g_GpuPrintf("SetGraphDebug:level:%d,type:%d reverse:%d\n", level, DAT_800568d0, DAT_800568d3);
     }
 
@@ -314,8 +317,14 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", PutDrawEnv);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", DrawOTagEnv);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", GetDrawEnv);
+DRAWENV* GetDrawEnv(DRAWENV* env) {
+    memcpy(env, &g_GpuDrawEnv, sizeof(DRAWENV));
+    return env;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", PutDispEnv);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libgpu", GetDispEnv);
+DISPENV* GetDispEnv(DISPENV* env) {
+    memcpy(env, &g_GpuDispEnv, sizeof(DISPENV));
+    return env;
+}

@@ -39,7 +39,9 @@ int CdReset(int mode) {
     return 1;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdFlush);
+void CdFlush(void) { 
+    CD_flush(); 
+}
 
 int CdSetDebug(int level) {
     int prevLevel;
