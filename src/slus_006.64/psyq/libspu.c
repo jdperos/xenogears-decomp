@@ -159,7 +159,9 @@ typedef struct {
 #define SPU_CONTROL_FLAG_MUTE_SPU           (1u << 14)
 #define SPU_CONTROL_FLAG_SPU_ENABLE         (1u << 15)
 
+extern SpuIRQCallbackProc g_SpuIRQCallback;
 extern long g_SpuTransferMode;
+extern long g_SpuTransferModeValue;
 extern long g_SpuReverbFlag;
 extern long g_bSpuReserveWorkArea;
 extern long g_SpuReverbOffsetAddress;
@@ -171,28 +173,45 @@ extern long g_ReverbFeedback;
 extern SpuRegisters* g_pSpuRegisters;
 extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
 
+void SpuInit(void) {
+    _SpuInit(0);
+}
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuInit);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004C660);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004C6DC);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004C970);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004CB3C);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004CBFC);
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_t);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004CF38);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_Fw);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004CFC0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_Fr);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D028);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetRXX);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetRXXa);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D114);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FgetRXXa);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D150);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetPCR);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D1B0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayW);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D1DC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayR);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D208);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_Fwlts);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D270);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuDataCallback);
 
+// Maybe SpuQuit
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D294);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuInitMalloc);
@@ -229,27 +248,55 @@ long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2
     return g_SpuReverbFlag;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D484);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuIsInAllocateArea);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuIsInAllocateArea_);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D590);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuReadDecodedData);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetIRQ);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetIRQCallback);
+SpuIRQCallbackProc SpuSetIRQCallback(SpuIRQCallbackProc func) {
+    SpuIRQCallbackProc callback;
+    
+    callback = g_SpuIRQCallback;
+    if (func != g_SpuIRQCallback) {
+        g_SpuIRQCallback = func;
+        _SpuCallback(func);
+    }
+    return callback;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D784);
+void _SpuCallback(SpuIRQCallbackProc func) {
+    InterruptCallback(9, func);
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuGetVoiceEnvelopeAttr);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D818);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuRead);
 
+// Possible SpuWrite
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D878);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D8D8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetTransferStartAddr);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetTransferMode);
+long SpuSetTransferMode(long mode) {
+    int value;
+
+    switch (mode) {
+    case SPU_TRANSFER_BY_DMA:
+        value = 0;
+        break;
+    case SPU_TRANSFER_BY_IO:
+        value = 1;
+        break;
+    default:
+        value = 0;
+    }
+    g_SpuTransferMode = mode;
+    g_SpuTransferModeValue = value;
+    return value;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetTransferCallback);
 

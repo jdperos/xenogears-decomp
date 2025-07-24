@@ -470,7 +470,13 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E680);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E6C0);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E700);
+void SoundClearVoiceDataPointers(void) {
+    s32 offset = sizeof(SoundVoiceData*) * (NUM_VOICES - 1);
+    while( offset >= 0 ) {
+        *(u32*)((u8*)&g_SoundVoiceDataPointerArray + offset) = NULL;
+        offset -= sizeof(SoundVoiceData*);
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E724);
 

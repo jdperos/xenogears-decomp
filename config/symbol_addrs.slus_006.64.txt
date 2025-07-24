@@ -173,6 +173,7 @@ FontLoadFont = 0x800374E8;
 SoundInitialize = 0x80037B88;
 SoundEnableAllSpuChannels = 0x80037E8C;
 SoundMuteAllSpuChannels = 0x80037EE4;
+SoundClearVoiceDataPointers = 0x8003E700;
 SoundHandleError = 0x8003F6B0;
 
 
@@ -410,15 +411,31 @@ PCread = 0x8004c398;
 PCwrite = 0x8004c470;
 
 // PSY-Q SPU (libspu)
+SpuInit = 0x8004C548;
+_SpuInit = 0x8004C568;
 _spu_t = 0x8004CCA8;
+_spu_Fw = 0x8004CF38;
+_spu_Fr = 0x8004CFC0;
+_spu_FsetRXX = 0x8004D028;
 _spu_FsetRXXa = 0x8004D070;
+_spu_FgetRXXa = 0x8004D114;
+_spu_FsetPCR = 0x8004D150;
+_spu_FsetDelayW = 0x8004D1B0;
+_spu_FsetDelayR = 0x8004D1DC;
+_spu_Fwlts = 0x8004D208;
+_SpuDataCallback = 0x8004D270;
 SpuInitMalloc = 0x8004D310;
 SpuSetNoiseClock = 0x8004D364;
 SpuSetReverb = 0x8004d3b4;
+_SpuIsInAllocateArea = 0x8004D484;
 _SpuIsInAllocateArea_ = 0x8004D504;
+SpuReadDecodedData = 0x8004D590;
 SpuSetIRQ = 0x8004D600;
 SpuSetIRQCallback = 0x8004D740;
+_SpuCallback = 0x8004D784;
 SpuGetVoiceEnvelopeAttr = 0x8004D7A8;
+SpuRead = 0x8004D818;
+SpuSetTransferStartAddr = 0x8004D8D8;
 SpuSetTransferMode = 0x8004D930;
 SpuSetTransferCallback = 0x8004D964;
 SpuSetCommonAttr = 0x8004D988;
@@ -505,6 +522,7 @@ g_spu_AllocBlockNum = 0x80058E64;
 g_spu_AllocLastNum = 0x80058E68;
 g_spu_memList = 0x80058E6C;
 g_SpuTransferMode = 0x800589A4;
+g_SpuTransferModeValue = 0x80058E24;
 g_SpuReverbFlag = 0x800589A8;
 g_bSpuReserveWorkArea = 0x800589AC;
 g_SpuReverbOffsetAddress = 0x800589B0;
@@ -569,9 +587,12 @@ g_Font = 0x80059394;
 g_FontClutDest = 0x80059398;
 
 // Sound
+g_pSoundSpuRegisters = 0x800508E4; // Weird. This is a pointer to the hardware register, but referenced in sound.c
+g_SoundKeyOnFlags = 0x800594FC;
 g_SoundSpuErrorId = 0x80059500;
 g_SoundControlFlags = 0x8005957C;
 g_SoundSpuCommonAttr = 0x8005A3C0; // type:SpuCommonAttr size:0x28
+g_SoundVoiceDataPointerArray = 0x8006252C;
 g_SoundSpuMemoryTableStart = 0x8006FAC8;
 
 // Controller
