@@ -163,7 +163,7 @@ extern long g_SpuTransferMode;
 extern long g_SpuReverbFlag;
 extern long g_bSpuReserveWorkArea;
 extern long g_SpuReverbOffsetAddress;
-extern long g_ReverbMode;
+extern volatile long g_ReverbMode;
 extern short g_ReverbVolumeLeft;
 extern short g_ReverbVolumeRight;
 extern long g_ReverbDelay;
@@ -376,7 +376,45 @@ void SpuSetReverbModeDepth(short DepthL, short DepthR)
     g_ReverbVolumeRight = DepthR;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverbModeDelayTime);
+void SpuSetReverbModeDelayTime(long delayTime) {
+    ReverbPreset preset;
+    u8* pSrc;
+    u8* pDst;
+    s32 bytesToCopy;
+    s32 scaledDelay;
+    s32 scaledDelay2;
+
+    s32 mode = g_ReverbMode;
+    if (mode <= SPU_REV_MODE_DELAY)
+    {
+        if (SPU_REV_MODE_ECHO <= mode)
+        {
+            pDst = (u8*)&preset;
+            bytesToCopy = sizeof(ReverbPreset) - 1;
+            pSrc = (u8*)&g_ReverbParameterTable[g_ReverbMode];
+
+            while (bytesToCopy != -1) {
+                *pDst++ = *pSrc++;
+                bytesToCopy--;
+            };
+            
+            preset.m_Mask = SPU_REV_MASK_mLSAME | SPU_REV_MASK_mRSAME | SPU_REV_MASK_mLCOMB1 
+                          | SPU_REV_MASK_dLSAME | SPU_REV_MASK_mLAPF1 | SPU_REV_MASK_mRAPF1;
+            
+            scaledDelay  = (delayTime << 12) / 127;  /* delayTime * 4096 / 127 */
+            scaledDelay2 = (delayTime << 13) / 127;  /* delayTime * 8192 / 127 */
+            
+            preset.m_Regs.m_mLSAME  = scaledDelay2 - preset.m_Regs.m_dAPF1;
+            preset.m_Regs.m_mRSAME  = scaledDelay  - preset.m_Regs.m_dAPF2;
+            preset.m_Regs.m_mLCOMB1 = preset.m_Regs.m_mRCOMB1 + scaledDelay;
+            preset.m_Regs.m_dLSAME  = preset.m_Regs.m_dRSAME + scaledDelay;
+            preset.m_Regs.m_mLAPF1  = preset.m_Regs.m_mLAPF2 + scaledDelay;
+            preset.m_Regs.m_mRAPF1  = preset.m_Regs.m_mRAPF2 + scaledDelay;
+            g_ReverbDelay = delayTime;
+            _spu_setReverbAttr(&preset);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverbModeFeedback);
 
