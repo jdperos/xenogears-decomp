@@ -159,6 +159,7 @@ typedef struct {
 #define SPU_CONTROL_FLAG_MUTE_SPU           (1u << 14)
 #define SPU_CONTROL_FLAG_SPU_ENABLE         (1u << 15)
 
+extern SpuIRQCallbackProc g_SpuIRQCallback;
 extern long g_SpuTransferMode;
 extern long g_SpuReverbFlag;
 extern long g_bSpuReserveWorkArea;
@@ -238,7 +239,16 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuReadDecodedData);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetIRQ);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetIRQCallback);
+SpuIRQCallbackProc SpuSetIRQCallback(SpuIRQCallbackProc func) {
+    SpuIRQCallbackProc callback;
+    
+    callback = g_SpuIRQCallback;
+    if (func != g_SpuIRQCallback) {
+        g_SpuIRQCallback = func;
+        _SpuCallback(func);
+    }
+    return callback;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuCallback);
 
