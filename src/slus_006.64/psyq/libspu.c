@@ -416,7 +416,31 @@ void SpuSetReverbModeDelayTime(long delayTime) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverbModeFeedback);
+void SpuSetReverbModeFeedback(long feedback) {
+    ReverbPreset preset;
+    u8* pSrc;
+    u8* pDst;
+    s32 bytesToCopy;
+    s32 mode = g_ReverbMode;
+
+    if (mode <= SPU_REV_MODE_DELAY) {
+        if (SPU_REV_MODE_ECHO <= mode) {
+            pDst = (u8*)&preset;
+            bytesToCopy = sizeof(ReverbPreset) - 1;
+            pSrc = (u8*)&g_ReverbParameterTable[g_ReverbMode];
+            
+            while (bytesToCopy != -1) {
+                *pDst++ = *pSrc++;
+                bytesToCopy--;
+            };
+            
+            g_ReverbFeedback = feedback;
+            preset.m_Mask = SPU_REV_MASK_vWALL;
+            preset.m_Regs.m_vWALL = (feedback * 0x8100) / 127;
+            _spu_setReverbAttr(&preset);
+        }
+    }
+}
 
 void SpuGetReverbModeType(long* type)
 {
