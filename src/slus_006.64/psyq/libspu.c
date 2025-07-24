@@ -160,6 +160,7 @@ typedef struct {
 #define SPU_CONTROL_FLAG_SPU_ENABLE         (1u << 15)
 
 extern SpuIRQCallbackProc g_SpuIRQCallback;
+extern SpuTransferCallbackProc g_SpuTransferCallback;
 extern long g_SpuTransferMode;
 extern long g_SpuTransferModeValue;
 extern long g_SpuReverbFlag;
@@ -298,7 +299,16 @@ long SpuSetTransferMode(long mode) {
     return value;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetTransferCallback);
+SpuTransferCallbackProc SpuSetTransferCallback(SpuTransferCallbackProc func) {
+    SpuTransferCallbackProc previousCallback;
+    
+    previousCallback = g_SpuTransferCallback;
+    if (func != g_SpuTransferCallback) {
+
+        g_SpuTransferCallback = func;
+    }
+    return previousCallback;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetCommonAttr);
 
