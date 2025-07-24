@@ -250,7 +250,9 @@ SpuIRQCallbackProc SpuSetIRQCallback(SpuIRQCallbackProc func) {
     return callback;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuCallback);
+void _SpuCallback(SpuIRQCallbackProc func) {
+    InterruptCallback(9, func);
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuGetVoiceEnvelopeAttr);
 
