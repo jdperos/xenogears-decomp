@@ -1,5 +1,6 @@
 #include "common.h"
 #include "psyq/libspu.h"
+#include "psyq/libapi.h"
 
 typedef struct {
     u16 m_VolumeL;
@@ -159,6 +160,8 @@ typedef struct {
 #define SPU_CONTROL_FLAG_MUTE_SPU           (1u << 14)
 #define SPU_CONTROL_FLAG_SPU_ENABLE         (1u << 15)
 
+extern long g_SpuRunning;
+extern long g_SpuEVdma;
 extern SpuIRQCallbackProc g_SpuIRQCallback;
 extern SpuTransferCallbackProc g_SpuTransferCallback;
 extern long g_SpuTransferMode;
@@ -174,19 +177,34 @@ extern long g_ReverbFeedback;
 extern SpuRegisters* g_pSpuRegisters;
 extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
 
+void _spu_FiDMA(void); // Forward declare for SpuStart()
+
 void SpuInit(void) {
     _SpuInit(0);
 }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuInit);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004C660);
+void SpuStart(void) {
+    s32 event;
+
+    if (g_SpuRunning == 0) {
+        g_SpuRunning = 1;
+        EnterCriticalSection();
+        _SpuDataCallback(_spu_FiDMA);
+        // TODO: who knows what these constants do
+        event = OpenEvent(0xF0000009U, 0x20, 0x2000, NULL);
+        g_SpuEVdma = event;
+        EnableEvent(event);
+        ExitCriticalSection();
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004C6DC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004C970);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004CB3C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FiDMA);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004CBFC);
 
@@ -212,8 +230,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_Fwlts);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuDataCallback);
 
-// Maybe SpuQuit
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D294);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuQuit);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuInitMalloc);
 
