@@ -161,6 +161,7 @@ typedef struct {
 
 extern SpuIRQCallbackProc g_SpuIRQCallback;
 extern long g_SpuTransferMode;
+extern long g_SpuTransferModeValue;
 extern long g_SpuReverbFlag;
 extern long g_bSpuReserveWorkArea;
 extern long g_SpuReverbOffsetAddress;
@@ -263,7 +264,23 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D878);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetTransferStartAddr);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetTransferMode);
+long SpuSetTransferMode(long mode) {
+    int value;
+
+    switch (mode) {
+    case SPU_TRANSFER_BY_DMA:
+        value = 0;
+        break;
+    case SPU_TRANSFER_BY_IO:
+        value = 1;
+        break;
+    default:
+        value = 0;
+    }
+    g_SpuTransferMode = mode;
+    g_SpuTransferModeValue = value;
+    return value;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetTransferCallback);
 

@@ -519,6 +519,7 @@ g_spu_AllocBlockNum = 0x80058E64;
 g_spu_AllocLastNum = 0x80058E68;
 g_spu_memList = 0x80058E6C;
 g_SpuTransferMode = 0x800589A4;
+g_SpuTransferModeValue = 0x80058E24;
 g_SpuReverbFlag = 0x800589A8;
 g_bSpuReserveWorkArea = 0x800589AC;
 g_SpuReverbOffsetAddress = 0x800589B0;
