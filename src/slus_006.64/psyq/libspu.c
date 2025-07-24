@@ -230,7 +230,18 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_Fwlts);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuDataCallback);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuQuit);
+void SpuQuit(void) {
+    if (g_SpuRunning == 1) {
+        g_SpuRunning = 0;
+        EnterCriticalSection();
+        g_SpuTransferCallback = NULL;
+        g_SpuIRQCallback = NULL;
+        _SpuDataCallback(NULL);
+        CloseEvent(g_SpuEVdma);
+        DisableEvent(g_SpuEVdma);
+        ExitCriticalSection();
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuInitMalloc);
 
