@@ -109,7 +109,7 @@ segments:
       - [0x3BD4C, c, psyq/libetc]
       - [0x3CB18, c, psyq/libsn]
       - [0x3CD30, asm]
-      - [0x3D4A8, c, psyq/libspu]
+      - [0x3CD48, c, psyq/libspu]
       - [0x3EF84, c, psyq/libcard]
       - [0x3F080, asm] # Likely part of libcard
       - [0x3F290, sdata]
