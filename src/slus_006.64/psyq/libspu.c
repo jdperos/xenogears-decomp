@@ -162,8 +162,8 @@ typedef struct {
 
 extern long g_SpuRunning;
 extern long g_SpuEVdma;
-extern SpuIRQCallbackProc g_SpuIRQCallback;
-extern SpuTransferCallbackProc g_SpuTransferCallback;
+extern volatile SpuIRQCallbackProc g_SpuIRQCallback;
+extern volatile SpuTransferCallbackProc g_SpuTransferCallback;
 extern long g_SpuTransferMode;
 extern long g_SpuTransferModeValue;
 extern long g_SpuReverbFlag;
@@ -275,10 +275,8 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuReadDecodedData);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetIRQ);
 
 SpuIRQCallbackProc SpuSetIRQCallback(SpuIRQCallbackProc func) {
-    SpuIRQCallbackProc callback;
-    
-    callback = g_SpuIRQCallback;
-    if (func != g_SpuIRQCallback) {
+    SpuIRQCallbackProc callback = g_SpuIRQCallback;
+    if (func != callback ) {
         g_SpuIRQCallback = func;
         _SpuCallback(func);
     }
@@ -317,11 +315,8 @@ long SpuSetTransferMode(long mode) {
 }
 
 SpuTransferCallbackProc SpuSetTransferCallback(SpuTransferCallbackProc func) {
-    SpuTransferCallbackProc previousCallback;
-    
-    previousCallback = g_SpuTransferCallback;
-    if (func != g_SpuTransferCallback) {
-
+    SpuTransferCallbackProc previousCallback = g_SpuTransferCallback;
+    if (func != previousCallback) {
         g_SpuTransferCallback = func;
     }
     return previousCallback;
