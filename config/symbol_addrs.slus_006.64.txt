@@ -416,6 +416,7 @@ SpuInit = 0x8004C548;
 _SpuInit = 0x8004C568;
 SpuStart = 0x8004C660;
 _spu_init = 0x8004C6DC;
+_spu_FwriteByIO = 0x8004C970;
 _spu_FiDMA = 0x8004CB3C;
 _spu_t = 0x8004CCA8;
 _spu_Fw = 0x8004CF38;

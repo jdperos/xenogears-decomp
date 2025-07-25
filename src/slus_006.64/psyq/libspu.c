@@ -153,6 +153,11 @@ typedef struct {
 #define SPU_MAX_ALIGNED_ADDR (SPU_MAX_SIZE - 8) // 0x7fff8 - largest 8-byte aligned addr < 512KB
 #define SPU_MAX_VALID_OFFSET (SPU_MAX_ALIGNED_ADDR - SPU_MIN_ADDR)  // 0x7efe8
 
+#define SPU_DMA_CMD_READ 0
+#define SPU_DMA_CMD_WRITE 1
+#define SPU_DMA_CMD_SETADDR 2
+#define SPU_DMA_CMD_EXEC 3
+
 #define SPU_CONTROL_FLAG_CD_AUDIO_ENABLE    (1u <<  0)
 #define SPU_CONTROL_FLAG_EXT_AUDIO_ENABLE   (1u <<  1)
 #define SPU_CONTROL_FLAG_CD_AUDIO_REVERB    (1u <<  2)
@@ -167,7 +172,7 @@ typedef struct {
 
 extern long g_SpuRunning;
 extern long g_SpuEVdma;
-extern short g_SpuTransferAddr;
+extern u_short g_SpuTransferAddr;
 extern long g_SpuTransferAddrShift;
 extern volatile SpuIRQCallbackProc g_SpuIRQCallback;
 extern volatile SpuTransferCallbackProc g_SpuTransferCallback;
@@ -185,6 +190,7 @@ extern SpuRegisters* g_pSpuRegisters;
 extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
 
 void _spu_FiDMA(void); // Forward declare for SpuStart()
+s32 _spu_t(s32, ...); // Forward declare for _spu_Fr and _spu_Fw
 
 void SpuInit(void) {
     _SpuInit(0);
@@ -209,7 +215,7 @@ void SpuStart(void) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_init);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004C970);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FwriteByIO);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FiDMA);
 
@@ -217,9 +223,26 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004CBFC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_t);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_Fw);
+// TODO(jperos): Will need to revisit this for argument names after decompiling _spu_t to see what they are
+s32 _spu_Fw(s32 arg0, s32 arg1) {
+    if (g_SpuTransferModeValue == SPU_TRANSFER_BY_DMA) {
+        _spu_t(SPU_DMA_CMD_SETADDR, g_SpuTransferAddr << g_SpuTransferAddrShift);
+        _spu_t(SPU_DMA_CMD_WRITE);
+        _spu_t(SPU_DMA_CMD_EXEC, arg0, arg1);
+    }
+    else
+    {
+        _spu_FwriteByIO(arg0, arg1);
+    }
+    return arg1;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_Fr);
+s32 _spu_Fr(s32 arg0, s32 arg1) {
+    _spu_t(SPU_DMA_CMD_SETADDR, g_SpuTransferAddr << g_SpuTransferAddrShift);
+    _spu_t(SPU_DMA_CMD_READ);
+    _spu_t(SPU_DMA_CMD_EXEC, arg0, arg1);
+    return arg1;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetRXX);
 
