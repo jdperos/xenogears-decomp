@@ -52,6 +52,13 @@ struct SoundFile_t {
 };
 typedef struct SoundFile_t SoundFile;
 
+extern void* g_pSoundSpuRegisters;
+
+extern short g_SoundSpuErrorId;
+extern short g_SoundControlFlags;
+extern SpuIRQCallbackProc g_SoundSpuIrqCallbackFn;
+extern int g_SoundSpuIRQCount;
+
 extern SoundVoiceData g_SoundVoiceDataPointerArray;
 
 extern SpuVolume g_SoundUnkVolume;

@@ -171,9 +171,12 @@ FontLoadFont = 0x800374E8;
 
 // Sound
 SoundInitialize = 0x80037B88;
+SoundReset = 0x80037DC0;
 SoundEnableAllSpuChannels = 0x80037E8C;
 SoundMuteAllSpuChannels = 0x80037EE4;
+SoundSpuIRQHandler = 0x8003BFA0;
 SoundClearVoiceDataPointers = 0x8003E700;
+SoundSetVoiceKeyOff = 0x8003F484;
 SoundValidateFile = 0x8003F614;
 SoundFileComputeChecksum = 0x8003F684;
 SoundHandleError = 0x8003F6B0;
@@ -607,9 +610,12 @@ g_SoundReverbFeedback = 0x8005940B;
 g_SoundUnkVolume = 0x8005940C; // type:SpuVolume size:0x4
 g_SoundKeyOnFlags = 0x800594FC;
 g_SoundSpuErrorId = 0x80059500;
+g_SoundSpuIrqCallbackFn = 0x8005950C;
+g_SoundSpuIRQCount = 0x80059514;
 g_SoundCdRomAttenuation = 0x80059530; // type:CdlATV size:0x4
 g_SoundControlFlags = 0x8005957C;
 g_SoundSpuCommonAttr = 0x8005A3C0; // type:SpuCommonAttr size:0x28
+D_800595BC = 0x800595BC;
 g_SoundVoiceDataPointerArray = 0x8006252C;
 g_SoundSpuMemoryTableStart = 0x8006FAC8;
 
