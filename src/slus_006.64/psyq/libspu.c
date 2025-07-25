@@ -226,7 +226,18 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayW);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayR);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_Fwlts);
+void _spu_Fwlts(void) {
+    volatile s32 counter;
+    volatile s32 value;
+    
+    value = 13;
+    counter = 0;
+    
+    while (counter < 60) {
+        value = value * 13;
+        counter++;
+    }
+}
 
 void _SpuDataCallback(SpuTransferCallbackProc func) {
     DMACallback(4, func);
