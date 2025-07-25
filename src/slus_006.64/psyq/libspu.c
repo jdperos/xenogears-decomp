@@ -228,7 +228,9 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayR);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_Fwlts);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuDataCallback);
+void _SpuDataCallback(SpuTransferCallbackProc func) {
+    DMACallback(4, func);
+}
 
 void SpuQuit(void) {
     if (g_SpuRunning == 1) {

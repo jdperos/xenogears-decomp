@@ -101,7 +101,7 @@ void InterruptCallback(unsigned int irq, VoidCallback_t fn) {
     g_pInterruptControl->setIntrHandler(irq, fn);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", func_8004B7A0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", DMACallback);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", func_8004B7D0);
 
