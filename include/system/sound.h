@@ -47,7 +47,7 @@ struct SoundFile_t {
     /* 0x14 */ unsigned short sedId;
     /* 0x16 */ unsigned short sndId;
     /* 0x18 */ u32 unk18;
-    /* 0x1C */ struct SedsFile_t* pNext;
+    /* 0x1C */ struct SoundFile_t* pNext;
     /* 0x20 */ // starts of 0x2 size offsets to scripts. Pair of scripts for each instrument. 1 script for 1 channel.
 };
 typedef struct SoundFile_t SoundFile;
