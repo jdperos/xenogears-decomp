@@ -148,6 +148,11 @@ typedef struct {
     ReverbRegisters m_Regs;
 } ReverbPreset;
 
+#define SPU_MIN_ADDR 0x1010
+#define SPU_MAX_SIZE 512 * 1024
+#define SPU_MAX_ALIGNED_ADDR (SPU_MAX_SIZE - 8) // 0x7fff8 - largest 8-byte aligned addr < 512KB
+#define SPU_MAX_VALID_OFFSET (SPU_MAX_ALIGNED_ADDR - SPU_MIN_ADDR)  // 0x7efe8
+
 #define SPU_CONTROL_FLAG_CD_AUDIO_ENABLE    (1u <<  0)
 #define SPU_CONTROL_FLAG_EXT_AUDIO_ENABLE   (1u <<  1)
 #define SPU_CONTROL_FLAG_CD_AUDIO_REVERB    (1u <<  2)
@@ -343,8 +348,8 @@ u_long SpuSetTransferStartAddr(u_long addr) {
     u32 offset;
     u16 base_addr;
 
-    offset = addr - 0x1010;
-    if (offset > 0x7efe8) {
+    offset = addr - SPU_MIN_ADDR;
+    if (offset > SPU_MAX_VALID_OFFSET) {
         return 0;
     }
 
