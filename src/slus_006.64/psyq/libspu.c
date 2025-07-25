@@ -187,6 +187,7 @@ extern short g_ReverbVolumeRight;
 extern long g_ReverbDelay;
 extern long g_ReverbFeedback;
 extern SpuRegisters* g_pSpuRegisters;
+extern long g_SpuInTransfer;
 extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
 
 void _spu_FiDMA(void); // Forward declare for SpuStart()
@@ -362,7 +363,17 @@ void _SpuCallback(SpuIRQCallbackProc func) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuGetVoiceEnvelopeAttr);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuRead);
+u_long SpuRead(u_char* addr, u_long size) {
+
+    if (size > 0x7EFF0U) {
+        size = 0x7EFF0;
+    }
+    _spu_Fr(addr, size);
+    if (g_SpuTransferCallback == 0) {
+        g_SpuInTransfer = 0;
+    }
+    return size;
+}
 
 // Possible SpuWrite
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D878);

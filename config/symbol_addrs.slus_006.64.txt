@@ -549,6 +549,7 @@ g_ReverbVolumeRight = 0x800589Be;
 g_ReverbDelay = 0x800589C0;
 g_ReverbFeedback = 0x800589C4;
 g_pSpuRegisters = 0x80058E08;
+g_SpuInTransfer = 0x80058E3C;
 g_ReverbParameterTable = 0x80058EC0;
 
 // Main
