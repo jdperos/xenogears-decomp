@@ -226,9 +226,22 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayW);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayR);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_Fwlts);
+void _spu_Fwlts(void) {
+    volatile s32 counter;
+    volatile s32 value;
+    
+    value = 13;
+    counter = 0;
+    
+    while (counter < 60) {
+        value = value * 13;
+        counter++;
+    }
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuDataCallback);
+void _SpuDataCallback(SpuTransferCallbackProc func) {
+    DMACallback(4, func);
+}
 
 void SpuQuit(void) {
     if (g_SpuRunning == 1) {
@@ -245,7 +258,26 @@ void SpuQuit(void) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuInitMalloc);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetNoiseClock);
+long SpuSetNoiseClock(long n_clock) {
+    long clamped;
+    u16 controlRegister;
+    u16 newVal;
+    
+
+    if (n_clock < 0) {
+        clamped = 0;
+    } else if (n_clock > 0x3F) {  // >= 64
+        clamped = 0x3F;      // = 63
+    } else {
+        clamped = n_clock;
+    }
+    
+    controlRegister = g_pSpuRegisters->controlRegister;
+    newVal = (controlRegister & 0xC0FF) | ((clamped & 0x3F) << 8);
+    ((volatile SpuRegisters*)g_pSpuRegisters)->controlRegister = newVal;
+
+    return clamped;
+}
 
 long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2.56)
 {

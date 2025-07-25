@@ -377,6 +377,7 @@ v_wait = 0x8004B694;
 ChangeClearRCnt = 0x8004B730;
 ResetCallback = 0x8004B740;
 InterruptCallback = 0x8004B770;
+DMACallback = 0x8004B7A0;
 startIntr = 0x8004B8D8;
 trapIntr = 0x8004B9B4;
 setIntr = 0x8004BB9C;
