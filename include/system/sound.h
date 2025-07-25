@@ -30,6 +30,35 @@ typedef struct {
     u8 m_AdsrSR;
 } SoundVoiceData;
 
+
+#define SOUND_STATUS_OK 0x0
+#define SOUND_ERR_INVALID_SIGNATURE 0x1
+#define SOUND_ERR_INVALID_CHECKSUM 0x2 // Maybe
+#define SOUND_ERR_UNK_0X4 0x4
+
+// Possibly a struct which can either be a SMD (Background Music), SED (Sound Effect) or SND entry
+struct SoundFile_t {
+    /* 0x0 */ unsigned int magic;
+    /* 0x4 */ u32 unk4;
+    /* 0x8 */ u32 unk8; // Size?
+    /* 0xC */ u16 unkC; // File format version?
+    /* 0xE */ u16 unkE;
+    /* 0x10 */ u32 unk10; // smdId?
+    /* 0x14 */ unsigned short sedId;
+    /* 0x16 */ unsigned short sndId;
+    /* 0x18 */ u32 unk18;
+    /* 0x1C */ struct SoundFile_t* pNext;
+    /* 0x20 */ // starts of 0x2 size offsets to scripts. Pair of scripts for each instrument. 1 script for 1 channel.
+};
+typedef struct SoundFile_t SoundFile;
+
+extern void* g_pSoundSpuRegisters;
+
+extern short g_SoundSpuErrorId;
+extern short g_SoundControlFlags;
+extern SpuIRQCallbackProc g_SoundSpuIrqCallbackFn;
+extern int g_SoundSpuIRQCount;
+
 extern SoundVoiceData g_SoundVoiceDataPointerArray;
 
 extern SpuVolume g_SoundUnkVolume;
