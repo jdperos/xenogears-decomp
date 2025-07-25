@@ -575,10 +575,39 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F5BC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F5EC);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F614);
+//
+int SoundValidateFile(SoundFile* pSoundFile, u32 magicBytes, unsigned short targetValue) {
+    unsigned char bIsError;
+    
+    if (pSoundFile->magic != magicBytes) {
+        return SOUND_ERR_INVALID_SIGNATURE;
+    }
+    
+    if (SoundFileComputeChecksum(pSoundFile) == 0) {
+        // Version check?
+        bIsError = (pSoundFile->unkC != targetValue);
+        return bIsError * SOUND_ERR_UNK_0X4;
+    }
+    
+    return SOUND_ERR_INVALID_CHECKSUM;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F67C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F684);
+int SoundFileComputeChecksum(SoundFile* pSoundFile) {
+    int nResult;
+    int* pCurrent;
+    unsigned int nCount;
+
+    pCurrent = pSoundFile;
+    nCount = (pSoundFile->unk8 + 3) / 4; // Align to 4-byte boundary
+    nResult = 0;
+    do {
+        nResult += *pCurrent++;
+    } while (--nCount);
+    
+    return nResult;
+}
+
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundHandleError);
