@@ -245,7 +245,17 @@ s32 _spu_Fr(s32 arg0, s32 arg1) {
     return arg1;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetRXX);
+void _spu_FsetRXX(u32 offset, u32 value, u32 mode)
+{
+    if (mode == 0) {
+        volatile u16* pRegs = (volatile u16*)g_pSpuRegisters;
+        pRegs[offset] = value;
+    }
+    else {
+        volatile u16* pRegs = (volatile u16*)g_pSpuRegisters;
+        pRegs[offset] = value >> g_SpuTransferAddrShift;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetRXXa);
 
