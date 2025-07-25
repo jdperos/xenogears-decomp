@@ -415,6 +415,7 @@ PCwrite = 0x8004c470;
 SpuInit = 0x8004C548;
 _SpuInit = 0x8004C568;
 SpuStart = 0x8004C660;
+_spu_init = 0x8004C6DC;
 _spu_FiDMA = 0x8004CB3C;
 _spu_t = 0x8004CCA8;
 _spu_Fw = 0x8004CF38;
@@ -524,6 +525,8 @@ g_GpuCurTIMHandle = 0x8005A37C;
 // PSY-Q SPU
 g_SpuRunning = 0x80058E04;
 g_SpuEVdma = 0x8005899C;
+g_SpuTransferAddr = 0x80058E20;
+g_SpuTransferAddrShift = 0x80058E30;
 g_SpuTransferCallback = 0x80058E40;
 g_SpuIRQCallback = 0x80058E44;
 g_spu_AllocBlockNum = 0x80058E64;

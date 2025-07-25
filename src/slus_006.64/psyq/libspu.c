@@ -162,6 +162,8 @@ typedef struct {
 
 extern long g_SpuRunning;
 extern long g_SpuEVdma;
+extern short g_SpuTransferAddr;
+extern long g_SpuTransferAddrShift;
 extern volatile SpuIRQCallbackProc g_SpuIRQCallback;
 extern volatile SpuTransferCallbackProc g_SpuTransferCallback;
 extern long g_SpuTransferMode;
@@ -200,7 +202,7 @@ void SpuStart(void) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004C6DC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_init);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004C970);
 
@@ -337,7 +339,19 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuRead);
 // Possible SpuWrite
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D878);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetTransferStartAddr);
+u_long SpuSetTransferStartAddr(u_long addr) {
+    u32 offset;
+    u16 base_addr;
+
+    offset = addr - 0x1010;
+    if (offset > 0x7efe8) {
+        return 0;
+    }
+
+    base_addr = _spu_FsetRXXa(-1, addr);
+    g_SpuTransferAddr = base_addr;
+    return (ulong)base_addr << g_SpuTransferAddrShift;
+}
 
 long SpuSetTransferMode(long mode) {
     int value;
