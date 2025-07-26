@@ -4,27 +4,38 @@
 extern int g_CdDebugLevel;
 extern CdCallbackFn_t* g_CdSyncCallback;
 extern CdCallbackFn_t* g_CdReadyCallback;
-extern func_80042700(); // psyq/interrupts
+
+extern unsigned char g_CdMode;
+extern unsigned char g_CdLastCommand;
+extern unsigned char g_CdStatus;
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdInit);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040DA0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", _cbsync);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040DC8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", _cbready);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040DF0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", _cbread);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040E18);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", DeliverEvent);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040E38);
+int CdStatus(void) {
+    return g_CdStatus;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040E48);
+int CdMode(void) {
+    return g_CdMode;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040E58);
+int CdLastCom(void) {
+    return g_CdLastCommand;
+}
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdLastPos);
 
 int CdReset(int mode) {
     if (mode == 2) {
-        func_80042700();
+        CD_initintr();
         return 1;
     }
 
@@ -51,9 +62,9 @@ int CdSetDebug(int level) {
     return prevLevel;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040F0C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdComstr);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040F40);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdIntstr);
 
 int CdSync(int mode, u_char* result) {
     int nStatus;
@@ -89,11 +100,14 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControlF);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControlB);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdMix);
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdGetSector2);
+int CdMix(CdlATV* vol) {
+    CD_vol(vol);
+    return 1;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdGetSector);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdGetSector2);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdDataSyncCallback);
 
@@ -111,18 +125,37 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_ready);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_cw);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800424A4);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_vol);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_flush);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_initvol);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042700);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_initintr);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_init);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_datasync);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042AA8);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042BA8);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_getsector);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_getsector2);
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042C98);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042CA8);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", puts);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042DDC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042E90);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042EC0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042EF0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800431C0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800432BC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800434D0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_8004356C);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReadSync);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReadCallback);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80043754);
