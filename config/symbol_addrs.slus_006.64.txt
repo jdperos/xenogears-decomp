@@ -551,6 +551,8 @@ g_ReverbFeedback = 0x800589C4;
 g_pSpuRegisters = 0x80058E08;
 g_SpuInTransfer = 0x80058E3C;
 g_ReverbParameterTable = 0x80058EC0;
+g_PendingOnMaskLow16 = 0x8005A4C8;
+g_PendingOnMaskHigh16 = 0x8005A4CC;
 
 // Main
 g_KernelErrorDescriptions = 0x8004F2C0;
