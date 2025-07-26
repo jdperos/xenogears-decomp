@@ -1,4 +1,18 @@
 #include "common.h"
+#include "psyq/kernel.h"
+
+typedef struct {
+    u16 rootCounter;
+    s16 unk2;
+    s16 mode;
+    s16 : 16;
+    s16 target;
+    s32 : 32;
+} Counter;
+
+extern volatile long* g_pInterruptStatusRegister;
+extern volatile Counter* g_pRCounters;
+extern volatile long g_InterruptStatusMasks[4];
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", FlushCache);
 
@@ -46,15 +60,59 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", Krom2RawAdd);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", ChangeClearPAD);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", func_800405F4);
+long SetRCnt(long spec, short target, long mode) {
+    int i = spec & 0xFFFF;
+    int final_mode = 0x48;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", func_80040690);
+    if (i >= 3)
+        return 0;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", func_800406C8);
+    g_pRCounters[i].mode = 0;
+    g_pRCounters[i].target = target;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", func_800406FC);
+    if (i < 2U) {
+        if (mode & RCntMdGATE) final_mode = 0x49;
+        if (!(mode & RCntMdSC)) final_mode |= 0x100;
+    } else if (i == 2U) {
+        if (!(mode & RCntMdSC)) final_mode = 0x248;
+    }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", func_80040734);
+    if ((mode & RCntMdINTR) != 0)
+        final_mode |= 0x10;
+
+    g_pRCounters[i].mode = final_mode;
+    return 1;
+}
+
+long GetRCnt(long spec) {
+    int i = spec & 0xFFFF;
+    if (i >= 3)
+        return 0;
+    return g_pRCounters[i].rootCounter;
+}
+
+long StartRCnt(long spec) {
+    int i = spec & 0xFFFF;
+    long* mask = g_InterruptStatusMasks;
+
+    g_pInterruptStatusRegister[1] |= mask[i];
+    return i < 3;
+}
+
+long StopRCnt(long spec) {
+    int i = spec & 0xFFFF;
+    long* mask = g_InterruptStatusMasks;
+    g_pInterruptStatusRegister[1] &= ~mask[i];
+    return 1;
+}
+
+long ResetRCnt(long spec) {
+    int i = spec & 0xFFFF;
+    if (i >= 3)
+        return 0;
+    g_pRCounters[i].rootCounter = 0;
+    return 1;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libapi", func_8004076C);
 

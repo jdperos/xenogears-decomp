@@ -218,6 +218,11 @@ rename = 0x800405A4;
 erase = 0x800405B4;
 Krom2RawAdd = 0x800405C4;
 ChangeClearPAD = 0x800405D4;
+SetRCnt = 0x800405F4;
+GetRCnt = 0x80040690;
+StartRCnt = 0x800406C8;
+StopRCnt = 0x800406FC;
+ResetRCnt = 0x80040734;
 // ...
 InitPAD = 0x80040828;
 StartPAD = 0x800408C4;
@@ -490,6 +495,10 @@ g_ArchiveCdDriveError = 0x8004FE20;
 g_ArchiveCurStreamFile = 0x8004FE30;
 g_ArchiveDebugTable = 0x8004FE48;
 g_ArchiveCdCurLocation = 0x80059F10;
+
+g_pRCounters = 0x80056400;
+g_InterruptStatusMasks = 0x80056404;
+g_pInterruptStatusRegister = 0x800563FC;
 
 g_CdDebugLevel = 0x800564B4;
 g_CdSyncCallback = 0x800564A8;
