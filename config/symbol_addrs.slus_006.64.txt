@@ -527,6 +527,15 @@ g_CdMode = 0x800564C8;
 g_CdLastCommand = 0x800564C9;
 g_CdLastSyncStatus = 0x80056788;
 g_CdLastReadyStatus = 0x80056789;
+g_CdIndexStatusReg = 0x80056770;
+g_CdInterruptEnableReg = 0x8005677C;
+g_CdRomDelayReg = 0x800567A4;
+
+g_ComDelayReg = 0x80056780;
+g_DmaControlReg = 0x800567A8;
+g_Dma3AddrReg = 0x800567AC;
+g_Dma3BlockControlReg = 0x800567B0;
+g_Dma3ChanControlReg = 0x800567B4;
 
 g_pGPUSTAT = 0x8005783C;
 g_pTMR_HRETRACE_VAL = 0x80057840;
