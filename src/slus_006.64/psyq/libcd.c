@@ -8,12 +8,22 @@ extern CdCallbackFn_t* g_CdReadyCallback;
 extern unsigned char g_CdMode;
 extern unsigned char g_CdLastCommand;
 extern unsigned char g_CdStatus;
+extern CdlLOC g_CdLastPosition;
+
+extern volatile u8* g_CdIndexStatusReg;
+extern volatile u8* g_CdInterruptEnableReg;
+extern volatile u32* g_ComDelayReg;
+extern volatile u32* g_CdRomDelayReg;
+extern volatile u32* g_DmaControlReg;
+extern volatile u32* g_Dma3AddrReg;
+extern volatile u32* g_Dma3BlockControlReg;
+extern volatile u32* g_Dma3ChanControlReg;
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdInit);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", _cbsync);
+void _cbsync(void) { DeliverEvent(0xF0000003, 0x20); }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", _cbready);
+void _cbready(void) { DeliverEvent(0xF0000003, 0x40); }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", _cbread);
 
@@ -31,7 +41,7 @@ int CdLastCom(void) {
     return g_CdLastCommand;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdLastPos);
+CdlLOC* CdLastPos(void) { return &g_CdLastPosition; }
 
 int CdReset(int mode) {
     if (mode == 2) {
@@ -137,7 +147,38 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_init);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_datasync);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_getsector);
+u32 CD_getsector(u32 madr, u32 size) {
+    // Reset CD command register.
+    *g_CdIndexStatusReg = 0;
+    *g_CdInterruptEnableReg = 0x80; // Exact effect is unclear.
+
+    // Configure CD-ROM read timing parameters
+    *g_CdRomDelayReg = 0x20943;
+    *g_ComDelayReg = 0x1323;
+
+    // DMA3 Master Enable.
+    *g_DmaControlReg |= 0x8000;
+
+    // Address in RAM where CD data should be written.
+    *g_Dma3AddrReg = madr;
+
+    // Set DMA transfer size (words in one block).
+    *g_Dma3BlockControlReg = size | 0x10000;
+
+    while (!(*g_CdIndexStatusReg & 0x40 /*Data fifo empty*/))
+        ;
+
+    // Start DMA transfer using SyncMode 0, enable + trigger.
+    *g_Dma3ChanControlReg = 0x11000000;
+
+    // Wait until DMA3 is no longer busy
+    while (*g_Dma3ChanControlReg & 0x01000000)
+        ;
+
+    *g_ComDelayReg = 0x1325;
+
+    return 0;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_getsector2);
 
