@@ -267,7 +267,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayW);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayR);
 
-void _spu_Fwlts(void) {
+void _spu_Fw1ts(void) {
     volatile s32 counter;
     volatile s32 value;
     
