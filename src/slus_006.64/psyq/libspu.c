@@ -3,15 +3,13 @@
 #include "psyq/libapi.h"
 
 typedef struct {
-    u16 m_VolumeL;
-    u16 m_VolumeR;
-    u16 m_SampleRate;
-    u16 m_StartAddress;
-    u16 m_Adsr1;
-    u16 m_Adsr2;
-    u16 m_CurrentAdsrVol;
-    u16 m_LoopAddress;
-} VoiceData;
+    SpuVolume volume;
+    u16 pitch;
+    u16 addr;
+    u16 adsr[2];
+    u16 volumex;
+    u16 loop_addr;
+} SPU_VOICE_REG;
 
 typedef struct {
     // APF Displacement registers (1F801DC0h - 1F801DC2h)
@@ -68,12 +66,10 @@ typedef struct {
 } ReverbRegisters;
 
 typedef struct {
-    VoiceData voiceData[24];
+    SPU_VOICE_REG voice[24];
     // Volumes
-    s16 m_MainVolumeL; // 1-bit for Volume Mode, 15-bits for Volume
-    s16 m_MainVolumeR; // 1-bit for Volume Mode, 15-bits for Volume
-    s16 m_ReverbOutVolumeL; // Full 16 bits for volume
-    s16 m_ReverbOutVolumeR; // Full 16 bits for volume
+    SpuVolume main_vol; // 1-bit for Volume Mode, 15-bits for Volume
+    SpuVolume rev_vol; // Full 16 bits for volume
 
     // Voice Flags
     u32 m_KeyOnFlags;
@@ -88,11 +84,11 @@ typedef struct {
     // Memory
     u16 m_ReverbWorkStartAddr;
     u16 m_IrqAddress;
-    u16 m_TransferAddress;
+    u16 trans_addr;
     u16 m_TransferFifo;
 
     // Control
-    u16 controlRegister;
+    u16 spucnt;
     u16 m_TransferControl;
     u16 m_StatusRegister;
 
@@ -108,7 +104,14 @@ typedef struct {
     u32 m_Unknown2;
 
     ReverbRegisters m_Reverb;
-} SpuRegisters;
+} SPU_RXX;
+
+union SpuUnion {
+    SPU_RXX _rxx;
+    volatile SPU_RXX rxx;
+    u16 _raw[0x100];
+    volatile u16 raw[0x100];
+};
 
 #define SPU_REV_MASK_dAPF1       (1U <<  0)
 #define SPU_REV_MASK_dAPF2       (1U <<  1)
@@ -172,12 +175,16 @@ typedef struct {
 
 extern long g_SpuRunning;
 extern long g_SpuEVdma;
-extern u_short g_SpuTransferAddr;
-extern long g_SpuTransferAddrShift;
-extern volatile SpuIRQCallbackProc g_SpuIRQCallback;
-extern volatile SpuTransferCallbackProc g_SpuTransferCallback;
+extern u_short _spu_tsa;
+extern long _spu_mem_mode;
+extern long _spu_mem_mode_plus;
+extern long _spu_mem_mode_unit;
+extern long _spu_mem_mode_unitM;
+extern volatile SpuIRQCallbackProc _spu_IRQCallback;
+extern volatile SpuTransferCallbackProc _spu_transferCallback;
+extern int _spu_dma_mode;
 extern long g_SpuTransferMode;
-extern long g_SpuTransferModeValue;
+extern long _spu_transMode;
 extern long g_SpuReverbFlag;
 extern long g_bSpuReserveWorkArea;
 extern long g_SpuReverbOffsetAddress;
@@ -186,9 +193,13 @@ extern short g_ReverbVolumeLeft;
 extern short g_ReverbVolumeRight;
 extern long g_ReverbDelay;
 extern long g_ReverbFeedback;
-extern SpuRegisters* g_pSpuRegisters;
-extern long g_SpuInTransfer;
+extern union SpuUnion* _spu_RXX;
+extern volatile int* _spu_madr;
+extern volatile int* _spu_bcr;
+extern volatile int* _spu_chcr;
+extern long _spu_inTransfer;
 extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
+extern volatile u16 _spu_RQ[10];
 
 void _spu_FiDMA(void); // Forward declare for SpuStart()
 s32 _spu_t(s32, ...); // Forward declare for _spu_Fr and _spu_Fw
@@ -218,16 +229,51 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_init);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FwriteByIO);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FiDMA);
+void _spu_FiDMA(void) {
+    s32 i;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004CBFC);
+    if (_spu_dma_mode == 0)
+    {
+        _spu_Fw1ts();
+    }
+
+    _spu_RXX->rxx.spucnt &= ~0x30;
+
+    for(i = 0; _spu_RXX->rxx.spucnt & 0x30; )
+    {
+        if (++i > 0xF00U) {
+            break;
+        }
+    }
+
+    if (_spu_transferCallback)
+    {
+        _spu_transferCallback();
+    }
+    else
+    {
+        DeliverEvent(0xF0000009, 0x20);
+    }
+}
+
+void _spu_Fr_(s32 madr, u16 trans_addr, s32 bcr) {
+    _spu_RXX->rxx.trans_addr = trans_addr;
+    _spu_Fw1ts();
+    _spu_RXX->rxx.spucnt |= 0x30;
+    _spu_Fw1ts();
+    _spu_FsetDelayR();
+    *_spu_madr = madr;
+    *_spu_bcr = (bcr << 0x10) | 0x10;
+    _spu_dma_mode = 1;
+    *_spu_chcr = 0x01000200;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_t);
 
 // TODO(jperos): Will need to revisit this for argument names after decompiling _spu_t to see what they are
 s32 _spu_Fw(s32 arg0, s32 arg1) {
-    if (g_SpuTransferModeValue == SPU_TRANSFER_BY_DMA) {
-        _spu_t(SPU_DMA_CMD_SETADDR, g_SpuTransferAddr << g_SpuTransferAddrShift);
+    if (_spu_transMode == SPU_TRANSFER_BY_DMA) {
+        _spu_t(SPU_DMA_CMD_SETADDR, _spu_tsa << _spu_mem_mode_plus);
         _spu_t(SPU_DMA_CMD_WRITE);
         _spu_t(SPU_DMA_CMD_EXEC, arg0, arg1);
     }
@@ -239,7 +285,7 @@ s32 _spu_Fw(s32 arg0, s32 arg1) {
 }
 
 s32 _spu_Fr(s32 arg0, s32 arg1) {
-    _spu_t(SPU_DMA_CMD_SETADDR, g_SpuTransferAddr << g_SpuTransferAddrShift);
+    _spu_t(SPU_DMA_CMD_SETADDR, _spu_tsa << _spu_mem_mode_plus);
     _spu_t(SPU_DMA_CMD_READ);
     _spu_t(SPU_DMA_CMD_EXEC, arg0, arg1);
     return arg1;
@@ -248,16 +294,35 @@ s32 _spu_Fr(s32 arg0, s32 arg1) {
 void _spu_FsetRXX(u32 offset, u32 value, u32 mode)
 {
     if (mode == 0) {
-        volatile u16* pRegs = (volatile u16*)g_pSpuRegisters;
+        volatile u16* pRegs = (volatile u16*)_spu_RXX;
         pRegs[offset] = value;
     }
     else {
-        volatile u16* pRegs = (volatile u16*)g_pSpuRegisters;
-        pRegs[offset] = value >> g_SpuTransferAddrShift;
+        volatile u16* pRegs = (volatile u16*)_spu_RXX;
+        pRegs[offset] = value >> _spu_mem_mode_plus;
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetRXXa);
+u32 _spu_FsetRXXa(s32 arg0, u32 arg1) {
+    u32 temp_a3;
+
+    if ((_spu_mem_mode != 0) && ((arg1 % _spu_mem_mode_unit) != 0)) {
+        arg1 += _spu_mem_mode_unit;
+        arg1 &= ~_spu_mem_mode_unitM;
+    }
+
+    temp_a3 = arg1 >> _spu_mem_mode_plus;
+    switch (arg0) {
+        case -1:
+            return temp_a3 & 0xFFFF;
+        case -2:
+            return arg1;
+        default:
+            _spu_RXX->raw[arg0] = temp_a3;
+    }
+
+    return arg1;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FgetRXXa);
 
@@ -267,7 +332,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayW);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayR);
 
-void _spu_Fwlts(void) {
+void _spu_Fw1ts(void) {
     volatile s32 counter;
     volatile s32 value;
     
@@ -288,8 +353,8 @@ void SpuQuit(void) {
     if (g_SpuRunning == 1) {
         g_SpuRunning = 0;
         EnterCriticalSection();
-        g_SpuTransferCallback = NULL;
-        g_SpuIRQCallback = NULL;
+        _spu_transferCallback = NULL;
+        _spu_IRQCallback = NULL;
         _SpuDataCallback(NULL);
         CloseEvent(g_SpuEVdma);
         DisableEvent(g_SpuEVdma);
@@ -301,7 +366,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuInitMalloc);
 
 long SpuSetNoiseClock(long n_clock) {
     long clamped;
-    u16 controlRegister;
+    u16 spucnt;
     u16 newVal;
     
 
@@ -313,9 +378,9 @@ long SpuSetNoiseClock(long n_clock) {
         clamped = n_clock;
     }
     
-    controlRegister = g_pSpuRegisters->controlRegister;
-    newVal = (controlRegister & 0xC0FF) | ((clamped & 0x3F) << 8);
-    ((volatile SpuRegisters*)g_pSpuRegisters)->controlRegister = newVal;
+    spucnt = _spu_RXX->_rxx.spucnt;
+    newVal = (spucnt & 0xC0FF) | ((clamped & 0x3F) << 8);
+    _spu_RXX->rxx.spucnt = newVal;
 
     return clamped;
 }
@@ -327,22 +392,22 @@ long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2
     switch( on_off ) {
     case SPU_OFF:
         g_SpuReverbFlag = SPU_OFF;
-        spuControlRegister = g_pSpuRegisters->controlRegister;
+        spuControlRegister = _spu_RXX->_rxx.spucnt;
         spuControlRegister &= ~SPU_CONTROL_FLAG_MASTER_REVERB;
-        g_pSpuRegisters->controlRegister = spuControlRegister;
+        _spu_RXX->_rxx.spucnt = spuControlRegister;
         break;
         
     case SPU_ON:
         if( g_bSpuReserveWorkArea != on_off && _SpuIsInAllocateArea_(g_SpuReverbOffsetAddress) ) {
             g_SpuReverbFlag = SPU_OFF;
-            spuControlRegister = g_pSpuRegisters->controlRegister;
+            spuControlRegister = _spu_RXX->_rxx.spucnt;
             spuControlRegister &= ~SPU_CONTROL_FLAG_MASTER_REVERB;
-            g_pSpuRegisters->controlRegister = spuControlRegister;
+            _spu_RXX->_rxx.spucnt = spuControlRegister;
         } else {
             g_SpuReverbFlag = on_off;
-            spuControlRegister = g_pSpuRegisters->controlRegister;
+            spuControlRegister = _spu_RXX->_rxx.spucnt;
             spuControlRegister |= SPU_CONTROL_FLAG_MASTER_REVERB;
-            g_pSpuRegisters->controlRegister = spuControlRegister;
+            _spu_RXX->_rxx.spucnt = spuControlRegister;
         }
         break;
     }
@@ -359,9 +424,9 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuReadDecodedData);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetIRQ);
 
 SpuIRQCallbackProc SpuSetIRQCallback(SpuIRQCallbackProc func) {
-    SpuIRQCallbackProc callback = g_SpuIRQCallback;
+    SpuIRQCallbackProc callback = _spu_IRQCallback;
     if (func != callback ) {
-        g_SpuIRQCallback = func;
+        _spu_IRQCallback = func;
         _SpuCallback(func);
     }
     return callback;
@@ -379,8 +444,8 @@ u_long SpuRead(u_char* addr, u_long size) {
         size = 0x7EFF0;
     }
     _spu_Fr(addr, size);
-    if (g_SpuTransferCallback == 0) {
-        g_SpuInTransfer = 0;
+    if (_spu_transferCallback == 0) {
+        _spu_inTransfer = 0;
     }
     return size;
 }
@@ -398,8 +463,8 @@ u_long SpuSetTransferStartAddr(u_long addr) {
     }
 
     base_addr = _spu_FsetRXXa(-1, addr);
-    g_SpuTransferAddr = base_addr;
-    return (ulong)base_addr << g_SpuTransferAddrShift;
+    _spu_tsa = base_addr;
+    return (ulong)base_addr << _spu_mem_mode_plus;
 }
 
 long SpuSetTransferMode(long mode) {
@@ -416,14 +481,14 @@ long SpuSetTransferMode(long mode) {
         value = 0;
     }
     g_SpuTransferMode = mode;
-    g_SpuTransferModeValue = value;
+    _spu_transMode = value;
     return value;
 }
 
 SpuTransferCallbackProc SpuSetTransferCallback(SpuTransferCallbackProc func) {
-    SpuTransferCallbackProc previousCallback = g_SpuTransferCallback;
+    SpuTransferCallbackProc previousCallback = _spu_transferCallback;
     if (func != previousCallback) {
-        g_SpuTransferCallback = func;
+        _spu_transferCallback = func;
     }
     return previousCallback;
 }
@@ -439,100 +504,100 @@ void _spu_setReverbAttr(ReverbPreset* preset) {
     Mask = preset->m_Mask;
     bSetAllAttribues = Mask == 0;
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_dAPF1)) {
-        g_pSpuRegisters->m_Reverb.m_dAPF1 = preset->m_Regs.m_dAPF1;
+        _spu_RXX->_rxx.m_Reverb.m_dAPF1 = preset->m_Regs.m_dAPF1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_dAPF2)) {
-        g_pSpuRegisters->m_Reverb.m_dAPF2 = preset->m_Regs.m_dAPF2;
+        _spu_RXX->_rxx.m_Reverb.m_dAPF2 = preset->m_Regs.m_dAPF2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vIIR)) {
-        g_pSpuRegisters->m_Reverb.m_vIIR = preset->m_Regs.m_vIIR;
+        _spu_RXX->_rxx.m_Reverb.m_vIIR = preset->m_Regs.m_vIIR;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vCOMB1)) {
-        g_pSpuRegisters->m_Reverb.m_vCOMB1 = preset->m_Regs.m_vCOMB1;
+        _spu_RXX->_rxx.m_Reverb.m_vCOMB1 = preset->m_Regs.m_vCOMB1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vCOMB2)) {
-        g_pSpuRegisters->m_Reverb.m_vCOMB2 = preset->m_Regs.m_vCOMB2;
+        _spu_RXX->_rxx.m_Reverb.m_vCOMB2 = preset->m_Regs.m_vCOMB2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vCOMB3)) {
-        g_pSpuRegisters->m_Reverb.m_vCOMB3 = preset->m_Regs.m_vCOMB3;
+        _spu_RXX->_rxx.m_Reverb.m_vCOMB3 = preset->m_Regs.m_vCOMB3;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vCOMB4)) {
-        g_pSpuRegisters->m_Reverb.m_vCOMB4 = preset->m_Regs.m_vCOMB4;
+        _spu_RXX->_rxx.m_Reverb.m_vCOMB4 = preset->m_Regs.m_vCOMB4;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vWALL)) {
-        g_pSpuRegisters->m_Reverb.m_vWALL = preset->m_Regs.m_vWALL;
+        _spu_RXX->_rxx.m_Reverb.m_vWALL = preset->m_Regs.m_vWALL;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vAPF1)) {
-        g_pSpuRegisters->m_Reverb.m_vAPF1 = preset->m_Regs.m_vAPF1;
+        _spu_RXX->_rxx.m_Reverb.m_vAPF1 = preset->m_Regs.m_vAPF1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vAPF2)) {
-        g_pSpuRegisters->m_Reverb.m_vAPF2 = preset->m_Regs.m_vAPF2;
+        _spu_RXX->_rxx.m_Reverb.m_vAPF2 = preset->m_Regs.m_vAPF2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLSAME)) {
-        g_pSpuRegisters->m_Reverb.m_mLSAME = preset->m_Regs.m_mLSAME;
+        _spu_RXX->_rxx.m_Reverb.m_mLSAME = preset->m_Regs.m_mLSAME;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRSAME)) {
-        g_pSpuRegisters->m_Reverb.m_mRSAME = preset->m_Regs.m_mRSAME;
+        _spu_RXX->_rxx.m_Reverb.m_mRSAME = preset->m_Regs.m_mRSAME;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLCOMB1)) {
-        g_pSpuRegisters->m_Reverb.m_mLCOMB1 = preset->m_Regs.m_mLCOMB1;
+        _spu_RXX->_rxx.m_Reverb.m_mLCOMB1 = preset->m_Regs.m_mLCOMB1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRCOMB1)) {
-        g_pSpuRegisters->m_Reverb.m_mRCOMB1 = preset->m_Regs.m_mRCOMB1;
+        _spu_RXX->_rxx.m_Reverb.m_mRCOMB1 = preset->m_Regs.m_mRCOMB1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLCOMB2)) {
-        g_pSpuRegisters->m_Reverb.m_mLCOMB2 = preset->m_Regs.m_mLCOMB2;
+        _spu_RXX->_rxx.m_Reverb.m_mLCOMB2 = preset->m_Regs.m_mLCOMB2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRCOMB2)) {
-        g_pSpuRegisters->m_Reverb.m_mRCOMB2 = preset->m_Regs.m_mRCOMB2;
+        _spu_RXX->_rxx.m_Reverb.m_mRCOMB2 = preset->m_Regs.m_mRCOMB2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_dLSAME)) {
-        g_pSpuRegisters->m_Reverb.m_dLSAME = preset->m_Regs.m_dLSAME;
+        _spu_RXX->_rxx.m_Reverb.m_dLSAME = preset->m_Regs.m_dLSAME;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_dRSAME)) {
-        g_pSpuRegisters->m_Reverb.m_dRSAME = preset->m_Regs.m_dRSAME;
+        _spu_RXX->_rxx.m_Reverb.m_dRSAME = preset->m_Regs.m_dRSAME;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLDIFF)) {
-        g_pSpuRegisters->m_Reverb.m_mLDIFF = preset->m_Regs.m_mLDIFF;
+        _spu_RXX->_rxx.m_Reverb.m_mLDIFF = preset->m_Regs.m_mLDIFF;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRDIFF)) {
-        g_pSpuRegisters->m_Reverb.m_mRDIFF = preset->m_Regs.m_mRDIFF;
+        _spu_RXX->_rxx.m_Reverb.m_mRDIFF = preset->m_Regs.m_mRDIFF;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLCOMB3)) {
-        g_pSpuRegisters->m_Reverb.m_mLCOMB3 = preset->m_Regs.m_mLCOMB3;
+        _spu_RXX->_rxx.m_Reverb.m_mLCOMB3 = preset->m_Regs.m_mLCOMB3;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRCOMB3)) {
-        g_pSpuRegisters->m_Reverb.m_mRCOMB3 = preset->m_Regs.m_mRCOMB3;
+        _spu_RXX->_rxx.m_Reverb.m_mRCOMB3 = preset->m_Regs.m_mRCOMB3;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLCOMB4)) {
-        g_pSpuRegisters->m_Reverb.m_mLCOMB4 = preset->m_Regs.m_mLCOMB4;
+        _spu_RXX->_rxx.m_Reverb.m_mLCOMB4 = preset->m_Regs.m_mLCOMB4;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRCOMB4)) {
-        g_pSpuRegisters->m_Reverb.m_mRCOMB4 = preset->m_Regs.m_mRCOMB4;
+        _spu_RXX->_rxx.m_Reverb.m_mRCOMB4 = preset->m_Regs.m_mRCOMB4;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_dLDIFF)) {
-        g_pSpuRegisters->m_Reverb.m_dLDIFF = preset->m_Regs.m_dLDIFF;
+        _spu_RXX->_rxx.m_Reverb.m_dLDIFF = preset->m_Regs.m_dLDIFF;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_dRDIFF)) {
-        g_pSpuRegisters->m_Reverb.m_dRDIFF = preset->m_Regs.m_dRDIFF;
+        _spu_RXX->_rxx.m_Reverb.m_dRDIFF = preset->m_Regs.m_dRDIFF;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLAPF1)) {
-        g_pSpuRegisters->m_Reverb.m_mLAPF1 = preset->m_Regs.m_mLAPF1;
+        _spu_RXX->_rxx.m_Reverb.m_mLAPF1 = preset->m_Regs.m_mLAPF1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRAPF1)) {
-        g_pSpuRegisters->m_Reverb.m_mRAPF1 = preset->m_Regs.m_mRAPF1;
+        _spu_RXX->_rxx.m_Reverb.m_mRAPF1 = preset->m_Regs.m_mRAPF1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLAPF2)) {
-        g_pSpuRegisters->m_Reverb.m_mLAPF2 = preset->m_Regs.m_mLAPF2;
+        _spu_RXX->_rxx.m_Reverb.m_mLAPF2 = preset->m_Regs.m_mLAPF2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRAPF2)) {
-        g_pSpuRegisters->m_Reverb.m_mRAPF2 = preset->m_Regs.m_mRAPF2;
+        _spu_RXX->_rxx.m_Reverb.m_mRAPF2 = preset->m_Regs.m_mRAPF2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vLIN)) {
-        g_pSpuRegisters->m_Reverb.m_vLIN = preset->m_Regs.m_vLIN;
+        _spu_RXX->_rxx.m_Reverb.m_vLIN = preset->m_Regs.m_vLIN;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vRIN)) {
-        g_pSpuRegisters->m_Reverb.m_vRIN = preset->m_Regs.m_vRIN;
+        _spu_RXX->_rxx.m_Reverb.m_vRIN = preset->m_Regs.m_vRIN;
     }
 }
 
@@ -543,8 +608,8 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004E564);
 
 void SpuSetReverbModeDepth(short DepthL, short DepthR)
 {
-    short* RL = &g_pSpuRegisters->m_ReverbOutVolumeL;
-    short* RR = &g_pSpuRegisters->m_ReverbOutVolumeR;
+    short* RL = &_spu_RXX->_rxx.rev_vol.left;
+    short* RR = &_spu_RXX->_rxx.rev_vol.right;
     *RL = DepthL;
     *RR = DepthR;
     g_ReverbVolumeLeft = DepthL;
