@@ -108,7 +108,14 @@ typedef struct {
     u32 m_Unknown2;
 
     ReverbRegisters m_Reverb;
-} SpuRegisters;
+} SPU_RXX;
+
+union SpuUnion {
+    SPU_RXX _rxx;
+    volatile SPU_RXX rxx;
+    u16 _raw[0x100];
+    volatile u16 raw[0x100];
+};
 
 #define SPU_REV_MASK_dAPF1       (1U <<  0)
 #define SPU_REV_MASK_dAPF2       (1U <<  1)
@@ -186,9 +193,10 @@ extern short g_ReverbVolumeLeft;
 extern short g_ReverbVolumeRight;
 extern long g_ReverbDelay;
 extern long g_ReverbFeedback;
-extern SpuRegisters* _spu_RXX;
+extern union SpuUnion* _spu_RXX;
 extern long _spu_inTransfer;
 extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
+extern volatile u16 _spu_RQ[10];
 
 void _spu_FiDMA(void); // Forward declare for SpuStart()
 s32 _spu_t(s32, ...); // Forward declare for _spu_Fr and _spu_Fw
@@ -313,9 +321,9 @@ long SpuSetNoiseClock(long n_clock) {
         clamped = n_clock;
     }
     
-    controlRegister = _spu_RXX->controlRegister;
+    controlRegister = _spu_RXX->_rxx.controlRegister;
     newVal = (controlRegister & 0xC0FF) | ((clamped & 0x3F) << 8);
-    ((volatile SpuRegisters*)_spu_RXX)->controlRegister = newVal;
+    _spu_RXX->rxx.controlRegister = newVal;
 
     return clamped;
 }
@@ -327,22 +335,22 @@ long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2
     switch( on_off ) {
     case SPU_OFF:
         g_SpuReverbFlag = SPU_OFF;
-        spuControlRegister = _spu_RXX->controlRegister;
+        spuControlRegister = _spu_RXX->_rxx.controlRegister;
         spuControlRegister &= ~SPU_CONTROL_FLAG_MASTER_REVERB;
-        _spu_RXX->controlRegister = spuControlRegister;
+        _spu_RXX->_rxx.controlRegister = spuControlRegister;
         break;
         
     case SPU_ON:
         if( g_bSpuReserveWorkArea != on_off && _SpuIsInAllocateArea_(g_SpuReverbOffsetAddress) ) {
             g_SpuReverbFlag = SPU_OFF;
-            spuControlRegister = _spu_RXX->controlRegister;
+            spuControlRegister = _spu_RXX->_rxx.controlRegister;
             spuControlRegister &= ~SPU_CONTROL_FLAG_MASTER_REVERB;
-            _spu_RXX->controlRegister = spuControlRegister;
+            _spu_RXX->_rxx.controlRegister = spuControlRegister;
         } else {
             g_SpuReverbFlag = on_off;
-            spuControlRegister = _spu_RXX->controlRegister;
+            spuControlRegister = _spu_RXX->_rxx.controlRegister;
             spuControlRegister |= SPU_CONTROL_FLAG_MASTER_REVERB;
-            _spu_RXX->controlRegister = spuControlRegister;
+            _spu_RXX->_rxx.controlRegister = spuControlRegister;
         }
         break;
     }
@@ -439,100 +447,100 @@ void _spu_setReverbAttr(ReverbPreset* preset) {
     Mask = preset->m_Mask;
     bSetAllAttribues = Mask == 0;
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_dAPF1)) {
-        _spu_RXX->m_Reverb.m_dAPF1 = preset->m_Regs.m_dAPF1;
+        _spu_RXX->_rxx.m_Reverb.m_dAPF1 = preset->m_Regs.m_dAPF1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_dAPF2)) {
-        _spu_RXX->m_Reverb.m_dAPF2 = preset->m_Regs.m_dAPF2;
+        _spu_RXX->_rxx.m_Reverb.m_dAPF2 = preset->m_Regs.m_dAPF2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vIIR)) {
-        _spu_RXX->m_Reverb.m_vIIR = preset->m_Regs.m_vIIR;
+        _spu_RXX->_rxx.m_Reverb.m_vIIR = preset->m_Regs.m_vIIR;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vCOMB1)) {
-        _spu_RXX->m_Reverb.m_vCOMB1 = preset->m_Regs.m_vCOMB1;
+        _spu_RXX->_rxx.m_Reverb.m_vCOMB1 = preset->m_Regs.m_vCOMB1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vCOMB2)) {
-        _spu_RXX->m_Reverb.m_vCOMB2 = preset->m_Regs.m_vCOMB2;
+        _spu_RXX->_rxx.m_Reverb.m_vCOMB2 = preset->m_Regs.m_vCOMB2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vCOMB3)) {
-        _spu_RXX->m_Reverb.m_vCOMB3 = preset->m_Regs.m_vCOMB3;
+        _spu_RXX->_rxx.m_Reverb.m_vCOMB3 = preset->m_Regs.m_vCOMB3;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vCOMB4)) {
-        _spu_RXX->m_Reverb.m_vCOMB4 = preset->m_Regs.m_vCOMB4;
+        _spu_RXX->_rxx.m_Reverb.m_vCOMB4 = preset->m_Regs.m_vCOMB4;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vWALL)) {
-        _spu_RXX->m_Reverb.m_vWALL = preset->m_Regs.m_vWALL;
+        _spu_RXX->_rxx.m_Reverb.m_vWALL = preset->m_Regs.m_vWALL;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vAPF1)) {
-        _spu_RXX->m_Reverb.m_vAPF1 = preset->m_Regs.m_vAPF1;
+        _spu_RXX->_rxx.m_Reverb.m_vAPF1 = preset->m_Regs.m_vAPF1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vAPF2)) {
-        _spu_RXX->m_Reverb.m_vAPF2 = preset->m_Regs.m_vAPF2;
+        _spu_RXX->_rxx.m_Reverb.m_vAPF2 = preset->m_Regs.m_vAPF2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLSAME)) {
-        _spu_RXX->m_Reverb.m_mLSAME = preset->m_Regs.m_mLSAME;
+        _spu_RXX->_rxx.m_Reverb.m_mLSAME = preset->m_Regs.m_mLSAME;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRSAME)) {
-        _spu_RXX->m_Reverb.m_mRSAME = preset->m_Regs.m_mRSAME;
+        _spu_RXX->_rxx.m_Reverb.m_mRSAME = preset->m_Regs.m_mRSAME;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLCOMB1)) {
-        _spu_RXX->m_Reverb.m_mLCOMB1 = preset->m_Regs.m_mLCOMB1;
+        _spu_RXX->_rxx.m_Reverb.m_mLCOMB1 = preset->m_Regs.m_mLCOMB1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRCOMB1)) {
-        _spu_RXX->m_Reverb.m_mRCOMB1 = preset->m_Regs.m_mRCOMB1;
+        _spu_RXX->_rxx.m_Reverb.m_mRCOMB1 = preset->m_Regs.m_mRCOMB1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLCOMB2)) {
-        _spu_RXX->m_Reverb.m_mLCOMB2 = preset->m_Regs.m_mLCOMB2;
+        _spu_RXX->_rxx.m_Reverb.m_mLCOMB2 = preset->m_Regs.m_mLCOMB2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRCOMB2)) {
-        _spu_RXX->m_Reverb.m_mRCOMB2 = preset->m_Regs.m_mRCOMB2;
+        _spu_RXX->_rxx.m_Reverb.m_mRCOMB2 = preset->m_Regs.m_mRCOMB2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_dLSAME)) {
-        _spu_RXX->m_Reverb.m_dLSAME = preset->m_Regs.m_dLSAME;
+        _spu_RXX->_rxx.m_Reverb.m_dLSAME = preset->m_Regs.m_dLSAME;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_dRSAME)) {
-        _spu_RXX->m_Reverb.m_dRSAME = preset->m_Regs.m_dRSAME;
+        _spu_RXX->_rxx.m_Reverb.m_dRSAME = preset->m_Regs.m_dRSAME;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLDIFF)) {
-        _spu_RXX->m_Reverb.m_mLDIFF = preset->m_Regs.m_mLDIFF;
+        _spu_RXX->_rxx.m_Reverb.m_mLDIFF = preset->m_Regs.m_mLDIFF;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRDIFF)) {
-        _spu_RXX->m_Reverb.m_mRDIFF = preset->m_Regs.m_mRDIFF;
+        _spu_RXX->_rxx.m_Reverb.m_mRDIFF = preset->m_Regs.m_mRDIFF;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLCOMB3)) {
-        _spu_RXX->m_Reverb.m_mLCOMB3 = preset->m_Regs.m_mLCOMB3;
+        _spu_RXX->_rxx.m_Reverb.m_mLCOMB3 = preset->m_Regs.m_mLCOMB3;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRCOMB3)) {
-        _spu_RXX->m_Reverb.m_mRCOMB3 = preset->m_Regs.m_mRCOMB3;
+        _spu_RXX->_rxx.m_Reverb.m_mRCOMB3 = preset->m_Regs.m_mRCOMB3;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLCOMB4)) {
-        _spu_RXX->m_Reverb.m_mLCOMB4 = preset->m_Regs.m_mLCOMB4;
+        _spu_RXX->_rxx.m_Reverb.m_mLCOMB4 = preset->m_Regs.m_mLCOMB4;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRCOMB4)) {
-        _spu_RXX->m_Reverb.m_mRCOMB4 = preset->m_Regs.m_mRCOMB4;
+        _spu_RXX->_rxx.m_Reverb.m_mRCOMB4 = preset->m_Regs.m_mRCOMB4;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_dLDIFF)) {
-        _spu_RXX->m_Reverb.m_dLDIFF = preset->m_Regs.m_dLDIFF;
+        _spu_RXX->_rxx.m_Reverb.m_dLDIFF = preset->m_Regs.m_dLDIFF;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_dRDIFF)) {
-        _spu_RXX->m_Reverb.m_dRDIFF = preset->m_Regs.m_dRDIFF;
+        _spu_RXX->_rxx.m_Reverb.m_dRDIFF = preset->m_Regs.m_dRDIFF;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLAPF1)) {
-        _spu_RXX->m_Reverb.m_mLAPF1 = preset->m_Regs.m_mLAPF1;
+        _spu_RXX->_rxx.m_Reverb.m_mLAPF1 = preset->m_Regs.m_mLAPF1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRAPF1)) {
-        _spu_RXX->m_Reverb.m_mRAPF1 = preset->m_Regs.m_mRAPF1;
+        _spu_RXX->_rxx.m_Reverb.m_mRAPF1 = preset->m_Regs.m_mRAPF1;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mLAPF2)) {
-        _spu_RXX->m_Reverb.m_mLAPF2 = preset->m_Regs.m_mLAPF2;
+        _spu_RXX->_rxx.m_Reverb.m_mLAPF2 = preset->m_Regs.m_mLAPF2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_mRAPF2)) {
-        _spu_RXX->m_Reverb.m_mRAPF2 = preset->m_Regs.m_mRAPF2;
+        _spu_RXX->_rxx.m_Reverb.m_mRAPF2 = preset->m_Regs.m_mRAPF2;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vLIN)) {
-        _spu_RXX->m_Reverb.m_vLIN = preset->m_Regs.m_vLIN;
+        _spu_RXX->_rxx.m_Reverb.m_vLIN = preset->m_Regs.m_vLIN;
     }
     if (bSetAllAttribues || (Mask & SPU_REV_MASK_vRIN)) {
-        _spu_RXX->m_Reverb.m_vRIN = preset->m_Regs.m_vRIN;
+        _spu_RXX->_rxx.m_Reverb.m_vRIN = preset->m_Regs.m_vRIN;
     }
 }
 
@@ -543,8 +551,8 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004E564);
 
 void SpuSetReverbModeDepth(short DepthL, short DepthR)
 {
-    short* RL = &_spu_RXX->m_ReverbOutVolumeL;
-    short* RR = &_spu_RXX->m_ReverbOutVolumeR;
+    short* RL = &_spu_RXX->_rxx.m_ReverbOutVolumeL;
+    short* RR = &_spu_RXX->_rxx.m_ReverbOutVolumeR;
     *RL = DepthL;
     *RR = DepthR;
     g_ReverbVolumeLeft = DepthL;
