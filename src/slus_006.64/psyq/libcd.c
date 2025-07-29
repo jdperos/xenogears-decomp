@@ -14,7 +14,8 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040DC8);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040DF0);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040E18);
+// TODO: I really don't think this is supposed to be in libcd
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", DeliverEvent);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80040E38);
 

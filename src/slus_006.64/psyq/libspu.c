@@ -3,15 +3,13 @@
 #include "psyq/libapi.h"
 
 typedef struct {
-    u16 m_VolumeL;
-    u16 m_VolumeR;
-    u16 m_SampleRate;
-    u16 m_StartAddress;
-    u16 m_Adsr1;
-    u16 m_Adsr2;
-    u16 m_CurrentAdsrVol;
-    u16 m_LoopAddress;
-} VoiceData;
+    SpuVolume volume;
+    u16 pitch;
+    u16 addr;
+    u16 adsr[2];
+    u16 volumex;
+    u16 loop_addr;
+} SPU_VOICE_REG;
 
 typedef struct {
     // APF Displacement registers (1F801DC0h - 1F801DC2h)
@@ -68,12 +66,10 @@ typedef struct {
 } ReverbRegisters;
 
 typedef struct {
-    VoiceData voiceData[24];
+    SPU_VOICE_REG voice[24];
     // Volumes
-    s16 m_MainVolumeL; // 1-bit for Volume Mode, 15-bits for Volume
-    s16 m_MainVolumeR; // 1-bit for Volume Mode, 15-bits for Volume
-    s16 m_ReverbOutVolumeL; // Full 16 bits for volume
-    s16 m_ReverbOutVolumeR; // Full 16 bits for volume
+    SpuVolume main_vol; // 1-bit for Volume Mode, 15-bits for Volume
+    SpuVolume rev_vol; // Full 16 bits for volume
 
     // Voice Flags
     u32 m_KeyOnFlags;
@@ -92,7 +88,7 @@ typedef struct {
     u16 m_TransferFifo;
 
     // Control
-    u16 controlRegister;
+    u16 spucnt;
     u16 m_TransferControl;
     u16 m_StatusRegister;
 
@@ -183,6 +179,7 @@ extern u_short _spu_tsa;
 extern long _spu_mem_mode_plus;
 extern volatile SpuIRQCallbackProc _spu_IRQCallback;
 extern volatile SpuTransferCallbackProc _spu_transferCallback;
+extern int _spu_dma_mode;
 extern long g_SpuTransferMode;
 extern long _spu_transMode;
 extern long g_SpuReverbFlag;
@@ -226,7 +223,32 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_init);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FwriteByIO);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FiDMA);
+void _spu_FiDMA(void) {
+    s32 i;
+
+    if (_spu_dma_mode == 0)
+    {
+        _spu_Fw1ts();
+    }
+
+    _spu_RXX->rxx.spucnt &= ~0x30;
+
+    for(i = 0; _spu_RXX->rxx.spucnt & 0x30; )
+    {
+        if (++i > 0xF00U) {
+            break;
+        }
+    }
+
+    if (_spu_transferCallback)
+    {
+        _spu_transferCallback();
+    }
+    else
+    {
+        DeliverEvent(0xF0000009, 0x20);
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004CBFC);
 
@@ -309,7 +331,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuInitMalloc);
 
 long SpuSetNoiseClock(long n_clock) {
     long clamped;
-    u16 controlRegister;
+    u16 spucnt;
     u16 newVal;
     
 
@@ -321,9 +343,9 @@ long SpuSetNoiseClock(long n_clock) {
         clamped = n_clock;
     }
     
-    controlRegister = _spu_RXX->_rxx.controlRegister;
-    newVal = (controlRegister & 0xC0FF) | ((clamped & 0x3F) << 8);
-    _spu_RXX->rxx.controlRegister = newVal;
+    spucnt = _spu_RXX->_rxx.spucnt;
+    newVal = (spucnt & 0xC0FF) | ((clamped & 0x3F) << 8);
+    _spu_RXX->rxx.spucnt = newVal;
 
     return clamped;
 }
@@ -335,22 +357,22 @@ long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2
     switch( on_off ) {
     case SPU_OFF:
         g_SpuReverbFlag = SPU_OFF;
-        spuControlRegister = _spu_RXX->_rxx.controlRegister;
+        spuControlRegister = _spu_RXX->_rxx.spucnt;
         spuControlRegister &= ~SPU_CONTROL_FLAG_MASTER_REVERB;
-        _spu_RXX->_rxx.controlRegister = spuControlRegister;
+        _spu_RXX->_rxx.spucnt = spuControlRegister;
         break;
         
     case SPU_ON:
         if( g_bSpuReserveWorkArea != on_off && _SpuIsInAllocateArea_(g_SpuReverbOffsetAddress) ) {
             g_SpuReverbFlag = SPU_OFF;
-            spuControlRegister = _spu_RXX->_rxx.controlRegister;
+            spuControlRegister = _spu_RXX->_rxx.spucnt;
             spuControlRegister &= ~SPU_CONTROL_FLAG_MASTER_REVERB;
-            _spu_RXX->_rxx.controlRegister = spuControlRegister;
+            _spu_RXX->_rxx.spucnt = spuControlRegister;
         } else {
             g_SpuReverbFlag = on_off;
-            spuControlRegister = _spu_RXX->_rxx.controlRegister;
+            spuControlRegister = _spu_RXX->_rxx.spucnt;
             spuControlRegister |= SPU_CONTROL_FLAG_MASTER_REVERB;
-            _spu_RXX->_rxx.controlRegister = spuControlRegister;
+            _spu_RXX->_rxx.spucnt = spuControlRegister;
         }
         break;
     }
@@ -551,8 +573,8 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004E564);
 
 void SpuSetReverbModeDepth(short DepthL, short DepthR)
 {
-    short* RL = &_spu_RXX->_rxx.m_ReverbOutVolumeL;
-    short* RR = &_spu_RXX->_rxx.m_ReverbOutVolumeR;
+    short* RL = &_spu_RXX->_rxx.rev_vol.left;
+    short* RR = &_spu_RXX->_rxx.rev_vol.right;
     *RL = DepthL;
     *RR = DepthR;
     g_ReverbVolumeLeft = DepthL;

@@ -233,6 +233,8 @@ _patch_pad = 0x80040B14;
 
 // PSY-Q CD
 CdInit = 0x80040D08;
+// TODO: I really don't think this is supposed to be in libcd
+DeliverEvent = 0x80040E18;
 CdReset = 0x80040E68;
 CdFlush = 0x80040ED4;
 CdSetDebug = 0x80040EF4;
@@ -540,6 +542,7 @@ _spu_mem_mode_unit = 0x80058E34;
 _spu_mem_mode_unitM = 0x80058E38;
 _spu_transferCallback = 0x80058E40;
 _spu_IRQCallback = 0x80058E44;
+_spu_dma_mode = 0x80058E58;
 g_spu_AllocBlockNum = 0x80058E64;
 g_spu_AllocLastNum = 0x80058E68;
 g_spu_memList = 0x80058E6C;
