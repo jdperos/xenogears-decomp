@@ -27,7 +27,6 @@ void _cbready(void) { DeliverEvent(0xF0000003, 0x40); }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", _cbread);
 
-// TODO: I really don't think this is supposed to be in libcd
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", DeliverEvent);
 
 int CdStatus(void) {
