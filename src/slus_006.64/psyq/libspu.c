@@ -84,7 +84,7 @@ typedef struct {
     // Memory
     u16 m_ReverbWorkStartAddr;
     u16 m_IrqAddress;
-    u16 m_TransferAddress;
+    u16 trans_addr;
     u16 m_TransferFifo;
 
     // Control
@@ -191,6 +191,9 @@ extern short g_ReverbVolumeRight;
 extern long g_ReverbDelay;
 extern long g_ReverbFeedback;
 extern union SpuUnion* _spu_RXX;
+extern volatile int* _spu_madr;
+extern volatile int* _spu_bcr;
+extern volatile int* _spu_chcr;
 extern long _spu_inTransfer;
 extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
 extern volatile u16 _spu_RQ[10];
@@ -250,7 +253,17 @@ void _spu_FiDMA(void) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004CBFC);
+void _spu_Fr_(s32 madr, u16 trans_addr, s32 bcr) {
+    _spu_RXX->rxx.trans_addr = trans_addr;
+    _spu_Fw1ts();
+    _spu_RXX->rxx.spucnt |= 0x30;
+    _spu_Fw1ts();
+    _spu_FsetDelayR();
+    *_spu_madr = madr;
+    *_spu_bcr = (bcr << 0x10) | 0x10;
+    _spu_dma_mode = 1;
+    *_spu_chcr = 0x01000200;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_t);
 
