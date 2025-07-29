@@ -1,5 +1,6 @@
 #include "common.h"
 #include "system/sound.h"
+#include "psyq/kernel.h"
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundInitialize);
 
@@ -17,7 +18,7 @@ void SoundReset(void) {
     SpuSetIRQ(SPU_OFF);
     SpuSetTransferCallback(NULL);
     SpuSetIRQCallback(NULL);
-    func_800406FC(0xF2000002);
+    StopRCnt(RCntCNT2);
     CloseEvent(D_800595BC);
     ExitCriticalSection();
     for (i = 0; i < 0x18; i++) {

@@ -218,6 +218,11 @@ rename = 0x800405A4;
 erase = 0x800405B4;
 Krom2RawAdd = 0x800405C4;
 ChangeClearPAD = 0x800405D4;
+SetRCnt = 0x800405F4;
+GetRCnt = 0x80040690;
+StartRCnt = 0x800406C8;
+StopRCnt = 0x800406FC;
+ResetRCnt = 0x80040734;
 // ...
 InitPAD = 0x80040828;
 StartPAD = 0x800408C4;
@@ -233,11 +238,19 @@ _patch_pad = 0x80040B14;
 
 // PSY-Q CD
 CdInit = 0x80040D08;
-// TODO: I really don't think this is supposed to be in libcd
+_cbsync = 0x80040DA0;
+_cbready = 0x80040DC8;
+_cbread = 0x80040DF0;
 DeliverEvent = 0x80040E18;
+CdStatus = 0x80040E28;
+CdMode = 0x80040E38;
+CdLastCom = 0x80040E48;
+CdLastPos = 0x80040E58;
 CdReset = 0x80040E68;
 CdFlush = 0x80040ED4;
 CdSetDebug = 0x80040EF4;
+CdComstr = 0x80040F0C;
+CdIntstr = 0x80040F40;
 CdSync = 0x80040F74;
 CdReady = 0x80040F94;
 CdSyncCallback = 0x80040FB4;
@@ -246,8 +259,8 @@ CdControl = 0x80040FE4;
 CdControlF = 0x8004111C;
 CdControlB = 0x80041248;
 CdMix = 0x8004138C;
-CdGetSector2 = 0x800413AC;
-CdGetSector = 0x800413CC;
+CdGetSector = 0x800413AC;
+CdGetSector2 = 0x800413CC;
 CdDataSyncCallback = 0x800413EC;
 CdDataSync = 0x80041410;
 CdIntToPos = 0x80041430;
@@ -256,10 +269,17 @@ CdReadInterrupt = 0x800415B4;
 CD_sync = 0x80041B3C;
 CD_ready = 0x80041DBC;
 CD_cw = 0x80042088;
+CD_vol = 0x800424A4;
 CD_flush = 0x8004252C;
 CD_initvol = 0x8004260C;
+CD_initintr = 0x80042700;
 CD_init = 0x80042750;
 CD_datasync = 0x8004293C;
+CD_getsector = 0x80042AA8;
+CD_getsector2 = 0x80042BA8;
+//...
+CdReadSync = 0x80043670;
+CdReadCallback = 0x8004373C;
 
 // PSY-Q Std library?
 puts = 0x80042D8C;
@@ -494,11 +514,29 @@ g_ArchiveCurStreamFile = 0x8004FE30;
 g_ArchiveDebugTable = 0x8004FE48;
 g_ArchiveCdCurLocation = 0x80059F10;
 
+g_pRCounters = 0x80056400;
+g_InterruptStatusMasks = 0x80056404;
+g_pInterruptStatusRegister = 0x800563FC;
+
+
 g_CdDebugLevel = 0x800564B4;
+g_CdStatus = 0x800564B8;
 g_CdSyncCallback = 0x800564A8;
 g_CdReadyCallback = 0x800564AC;
+g_CdLastPosition = 0x800564C4; // type:CdlLOC size:0x4
+g_CdMode = 0x800564C8;
+g_CdLastCommand = 0x800564C9;
 g_CdLastSyncStatus = 0x80056788;
 g_CdLastReadyStatus = 0x80056789;
+g_CdIndexStatusReg = 0x80056770;
+g_CdInterruptEnableReg = 0x8005677C;
+g_CdRomDelayReg = 0x800567A4;
+
+g_ComDelayReg = 0x80056780;
+g_DmaControlReg = 0x800567A8;
+g_Dma3AddrReg = 0x800567AC;
+g_Dma3BlockControlReg = 0x800567B0;
+g_Dma3ChanControlReg = 0x800567B4;
 
 g_pGPUSTAT = 0x8005783C;
 g_pTMR_HRETRACE_VAL = 0x80057840;
