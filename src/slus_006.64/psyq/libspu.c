@@ -176,7 +176,10 @@ typedef struct {
 extern long g_SpuRunning;
 extern long g_SpuEVdma;
 extern u_short _spu_tsa;
+extern long _spu_mem_mode;
 extern long _spu_mem_mode_plus;
+extern long _spu_mem_mode_unit;
+extern long _spu_mem_mode_unitM;
 extern volatile SpuIRQCallbackProc _spu_IRQCallback;
 extern volatile SpuTransferCallbackProc _spu_transferCallback;
 extern int _spu_dma_mode;
@@ -300,7 +303,26 @@ void _spu_FsetRXX(u32 offset, u32 value, u32 mode)
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetRXXa);
+u32 _spu_FsetRXXa(s32 arg0, u32 arg1) {
+    u32 temp_a3;
+
+    if ((_spu_mem_mode != 0) && ((arg1 % _spu_mem_mode_unit) != 0)) {
+        arg1 += _spu_mem_mode_unit;
+        arg1 &= ~_spu_mem_mode_unitM;
+    }
+
+    temp_a3 = arg1 >> _spu_mem_mode_plus;
+    switch (arg0) {
+        case -1:
+            return temp_a3 & 0xFFFF;
+        case -2:
+            return arg1;
+        default:
+            _spu_RXX->raw[arg0] = temp_a3;
+    }
+
+    return arg1;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FgetRXXa);
 

@@ -59,7 +59,7 @@ define DL_FlagsSwitch
 			$(filter MAIN,$(patsubst build/src/slus_006.64/psyq/%,MAIN,$(1))), 
 			$(filter MAIN,$(patsubst build/asm/slus_006.64/psyq/%,MAIN,$(1)))
 		),
-		$(eval MASPSX_FLAGS = --aspsx-version=2.56 --use-comm-section --run-assembler $(AS_FLAGS)), 
+		$(eval MASPSX_FLAGS = --aspsx-version=2.56 --expand-div --use-comm-section --run-assembler $(AS_FLAGS)),
 		$(eval MASPSX_FLAGS = --use-comm-section --run-assembler $(AS_FLAGS))
 	)
 
