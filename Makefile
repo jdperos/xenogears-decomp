@@ -52,7 +52,7 @@ CC_FLAGS := $(OPT_FLAGS) $(DL_FLAGS) -mips1 -mcpu=3000 -w -funsigned-char -fpeep
 
 # PSY-Q libraries uses ASPSX 2.56 (PSQ 4.0)
 # Archive library code uses GCC 2.6.0.
-# Main-related code seems to use -G0 instead of -G8
+# Main-related and psyq code seem to use -G0 instead of -G8
 define DL_FlagsSwitch
 	$(if
 		$(or 
@@ -75,7 +75,9 @@ define DL_FlagsSwitch
 	$(if
 		$(or 
 			$(filter MAIN,$(patsubst build/src/slus_006.64/main/main_loop%,MAIN,$(1))), 
-			$(filter MAIN,$(patsubst build/asm/slus_006.64/main/main_loop%,MAIN,$(1)))
+			$(filter MAIN,$(patsubst build/asm/slus_006.64/main/main_loop%,MAIN,$(1))),
+			$(filter MAIN,$(patsubst build/src/slus_006.64/psyq/%,MAIN,$(1))),
+			$(filter MAIN,$(patsubst build/asm/slus_006.64/psyq/%,MAIN,$(1)))
 		),
 		$(eval DL_FLAGS := -G0),
 		$(eval DL_FLAGS := -G8)
