@@ -1,6 +1,8 @@
 #include "common.h"
 #include "psyq/libspu.h"
 #include "psyq/libapi.h"
+#include "psyq/stdarg.h"
+#include "libdma.h"
 
 typedef struct {
     SpuVolume volume;
@@ -106,6 +108,32 @@ typedef struct {
     ReverbRegisters m_Reverb;
 } SPU_RXX;
 
+// SPU Control Register (SPUCNT) bit masks
+#define SPU_CTRL_MASK_CD_AUDIO_ENABLE        (1 <<  0)              // 0
+#define SPU_CTRL_MASK_EXT_AUDIO_ENABLE       (1 <<  1)              // 1
+#define SPU_CTRL_MASK_CD_AUDIO_REVERB        (1 <<  2)              // 2
+#define SPU_CTRL_MASK_EXT_AUDIO_REVERB       (1 <<  3)              // 3
+#define SPU_CTRL_MASK_SRAM_TRANSFER_MODE    ((1 <<  4) | (1 << 5))  // 4-5
+#define SPU_CTRL_MASK_IRQ9_ENABLE            (1 <<  6)              // 6
+#define SPU_CTRL_MASK_REVERB_MASTER_ENABLE   (1 <<  7)              // 7
+#define SPU_CTRL_MASK_NOISE_FREQ_STEP       ((1 <<  8) | (1 << 9))  // 8-9
+#define SPU_CTRL_MASK_NOISE_FREQ_SHIFT      ((1 << 10) | (1 << 11) | (1 << 12) | (1 << 13))  // 10-13
+#define SPU_CTRL_MASK_MUTE_SPU               (1 << 14)              // 14
+#define SPU_CTRL_MASK_SPU_ENABLE             (1 << 15)              // 15
+
+// Shift amounts for multi-bit fields
+#define SPU_CTRL_SRAM_TRANSFER_SHIFT     4
+#define SPU_CTRL_NOISE_FREQ_STEP_SHIFT   8
+#define SPU_CTRL_NOISE_FREQ_SHIFT_SHIFT 10
+
+#define SPU_CTRL_TRANSFER_MODE_STOP         ( 0 << SPU_CTRL_SRAM_TRANSFER_SHIFT )
+#define SPU_CTRL_TRANSFER_MODE_MANUAL_WRITE ( 1 << SPU_CTRL_SRAM_TRANSFER_SHIFT )
+#define SPU_CTRL_TRANSFER_MODE_DMA_WRITE    ( 2 << SPU_CTRL_SRAM_TRANSFER_SHIFT )
+#define SPU_CTRL_TRANSFER_MODE_DMA_READ     ( 3 << SPU_CTRL_SRAM_TRANSFER_SHIFT )
+
+#define SPU_DMA_MODE_WRITE 0
+#define SPU_DMA_MODE_READ  1
+
 union SpuUnion {
     SPU_RXX _rxx;
     volatile SPU_RXX rxx;
@@ -161,6 +189,7 @@ typedef struct {
 #define SPU_DMA_CMD_SETADDR 2
 #define SPU_DMA_CMD_EXEC 3
 
+
 #define SPU_CONTROL_FLAG_CD_AUDIO_ENABLE    (1u <<  0)
 #define SPU_CONTROL_FLAG_EXT_AUDIO_ENABLE   (1u <<  1)
 #define SPU_CONTROL_FLAG_CD_AUDIO_REVERB    (1u <<  2)
@@ -198,6 +227,8 @@ extern volatile int* _spu_madr;
 extern volatile int* _spu_bcr;
 extern volatile int* _spu_chcr;
 extern long _spu_inTransfer;
+extern long _spu_transfer_startaddr;
+extern long _spu_transfer_time;
 extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
 extern volatile u16 _spu_RQ[10];
 
@@ -232,16 +263,16 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FwriteByIO);
 void _spu_FiDMA(void) {
     s32 i;
 
-    if (_spu_dma_mode == 0)
+    if (_spu_dma_mode == SPU_DMA_MODE_WRITE)
     {
         _spu_Fw1ts();
     }
 
-    _spu_RXX->rxx.spucnt &= ~0x30;
+    _spu_RXX->rxx.spucnt &= ~SPU_CTRL_TRANSFER_MODE_DMA_READ;
 
-    for(i = 0; _spu_RXX->rxx.spucnt & 0x30; )
+    for(i = 0; _spu_RXX->rxx.spucnt & SPU_CTRL_TRANSFER_MODE_DMA_READ; )
     {
-        if (++i > 0xF00U) {
+        if (++i > DMA_TIMEOUT) {
             break;
         }
     }
@@ -259,16 +290,102 @@ void _spu_FiDMA(void) {
 void _spu_Fr_(s32 madr, u16 trans_addr, s32 bcr) {
     _spu_RXX->rxx.trans_addr = trans_addr;
     _spu_Fw1ts();
-    _spu_RXX->rxx.spucnt |= 0x30;
+    _spu_RXX->rxx.spucnt |= SPU_CTRL_TRANSFER_MODE_DMA_READ;
     _spu_Fw1ts();
     _spu_FsetDelayR();
     *_spu_madr = madr;
-    *_spu_bcr = (bcr << 0x10) | 0x10;
-    _spu_dma_mode = 1;
+    *_spu_bcr = (bcr << 16) | 16;
+    _spu_dma_mode = SPU_DMA_MODE_READ;
     *_spu_chcr = 0x01000200;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_t);
+
+s32 _spu_t(s32 operation, ...) {
+    u16 spuTransferMode;
+    s32 chcr;
+    u32 dmaTimer;
+    u32 addr;
+    va_list args;
+    u32 arg;
+    u16 controlRegister;
+
+    va_start(args, operation);
+
+    switch (operation) {
+        case SPU_DMA_CMD_SETADDR:
+            arg = va_arg(args, u32);
+            _spu_RXX->rxx.trans_addr = _spu_tsa = arg >> _spu_mem_mode_plus;
+            break;
+        case SPU_DMA_CMD_WRITE:
+            _spu_dma_mode = SPU_DMA_MODE_WRITE;
+
+            dmaTimer = 0;
+            while (_spu_RXX->rxx.trans_addr != _spu_tsa) {
+                if (++dmaTimer > DMA_TIMEOUT) {
+                    return DMA_TRANSFER_TIMEOUT;
+                }
+            }
+
+            // _spu_RXX->rxx.spucnt = (_spu_RXX->rxx.spucnt & 0xFFCF) | 0x20;
+            controlRegister = _spu_RXX->rxx.spucnt;
+            controlRegister &= ~SPU_CTRL_TRANSFER_MODE_DMA_READ;
+            controlRegister |= SPU_CTRL_TRANSFER_MODE_DMA_WRITE;
+            _spu_RXX->rxx.spucnt = controlRegister;
+            break;
+        case SPU_DMA_CMD_READ:
+            _spu_dma_mode = SPU_DMA_MODE_READ;
+
+            dmaTimer = 0;
+            while (_spu_RXX->rxx.trans_addr != _spu_tsa) {
+                if (++dmaTimer > DMA_TIMEOUT) {
+                    return DMA_TRANSFER_TIMEOUT;
+                }
+            }
+
+            // _spu_RXX->rxx.spucnt |= 0x30;
+            controlRegister = _spu_RXX->rxx.spucnt;
+            controlRegister &= ~SPU_CTRL_TRANSFER_MODE_DMA_READ;
+            controlRegister |= SPU_CTRL_TRANSFER_MODE_DMA_READ;
+            _spu_RXX->rxx.spucnt = controlRegister;
+            break;
+        case SPU_DMA_CMD_EXEC:
+            if (_spu_dma_mode == SPU_DMA_MODE_READ) {
+                spuTransferMode = SPU_CTRL_TRANSFER_MODE_DMA_READ;
+            } else {
+                spuTransferMode = SPU_CTRL_TRANSFER_MODE_DMA_WRITE;
+            }
+
+            dmaTimer = 0;
+            while ((_spu_RXX->rxx.spucnt & SPU_CTRL_TRANSFER_MODE_DMA_READ) != spuTransferMode) {
+                if (++dmaTimer > DMA_TIMEOUT) {
+                    return DMA_TRANSFER_TIMEOUT;
+                }
+            }
+
+            if (_spu_dma_mode == SPU_DMA_MODE_READ) {
+                _spu_FsetDelayR();
+            } else {
+                _spu_FsetDelayW();
+            }
+
+            arg = va_arg(args, u32);
+            _spu_transfer_startaddr = arg;
+            arg = va_arg(args, u32);
+            _spu_transfer_time = (arg / DMA_BLOCK_SIZE);
+            _spu_transfer_time += ((arg % DMA_BLOCK_SIZE) ? 1 : 0);
+            *_spu_madr = _spu_transfer_startaddr;
+            *_spu_bcr = (_spu_transfer_time << 16) | 16;
+            if (_spu_dma_mode == SPU_DMA_MODE_READ) {
+                chcr = DMA_CHCR_SPU_READ;
+            } else {
+                chcr = DMA_CHCR_SPU_WRITE;
+            }
+            *_spu_chcr = chcr;
+            break;
+    }
+
+    return DMA_TRANSFER_SUCCESS;
+}
 
 // TODO(jperos): Will need to revisit this for argument names after decompiling _spu_t to see what they are
 s32 _spu_Fw(s32 arg0, s32 arg1) {
