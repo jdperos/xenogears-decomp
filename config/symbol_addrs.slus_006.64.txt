@@ -278,8 +278,28 @@ CD_datasync = 0x8004293C;
 CD_getsector = 0x80042AA8;
 CD_getsector2 = 0x80042BA8;
 //...
+callback = 0x80042CA8;
 CdReadSync = 0x80043670;
 CdReadCallback = 0x8004373C;
+CD_cbsync = 0x800564A8;
+CD_debug = 0x800564B4;
+CD_status = 0x800564B8;
+CD_status1 = 0x800564BC;
+CD_cbready = 0x800564AC;
+CD_pos = 0x800564C4; // type:CdlLOC size:0x4
+CD_mode = 0x800564C8;
+CD_com = 0x800564C9;
+reg0 = 0x80056770;
+reg2 = 0x80056778;
+reg3 = 0x8005677C;
+com_delay = 0x80056780;
+Intr = 0x80056788; // type:CD_intr size:0x3
+
+cdrom_delay = 0x800567A4;
+d_pcr = 0x800567A8;
+d3_madr = 0x800567AC;
+d3_bcr = 0x800567B0;
+d3_chcr = 0x800567B4;
 
 // PSY-Q Std library?
 puts = 0x80042D8C;
@@ -519,25 +539,6 @@ g_InterruptStatusMasks = 0x80056404;
 g_pInterruptStatusRegister = 0x800563FC;
 
 
-g_CdDebugLevel = 0x800564B4;
-g_CdStatus = 0x800564B8;
-g_CdSyncCallback = 0x800564A8;
-g_CdReadyCallback = 0x800564AC;
-g_CdLastPosition = 0x800564C4; // type:CdlLOC size:0x4
-g_CdMode = 0x800564C8;
-g_CdLastCommand = 0x800564C9;
-g_CdLastSyncStatus = 0x80056788;
-g_CdLastReadyStatus = 0x80056789;
-g_CdIndexStatusReg = 0x80056770;
-g_CdInterruptEnableReg = 0x8005677C;
-g_CdRomDelayReg = 0x800567A4;
-
-g_ComDelayReg = 0x80056780;
-g_DmaControlReg = 0x800567A8;
-g_Dma3AddrReg = 0x800567AC;
-g_Dma3BlockControlReg = 0x800567B0;
-g_Dma3ChanControlReg = 0x800567B4;
-
 g_pGPUSTAT = 0x8005783C;
 g_pTMR_HRETRACE_VAL = 0x80057840;
 g_HsyncInterruptCount = 0x80057844;
@@ -559,6 +560,7 @@ g_DmaInterruptCallbacks = 0x8005896C;
 
 // PSY-Q LibC
 g_RandomSeed = 0x8005A1FC;
+Result = 0x8005A230;
 
 // PSY-Q Libgpu
 g_GpuPrintf = 0x800568CC;

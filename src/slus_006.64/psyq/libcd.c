@@ -1,47 +1,75 @@
 #include "common.h"
+#include "libdma.h"
 #include "psyq/libcd.h"
+#include "psyq/stdio.h"
 
-extern int g_CdDebugLevel;
-extern CdCallbackFn_t* g_CdSyncCallback;
-extern CdCallbackFn_t* g_CdReadyCallback;
+// TODO: Move elsewhere.
+typedef struct {
+    unsigned char sync;
+    unsigned char ready;
+    unsigned char c;
+} CD_intr; // Placeholder name.
 
-extern unsigned char g_CdMode;
-extern unsigned char g_CdLastCommand;
-extern unsigned char g_CdStatus;
-extern CdlLOC g_CdLastPosition;
+extern int CD_debug;
+extern CdCallbackFn_t* CD_cbsync;
+extern CdCallbackFn_t* CD_cbready;
+extern void callback;
 
-extern volatile u8* g_CdIndexStatusReg;
-extern volatile u8* g_CdInterruptEnableReg;
-extern volatile u32* g_ComDelayReg;
-extern volatile u32* g_CdRomDelayReg;
-extern volatile u32* g_DmaControlReg;
-extern volatile u32* g_Dma3AddrReg;
-extern volatile u32* g_Dma3BlockControlReg;
-extern volatile u32* g_Dma3ChanControlReg;
+// State.
+extern unsigned char CD_mode;
+extern unsigned char CD_com;
+extern int CD_status;
+extern int CD_status1;
+extern CdlLOC CD_pos;
+extern volatile CD_intr Intr;
+
+// CD Drive + DMA Registers.
+extern volatile u8* reg0; // CD Index/Status.
+extern volatile u8* reg2;
+extern volatile u8* reg3; // CD Interrupt Enable.
+extern volatile u32* com_delay;
+extern volatile u32* cdrom_delay;
+extern volatile u32* d_pcr;
+extern volatile u32* d3_madr;
+extern volatile u32* d3_bcr;
+extern volatile u32* d3_chcr;
+
+extern u32 D_8005A234;
+extern u8 D_800567C1[];
+extern char D_80018F18;
+extern char D_80018F24;
+extern int D_8005678C;
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdInit);
 
-void _cbsync(void) { DeliverEvent(0xF0000003, 0x20); }
+void _cbsync(void) {
+    DeliverEvent(0xF0000003, 0x20);
+}
 
-void _cbready(void) { DeliverEvent(0xF0000003, 0x40); }
+void _cbready(void) {
+    DeliverEvent(0xF0000003, 0x40);
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", _cbread);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", DeliverEvent);
 
 int CdStatus(void) {
-    return g_CdStatus;
+    // FIXME: CD_status gets loaded as a byte here for some reason.
+    return (*((u8*)&CD_status));
 }
 
 int CdMode(void) {
-    return g_CdMode;
+    return CD_mode;
 }
 
 int CdLastCom(void) {
-    return g_CdLastCommand;
+    return CD_com;
 }
 
-CdlLOC* CdLastPos(void) { return &g_CdLastPosition; }
+CdlLOC* CdLastPos(void) {
+    return &CD_pos;
+}
 
 int CdReset(int mode) {
     if (mode == 2) {
@@ -66,9 +94,9 @@ void CdFlush(void) {
 
 int CdSetDebug(int level) {
     int prevLevel;
-    
-    prevLevel = g_CdDebugLevel;
-    g_CdDebugLevel = level;
+
+    prevLevel = CD_debug;
+    CD_debug = level;
     return prevLevel;
 }
 
@@ -92,15 +120,15 @@ int CdReady(int mode, u_char* result) {
 
 CdCallbackFn_t* CdSyncCallback(CdCallbackFn_t* callback) {
     CdCallbackFn_t* prevCallback;
-    prevCallback = g_CdSyncCallback;
-    g_CdSyncCallback = callback;
+    prevCallback = CD_cbsync;
+    CD_cbsync = callback;
     return prevCallback;
 }
 
 CdCallbackFn_t* CdReadyCallback(CdCallbackFn_t* callback) {
     CdCallbackFn_t* prevCallback;
-    prevCallback = g_CdReadyCallback;
-    g_CdReadyCallback = callback;
+    prevCallback = CD_cbready;
+    CD_cbready = callback;
     return prevCallback;
 }
 
@@ -115,9 +143,13 @@ int CdMix(CdlATV* vol) {
     return 1;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdGetSector);
+int CdGetSector(void* madr, int size) {
+    return CD_getsector(madr, size) == 0;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdGetSector2);
+int CdGetSector2(void* madr, int size) {
+    return CD_getsector2(madr, size) == 0;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdDataSyncCallback);
 
@@ -143,50 +175,118 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_initvol);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_initintr);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_init);
+int CD_init(void) {
+    puts(&D_80018F18);
+    printf(&D_80018F24, &D_8005678C);
+    CD_com = 0;
+    CD_mode = 0;
+    CD_cbready = 0;
+    CD_cbsync = 0;
+    CD_status1 = 0;
+    CD_status = 0;
+    ResetCallback();
+    InterruptCallback(2, &callback);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_datasync);
+    *reg0 = 1;
+    while (*reg3 & 7) {
+        *reg0 = 1;
+        *reg3 = 7;
+        *reg2 = 7;
+    }
 
-u32 CD_getsector(u32 madr, u32 size) {
-    // Reset CD command register.
-    *g_CdIndexStatusReg = 0;
-    *g_CdInterruptEnableReg = 0x80; // Exact effect is unclear.
+    Intr.ready = Intr.c = 0;
+    Intr.sync = 2;
 
-    // Configure CD-ROM read timing parameters
-    *g_CdRomDelayReg = 0x20943;
-    *g_ComDelayReg = 0x1323;
+    *reg0 = 0;
+    *reg3 = 0;
+    *com_delay = 0x1325;
 
-    // DMA3 Master Enable.
-    *g_DmaControlReg |= 0x8000;
+    CD_cw(1, 0, 0, 0);
+    if (CD_status & 0x10) {
+        CD_cw(1, 0, 0, 0);
+    }
 
-    // Address in RAM where CD data should be written.
-    *g_Dma3AddrReg = madr;
+    if (CD_cw(0xA, 0, 0, 0) != 0) {
+        return -1;
+    }
 
-    // Set DMA transfer size (words in one block).
-    *g_Dma3BlockControlReg = size | 0x10000;
+    if (CD_cw(0xC, 0, 0, 0) != 0) {
+        return -1;
+    }
 
-    while (!(*g_CdIndexStatusReg & 0x40 /*Data fifo empty*/))
-        ;
-
-    // Start DMA transfer using SyncMode 0, enable + trigger.
-    *g_Dma3ChanControlReg = 0x11000000;
-
-    // Wait until DMA3 is no longer busy
-    while (*g_Dma3ChanControlReg & 0x01000000)
-        ;
-
-    *g_ComDelayReg = 0x1325;
+    if (CD_sync(0, 0) != 2) {
+        return -1;
+    }
 
     return 0;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_getsector2);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_datasync);
+
+int CD_getsector(void* madr, size_t size) {
+    *reg0 = 0;
+    *reg3 = 0x80;
+    *cdrom_delay = 0x20943;
+    *com_delay = 0x1323;
+    // DMA3 Master Enable.
+    *d_pcr |= 0x8000;
+    *d3_madr = (u32)madr;
+    *d3_bcr = size | 0x10000;
+    while (!(*reg0 & 0x40))
+        ;
+    // Start DMA transfer.
+    *d3_chcr = DMA_CHCR_CDROM_NORMAL;
+    // Wait until transfer is complete.
+    while (*d3_chcr & DMA_CHCR_START_BUSY_ENABLED)
+        ;
+    *com_delay = 0x1325;
+    return 0;
+}
+
+int CD_getsector2(void* madr, size_t size) {
+    volatile u32 sp0;
+    *reg0 = 0;
+    *reg3 = 0x80;
+    *cdrom_delay = 0x21020843;
+    *com_delay = 0x1325;
+    *d_pcr |= 0x8000;
+    *d3_madr = (u32)madr;
+    *d3_bcr = size | 0x10000;
+    while (!(*reg0 & 0x40))
+        ;
+    // Start DMA transfer w/ "chopping" (cycle stealing by CPU).
+    *d3_chcr = DMA_CHCR_CDROM_CHOPPED;
+    sp0 = *d3_chcr;
+    return 0;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042C98);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042CA8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", callback);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", puts);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042DDC);
+
+void func_80042DDC(u8 byte) {
+    if (byte != 0x9) {
+        if (byte == 0xa) {
+            func_80042DDC(0xd);
+            D_8005A234 = 0;
+            write(1, &byte, 1);
+            return;
+        }
+    } else {
+        do {
+            func_80042DDC(0x20);
+        } while (D_8005A234 & 0x7);
+        return;
+    }
+
+    if (D_800567C1[byte] & 0x97) {
+        D_8005A234++;
+    }
+
+    write(1, &byte, 1);
+}
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042E90);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042EC0);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042EF0);
