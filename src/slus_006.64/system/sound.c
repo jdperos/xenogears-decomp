@@ -4,7 +4,6 @@
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundInitialize);
 
-extern long D_800595BC; // Unknown event descriptor
 void SoundReset(void) {
     int i;
 
@@ -52,7 +51,38 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038310);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800383EC);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038428);
+void SoundAddSedsEntry(SoundFile* pSoundFile) {
+    SoundFile* pEntry;
+    short nSedsStatus;
+    SoundFile** pList;
+    SoundFile* pSoundFileToVerify = pSoundFile;
+
+    // Ensure that an entry with the same SED ID does not exists in the linked list already
+    if (!(g_SoundControlFlags & 0x80)) {
+        for (pEntry = g_SoundSedsLinkedList; pEntry != NULL; pEntry = pEntry->pNext) {
+            if (pSoundFile->sedId == pEntry->sedId) {
+                SoundHandleError(SOUND_ERR_ENTRY_ALREADY_EXISTS);
+                return;
+            }
+        }
+    }
+
+    // Validate SEDS File
+    nSedsStatus = SoundValidateFile(pSoundFileToVerify, FILE_SIGNATURE('s','e','d','s'), 0x101);
+    if (nSedsStatus != SOUND_STATUS_OK) {
+        SoundHandleError(nSedsStatus);
+        return;
+    }
+
+    // Add the SED Entry to the linked list
+    DisableEvent(D_800595BC);
+    pList = &g_SoundSedsLinkedList;
+    while (*pList != NULL)
+        pList = &((*pList)->pNext);
+    *pList = pSoundFile;
+    pSoundFile->pNext = NULL;
+    EnableEvent(D_800595BC);
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003852C);
 
@@ -613,7 +643,6 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F5BC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F5EC);
 
-//
 int SoundValidateFile(SoundFile* pSoundFile, u32 magicBytes, unsigned short targetValue) {
     unsigned char bIsError;
     
