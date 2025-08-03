@@ -87,12 +87,12 @@ typedef struct {
     u16 m_ReverbWorkStartAddr;
     u16 m_IrqAddress;
     u16 trans_addr;
-    u16 m_TransferFifo;
+    u16 trans_fifo;
 
     // Control
     u16 spucnt;
     u16 m_TransferControl;
-    u16 m_StatusRegister;
+    u16 spustat;
 
     // Aux volumes
     s16 m_CdInputVolumeL;
@@ -126,10 +126,10 @@ typedef struct {
 #define SPU_CTRL_NOISE_FREQ_STEP_SHIFT   8
 #define SPU_CTRL_NOISE_FREQ_SHIFT_SHIFT 10
 
-#define SPU_CTRL_TRANSFER_MODE_STOP         ( 0 << SPU_CTRL_SRAM_TRANSFER_SHIFT )
-#define SPU_CTRL_TRANSFER_MODE_MANUAL_WRITE ( 1 << SPU_CTRL_SRAM_TRANSFER_SHIFT )
-#define SPU_CTRL_TRANSFER_MODE_DMA_WRITE    ( 2 << SPU_CTRL_SRAM_TRANSFER_SHIFT )
-#define SPU_CTRL_TRANSFER_MODE_DMA_READ     ( 3 << SPU_CTRL_SRAM_TRANSFER_SHIFT )
+#define SPU_CTRL_TRANSFER_MODE_STOP         ( 0 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x00
+#define SPU_CTRL_TRANSFER_MODE_MANUAL_WRITE ( 1 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x10
+#define SPU_CTRL_TRANSFER_MODE_DMA_WRITE    ( 2 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x20
+#define SPU_CTRL_TRANSFER_MODE_DMA_READ     ( 3 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x30
 
 #define SPU_DMA_MODE_WRITE 0
 #define SPU_DMA_MODE_READ  1
@@ -420,28 +420,38 @@ void _spu_FsetRXX(u32 offset, u32 value, u32 mode)
     }
 }
 
-u32 _spu_FsetRXXa(s32 arg0, u32 arg1) {
-    u32 temp_a3;
+u32 _spu_FsetRXXa(s32 offset, u32 value) {
+    u32 converted_value;
 
-    if ((_spu_mem_mode != 0) && ((arg1 % _spu_mem_mode_unit) != 0)) {
-        arg1 += _spu_mem_mode_unit;
-        arg1 &= ~_spu_mem_mode_unitM;
+    if ((_spu_mem_mode != 0) && ((value % _spu_mem_mode_unit) != 0)) {
+        value += _spu_mem_mode_unit;
+        value &= ~_spu_mem_mode_unitM;
     }
 
-    temp_a3 = arg1 >> _spu_mem_mode_plus;
-    switch (arg0) {
+    converted_value = value >> _spu_mem_mode_plus;
+    switch (offset) {
         case -1:
-            return temp_a3 & 0xFFFF;
+            return converted_value & 0xFFFF;
         case -2:
-            return arg1;
+            return value;
         default:
-            _spu_RXX->raw[arg0] = temp_a3;
+            _spu_RXX->raw[offset] = converted_value;
     }
 
-    return arg1;
+    return value;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FgetRXXa);
+s32 _spu_FgetRXXa(s32 offset, s32 conversion_type) {
+    u16 register_value;
+
+    register_value = _spu_RXX->raw[offset];
+    switch (conversion_type) {
+        case -1:
+            return register_value;
+        default:
+            return register_value << _spu_mem_mode_plus;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetPCR);
 
