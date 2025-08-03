@@ -35,6 +35,9 @@ typedef struct {
 #define SOUND_ERR_INVALID_SIGNATURE 0x1
 #define SOUND_ERR_INVALID_CHECKSUM 0x2 // Maybe
 #define SOUND_ERR_UNK_0X4 0x4
+#define SOUND_ERR_ENTRY_ALREADY_EXISTS 0x15
+
+#define FILE_SIGNATURE(a, b, c, d) (d<<24)+(c<<16)+(b<<8)+a
 
 // Possibly a struct which can either be a SMD (Background Music), SED (Sound Effect) or SND entry
 struct SoundFile_t {
@@ -51,6 +54,9 @@ struct SoundFile_t {
     /* 0x20 */ // starts of 0x2 size offsets to scripts. Pair of scripts for each instrument. 1 script for 1 channel.
 };
 typedef struct SoundFile_t SoundFile;
+
+extern long D_800595BC; // Unknown event descriptor
+extern SoundFile* g_SoundSedsLinkedList;
 
 extern void* g_pSoundSpuRegisters;
 
