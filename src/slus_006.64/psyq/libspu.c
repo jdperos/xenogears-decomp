@@ -410,25 +410,24 @@ s32 _spu_t(s32 operation, ...) {
     return DMA_TRANSFER_SUCCESS;
 }
 
-// TODO(jperos): Will need to revisit this for argument names after decompiling _spu_t to see what they are
-s32 _spu_Fw(s32 arg0, s32 arg1) {
+s32 _spu_Fw(s32 addr, s32 size) {
     if (_spu_transMode == SPU_TRANSFER_BY_DMA) {
         _spu_t(SPU_DMA_CMD_SETADDR, _spu_tsa << _spu_mem_mode_plus);
         _spu_t(SPU_DMA_CMD_WRITE);
-        _spu_t(SPU_DMA_CMD_EXEC, arg0, arg1);
+        _spu_t(SPU_DMA_CMD_EXEC, addr, size);
     }
     else
     {
-        _spu_FwriteByIO(arg0, arg1);
+        _spu_FwriteByIO(addr, size);
     }
-    return arg1;
+    return size;
 }
 
-s32 _spu_Fr(s32 arg0, s32 arg1) {
+s32 _spu_Fr(s32 addr, s32 size) {
     _spu_t(SPU_DMA_CMD_SETADDR, _spu_tsa << _spu_mem_mode_plus);
     _spu_t(SPU_DMA_CMD_READ);
-    _spu_t(SPU_DMA_CMD_EXEC, arg0, arg1);
-    return arg1;
+    _spu_t(SPU_DMA_CMD_EXEC, addr, size);
+    return size;
 }
 
 void _spu_FsetRXX(u32 offset, u32 value, u32 mode)
