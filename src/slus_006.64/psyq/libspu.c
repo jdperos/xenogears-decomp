@@ -204,6 +204,7 @@ typedef struct {
 #define SPU_MAX_SIZE 512 * 1024
 #define SPU_MAX_ALIGNED_ADDR (SPU_MAX_SIZE - 8) // 0x7fff8 - largest 8-byte aligned addr < 512KB
 #define SPU_MAX_VALID_OFFSET (SPU_MAX_ALIGNED_ADDR - SPU_MIN_ADDR)  // 0x7efe8
+#define SPU_RAM_SIZE 0x10000 // 512kb (64 << 3) total SPU RAM
 
 #define SPU_DMA_CMD_READ 0
 #define SPU_DMA_CMD_WRITE 1
@@ -226,7 +227,7 @@ typedef struct {
 #define SPU_ADDRESS_MODE_SPU (-1)
 #define SPU_ADDRESS_MODE_ALIGNED (-2)
 
-extern long g_SpuEVdma;
+extern long _spu_EVdma;
 extern long g_SpuTransferMode;
 extern long g_SpuReverbFlag;
 extern long g_bSpuReserveWorkArea;
@@ -236,6 +237,7 @@ extern short g_ReverbVolumeLeft;
 extern short g_ReverbVolumeRight;
 extern long g_ReverbDelay;
 extern long g_ReverbFeedback;
+extern char _spu_zerobuf[1024];
 extern long g_SpuRunning;
 extern union SpuUnion* _spu_RXX;
 extern volatile long* _spu_madr;
@@ -256,6 +258,7 @@ extern volatile SpuIRQCallbackProc _spu_IRQCallback;
 extern long _spu_dma_mode;
 extern long _spu_transfer_startaddr;
 extern long _spu_transfer_time;
+extern long _spu_rev_startaddr[];
 extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
 extern volatile u_short _spu_RQ[10];
 
@@ -277,7 +280,7 @@ void SpuStart(void) {
         _SpuDataCallback(_spu_FiDMA);
         // TODO: who knows what these constants do
         event = OpenEvent(0xF0000009U, 0x20, 0x2000, NULL);
-        g_SpuEVdma = event;
+        _spu_EVdma = event;
         EnableEvent(event);
         ExitCriticalSection();
     }
@@ -531,8 +534,8 @@ void SpuQuit(void) {
         _spu_transferCallback = NULL;
         _spu_IRQCallback = NULL;
         _SpuDataCallback(NULL);
-        CloseEvent(g_SpuEVdma);
-        DisableEvent(g_SpuEVdma);
+        CloseEvent(_spu_EVdma);
+        DisableEvent(_spu_EVdma);
         ExitCriticalSection();
     }
 }
@@ -795,10 +798,71 @@ void _spu_setReverbAttr(ReverbPreset* preset) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuClearReverbWorkArea);
+// TODO(jperos): The significance of these constants is yet not understood by me
+long SpuClearReverbWorkArea (long mode) {
+    volatile s32 callback;
+    s32 oldTransmode;
+    s32 addr;
+    s32 bTransferring;
+    s32 bTansmodeCleared;
+    u32 size;
+    u32 remaining;
 
-// Probable WaitEvent()
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004E564);
+    callback = 0;
+    bTansmodeCleared = 0;
+
+    if ((mode >= (u_long)SPU_REV_MODE_MAX) ||
+        (_SpuIsInAllocateArea_(_spu_rev_startaddr[mode]))) {
+        return SPU_ERROR;
+    }
+
+    if (mode == SPU_REV_MODE_OFF) {
+        remaining = 0x10 << _spu_mem_mode_plus;
+        addr = 0xFFF0 << _spu_mem_mode_plus;
+    } else {
+        remaining = (SPU_RAM_SIZE - _spu_rev_startaddr[mode]) << _spu_mem_mode_plus;
+        addr = _spu_rev_startaddr[mode] << _spu_mem_mode_plus;
+    }
+
+    oldTransmode = _spu_transMode;
+    if (_spu_transMode == 1) {
+        _spu_transMode = 0;
+        bTansmodeCleared = 1;
+    }
+
+    bTransferring = 1;
+    if (_spu_transferCallback != 0) {
+        callback = _spu_transferCallback;
+        _spu_transferCallback = 0;
+    }
+
+    while (bTransferring) {
+        size = remaining;
+        if (!(remaining < (0x400U + 1))) {
+            size = 0x400;
+        } else {
+            bTransferring = 0;
+        }
+        _spu_t(SPU_DMA_CMD_SETADDR, addr);
+        _spu_t(SPU_DMA_CMD_WRITE);
+        _spu_t(SPU_DMA_CMD_EXEC, &_spu_zerobuf, size);
+        WaitEvent(_spu_EVdma);
+        remaining -= 0x400;
+        addr += 0x400;
+    };
+
+    if (bTansmodeCleared) {
+        _spu_transMode = oldTransmode;
+    }
+
+    if (callback) {
+        _spu_transferCallback = callback;
+    }
+
+    return SPU_SUCCESS;
+}
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", WaitEvent);
 
 void SpuSetReverbModeDepth(short DepthL, short DepthR)
 {
