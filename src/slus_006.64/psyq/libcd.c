@@ -25,6 +25,7 @@ extern volatile CD_intr Intr;
 
 // CD Drive + DMA Registers.
 extern volatile u8* reg0; // CD Index/Status.
+extern volatile u8* reg1;
 extern volatile u8* reg2;
 extern volatile u8* reg3; // CD Interrupt Enable.
 extern volatile u32* com_delay;
@@ -39,6 +40,7 @@ extern u8 D_800567C1[];
 extern char D_80018F18;
 extern char D_80018F24;
 extern int D_8005678C;
+extern volatile u32* _spu;
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdInit);
 
@@ -50,7 +52,9 @@ void _cbready(void) {
     DeliverEvent(0xF0000003, 0x40);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", _cbread);
+void _cbread() {
+    DeliverEvent(0xF0000003, 0x40);
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", DeliverEvent);
 
@@ -167,11 +171,44 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_ready);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_cw);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_vol);
+int CD_vol(CdlATV* vol) {
+    *reg0 = 2;
+    *reg2 = vol->val0;
+    *reg3 = vol->val1;
+    *reg0 = 3;
+    *reg1 = vol->val2;
+    *reg2 = vol->val3;
+    *reg3 = 0x20;
+    return 0;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_flush);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_initvol);
+int CD_initvol(void) {
+    CdlATV vol;
+    // 0x1F801c00 + 0x1b8 = 0x1F801db8 (current main vol left).
+    if (*((volatile u16*)((u32)_spu + 0x1b8)) == 0 &&
+        *((volatile u16*)((u32)_spu + 0x1ba)) == 0) {
+        // 0x1F801c00 + 0x180 = 0x1F801d80 (main vol left/right).
+        *((volatile u16*)((u32)_spu + 0x180)) = 0x3fff;
+        *((volatile u16*)((u32)_spu + 0x182)) = 0x3fff;
+    }
+    // 0x1F801c00 + 0x1b0 = 0x1F801db0 (CD volume left/right).
+    *((volatile u16*)((u32)_spu + 0x1b0)) = 0x3fff;
+    *((volatile u16*)((u32)_spu + 0x1b2)) = 0x3fff;
+    // Enable spu, unmute spu and enable cd audio.
+    *((volatile u16*)((u32)_spu + 0x1aa)) = (1 << 15) | (1 << 14) | (1 << 0);
+    vol.val0 = vol.val2 = 0x80;
+    vol.val1 = vol.val3 = 0;
+    *reg0 = 2;
+    *reg2 = vol.val0;
+    *reg3 = vol.val1;
+    *reg0 = 3;
+    *reg1 = vol.val2;
+    *reg2 = vol.val3;
+    *reg3 = 0x20;
+    return 0;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_initintr);
 

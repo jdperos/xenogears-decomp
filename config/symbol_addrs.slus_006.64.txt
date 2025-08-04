@@ -291,9 +291,11 @@ CD_pos = 0x800564C4; // type:CdlLOC size:0x4
 CD_mode = 0x800564C8;
 CD_com = 0x800564C9;
 reg0 = 0x80056770;
+reg1 = 0x80056774;
 reg2 = 0x80056778;
 reg3 = 0x8005677C;
 com_delay = 0x80056780;
+_spu = 0x80056784;
 Intr = 0x80056788; // type:CD_intr size:0x3
 
 cdrom_delay = 0x800567A4;
