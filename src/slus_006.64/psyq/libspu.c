@@ -226,19 +226,8 @@ typedef struct {
 #define SPU_ADDRESS_MODE_SPU (-1)
 #define SPU_ADDRESS_MODE_ALIGNED (-2)
 
-extern long g_SpuRunning;
 extern long g_SpuEVdma;
-extern volatile long* _spu_sys_pcr;
-extern u_short _spu_tsa;
-extern long _spu_mem_mode;
-extern long _spu_mem_mode_plus;
-extern long _spu_mem_mode_unit;
-extern long _spu_mem_mode_unitM;
-extern volatile SpuIRQCallbackProc _spu_IRQCallback;
-extern volatile SpuTransferCallbackProc _spu_transferCallback;
-extern int _spu_dma_mode;
 extern long g_SpuTransferMode;
-extern long _spu_transMode;
 extern long g_SpuReverbFlag;
 extern long g_bSpuReserveWorkArea;
 extern long g_SpuReverbOffsetAddress;
@@ -247,16 +236,27 @@ extern short g_ReverbVolumeLeft;
 extern short g_ReverbVolumeRight;
 extern long g_ReverbDelay;
 extern long g_ReverbFeedback;
+extern long g_SpuRunning;
 extern union SpuUnion* _spu_RXX;
-extern volatile int* _spu_madr;
-extern volatile int* _spu_bcr;
-extern volatile int* _spu_chcr;
-extern volatile int* _spu_delay;
+extern volatile long* _spu_madr;
+extern volatile long* _spu_bcr;
+extern volatile long* _spu_chcr;
+extern volatile long* _spu_delay;
+extern volatile long* _spu_sys_pcr;
+extern u_short _spu_tsa;
+extern long _spu_transMode;
+extern long _spu_mem_mode;
+extern long _spu_mem_mode_plus;
+extern long _spu_mem_mode_unit;
+extern long _spu_mem_mode_unitM;
 extern long _spu_inTransfer;
+extern volatile SpuTransferCallbackProc _spu_transferCallback;
+extern volatile SpuIRQCallbackProc _spu_IRQCallback;
+extern long _spu_dma_mode;
 extern long _spu_transfer_startaddr;
 extern long _spu_transfer_time;
 extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
-extern volatile u16 _spu_RQ[10];
+extern volatile u_short _spu_RQ[10];
 
 void _spu_FiDMA(void); // Forward declare for SpuStart()
 s32 _spu_t(s32, ...); // Forward declare for _spu_Fr and _spu_Fw
