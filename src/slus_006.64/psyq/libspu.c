@@ -121,7 +121,7 @@ typedef struct {
 #define SPU_CTRL_MASK_MUTE_SPU               (1 << 14)              // 14
 #define SPU_CTRL_MASK_SPU_ENABLE             (1 << 15)              // 15
 
-// Shift amounts for multi-bit fields
+// SPU Control Register shift amounts for multi-bit fields
 #define SPU_CTRL_SRAM_TRANSFER_SHIFT     4
 #define SPU_CTRL_NOISE_FREQ_STEP_SHIFT   8
 #define SPU_CTRL_NOISE_FREQ_SHIFT_SHIFT 10
@@ -130,6 +130,26 @@ typedef struct {
 #define SPU_CTRL_TRANSFER_MODE_MANUAL_WRITE ( 1 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x10
 #define SPU_CTRL_TRANSFER_MODE_DMA_WRITE    ( 2 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x20
 #define SPU_CTRL_TRANSFER_MODE_DMA_READ     ( 3 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x30
+
+// SPU Status Register (SPUSTAT) bit masks
+#define SPU_STAT_MASK_CURRENT_SPU_MODE      ((1 <<  0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 <<  4) | (1 <<  5))  // 0-5
+#define SPU_STAT_MASK_IRQ9_FLAG              (1 <<  6)              // 6
+#define SPU_STAT_MASK_DMA_READ_WRITE_REQUEST (1 <<  7)              // 7
+#define SPU_STAT_MASK_DMA_WRITE_REQUEST      (1 <<  8)              // 8
+#define SPU_STAT_MASK_DMA_READ_REQUEST       (1 <<  9)              // 9
+#define SPU_STAT_MASK_DATA_TRANSFER_BUSY     (1 << 10)              // 10
+#define SPU_STAT_MASK_CAPTURE_BUFFER_HALF    (1 << 11)              // 11
+#define SPU_STAT_MASK_UNKNOWN_UNUSED        ((1 << 12) | (1 << 13) | (1 << 14) | (1 << 15))  // 12-15
+
+// SPU Status Register shift amounts for multi-bit fields
+#define SPU_STAT_CURRENT_SPU_MODE_SHIFT      0
+#define SPU_STAT_UNKNOWN_UNUSED_SHIFT        12
+
+// SPU Status Register values
+#define SPU_STAT_CAPTURE_FIRSTHALF           (0 << 11)  // Writing to first half
+#define SPU_STAT_CAPTURE_SECONDHALF          (1 << 11)  // Writing to second half
+#define SPU_STAT_TRANSFER_READY              (0 << 10)  // Transfer ready
+#define SPU_STAT_TRANSFER_BUSY               (1 << 10)  // Transfer busy
 
 #define SPU_DMA_MODE_WRITE 0
 #define SPU_DMA_MODE_READ  1
@@ -201,6 +221,9 @@ typedef struct {
 #define SPU_CONTROL_NOISE_FREQUENCY_SHIFT   (1u << 10) // 4 bits
 #define SPU_CONTROL_FLAG_MUTE_SPU           (1u << 14)
 #define SPU_CONTROL_FLAG_SPU_ENABLE         (1u << 15)
+
+#define SPU_ADDRESS_MODE_SPU (-1)
+#define SPU_ADDRESS_MODE_ALIGNED (-2)
 
 extern long g_SpuRunning;
 extern long g_SpuEVdma;
@@ -296,7 +319,7 @@ void _spu_Fr_(s32 madr, u16 trans_addr, s32 bcr) {
     *_spu_madr = madr;
     *_spu_bcr = (bcr << 16) | 16;
     _spu_dma_mode = SPU_DMA_MODE_READ;
-    *_spu_chcr = 0x01000200;
+    *_spu_chcr = DMA_CHCR_SPU_READ;
 }
 
 
@@ -420,36 +443,42 @@ void _spu_FsetRXX(u32 offset, u32 value, u32 mode)
     }
 }
 
+// Set Register Address (value)
+// Note: Addresses are stored in SPU RAM as 16 bit values, as 1/8th ( >> 3 ) versions of the actual memory address
 u32 _spu_FsetRXXa(s32 offset, u32 value) {
-    u32 converted_value;
+    u32 translated_address;
 
+    // Align the address value to 8 bits
     if ((_spu_mem_mode != 0) && ((value % _spu_mem_mode_unit) != 0)) {
         value += _spu_mem_mode_unit;
         value &= ~_spu_mem_mode_unitM;
     }
 
-    converted_value = value >> _spu_mem_mode_plus;
+    // Shift it to translate it to the actual SPU-ranged value
+    translated_address = value >> _spu_mem_mode_plus;
     switch (offset) {
-        case -1:
-            return converted_value & 0xFFFF;
-        case -2:
+        case SPU_ADDRESS_MODE_SPU:
+            return translated_address & 0xFFFF;
+        case SPU_ADDRESS_MODE_ALIGNED:
             return value;
         default:
-            _spu_RXX->raw[offset] = converted_value;
+            _spu_RXX->raw[offset] = translated_address;
     }
 
     return value;
 }
 
-s32 _spu_FgetRXXa(s32 offset, s32 conversion_type) {
-    u16 register_value;
+// Get Register Address (value)
+// Note: Addresses are stored in SPU RAM as 16 bit values, as 1/8th ( >> 3 ) versions of the actual memory address
+s32 _spu_FgetRXXa(s32 offset, s32 addressing_mode) {
+    u16 value;
 
-    register_value = _spu_RXX->raw[offset];
-    switch (conversion_type) {
-        case -1:
-            return register_value;
+    value = _spu_RXX->raw[offset];
+    switch (addressing_mode) {
+        case SPU_ADDRESS_MODE_SPU:
+            return value;
         default:
-            return register_value << _spu_mem_mode_plus;
+            return value << _spu_mem_mode_plus;
     }
 }
 
@@ -546,7 +575,26 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuIsInAllocateArea);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuIsInAllocateArea_);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuReadDecodedData);
+// TODO(jperos): Replace these constants as soon as the docs make sense
+long SpuReadDecodedData(SpuDecodedData *d_data, long flag) {
+    switch (flag) {
+        case SPU_CDONLY:
+            _spu_Fr_(d_data->cd_left, 0, 0x20);
+            break;
+        case SPU_VOICEONLY:
+            _spu_Fr_(d_data->voice1, 0x100, 0x20);
+            break;
+        default:
+            _spu_Fr_(d_data->cd_left, 0, 0x40);
+            break;
+    }
+
+    if (_spu_RXX->rxx.spustat & SPU_STAT_CAPTURE_SECONDHALF) {
+        return SPU_DECODE_SECONDHALF;
+    } else {
+        return SPU_DECODE_FIRSTHALF;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetIRQ);
 
@@ -589,7 +637,7 @@ u_long SpuSetTransferStartAddr(u_long addr) {
         return 0;
     }
 
-    base_addr = _spu_FsetRXXa(-1, addr);
+    base_addr = _spu_FsetRXXa(SPU_ADDRESS_MODE_SPU, addr);
     _spu_tsa = base_addr;
     return (ulong)base_addr << _spu_mem_mode_plus;
 }
