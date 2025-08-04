@@ -3,6 +3,7 @@
 #include "psyq/libapi.h"
 #include "psyq/stdarg.h"
 #include "libdma.h"
+#include "libmctrl.h"
 
 typedef struct {
     SpuVolume volume;
@@ -250,6 +251,7 @@ extern union SpuUnion* _spu_RXX;
 extern volatile int* _spu_madr;
 extern volatile int* _spu_bcr;
 extern volatile int* _spu_chcr;
+extern volatile int* _spu_delay;
 extern long _spu_inTransfer;
 extern long _spu_transfer_startaddr;
 extern long _spu_transfer_time;
@@ -491,9 +493,18 @@ void _spu_FsetPCR(s32 bKindOfHighPriority) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayW);
+// NOTE(jperos): I'm currently unaware of exactly what these DMA timing override codes mean exactly.
+//               From: https://psx-spx.consoledev.net/memorycontrol/ :
+//                   1F801014h - SPU Delay/Size (200931E1h) (use 220931E1h for SPU-RAM reads)
+static void _spu_FsetDelayW(void) {
+    *_spu_delay = (*_spu_delay & ~MCTRL_DELAY_DMA_TIMING_OVERRIDE_MASK) |
+                  MCTRL_DELAY_DMA_TIMING_SELECT;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayR);
+static void _spu_FsetDelayR(void) {
+    *_spu_delay = (*_spu_delay & ~MCTRL_DELAY_DMA_TIMING_OVERRIDE_MASK) |
+                  ((2 << MCTRL_DELAY_DMA_TIMING_OVERRIDE_SHIFT) | MCTRL_DELAY_DMA_TIMING_SELECT);
+}
 
 void _spu_Fw1ts(void) {
     volatile s32 counter;

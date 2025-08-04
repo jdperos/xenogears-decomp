@@ -602,6 +602,7 @@ _spu_RXX = 0x80058E08;
 _spu_madr = 0x80058E0C;
 _spu_bcr = 0x80058E10;
 _spu_chcr = 0x80058E14;
+_spu_delay = 0x80058E1C;
 _spu_inTransfer = 0x80058E3C;
 _spu_transfer_startaddr = 0x80058E5C;
 _spu_transfer_time = 0x80058E60;
