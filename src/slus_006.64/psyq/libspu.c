@@ -227,6 +227,7 @@ typedef struct {
 
 extern long g_SpuRunning;
 extern long g_SpuEVdma;
+extern volatile long* _spu_sys_pcr;
 extern u_short _spu_tsa;
 extern long _spu_mem_mode;
 extern long _spu_mem_mode_plus;
@@ -481,7 +482,14 @@ s32 _spu_FgetRXXa(s32 offset, s32 addressing_mode) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetPCR);
+void _spu_FsetPCR(s32 bKindOfHighPriority) {
+    *_spu_sys_pcr &= ~DMA_DPCR_MASK_DMA4_PRIORITY;
+    if (bKindOfHighPriority) {
+        *_spu_sys_pcr |= (DMA_PRIORITY_HIGH << DMA_DPCR_DMA4_PRIORITY_SHIFT);
+    } else {
+        *_spu_sys_pcr |= (DMA_PRIORITY_MEDIUM << DMA_DPCR_DMA4_PRIORITY_SHIFT);
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FsetDelayW);
 

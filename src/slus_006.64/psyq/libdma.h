@@ -6,6 +6,9 @@
 #define DMA_TRANSFER_TIMEOUT (-2)
 #define DMA_BLOCK_SIZE   64 // in bytes
 
+//----------------------------------------------------------------------------------------------------------------------
+// DMA Channel Control Register (CHCR)
+//----------------------------------------------------------------------------------------------------------------------
 // DMA Channel Control Register (CHCR) - Bit Definitions
 // Bit 0: Transfer Direction
 #define DMA_CHCR_SHFT_TRANSFER_DIR      (0)
@@ -175,5 +178,69 @@
                                  DMA_CHCR_START_BUSY_ENABLED | \
                                  DMA_CHCR_START_MANUAL | \
                                  DMA_CHCR_PAUSE_NO)
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// DMA Priority Control Register (DPCR)
+//----------------------------------------------------------------------------------------------------------------------
+// DMA Priority Control Register (DPCR) - Bit Definitions
+
+// DMA0 (MDECin) - Bits 0-3
+#define DMA_DPCR_MASK_DMA0_PRIORITY     ((1 << 0) | (1 << 1) | (1 << 2))   // 0-2
+#define DMA_DPCR_MASK_DMA0_ENABLE       (1 << 3)                           // 3
+
+// DMA1 (MDECout) - Bits 4-7
+#define DMA_DPCR_MASK_DMA1_PRIORITY     ((1 << 4) | (1 << 5) | (1 << 6))   // 4-6
+#define DMA_DPCR_MASK_DMA1_ENABLE       (1 << 7)                           // 7
+
+// DMA2 (GPU) - Bits 8-11
+#define DMA_DPCR_MASK_DMA2_PRIORITY     ((1 << 8) | (1 << 9) | (1 << 10))  // 8-10
+#define DMA_DPCR_MASK_DMA2_ENABLE       (1 << 11)                          // 11
+
+// DMA3 (CDROM) - Bits 12-15
+#define DMA_DPCR_MASK_DMA3_PRIORITY     ((1 << 12) | (1 << 13) | (1 << 14)) // 12-14
+#define DMA_DPCR_MASK_DMA3_ENABLE       (1 << 15)                           // 15
+
+// DMA4 (SPU) - Bits 16-19
+#define DMA_DPCR_MASK_DMA4_PRIORITY     ((1 << 16) | (1 << 17) | (1 << 18)) // 16-18
+#define DMA_DPCR_MASK_DMA4_ENABLE       (1 << 19)                           // 19
+
+// DMA5 (PIO) - Bits 20-23
+#define DMA_DPCR_MASK_DMA5_PRIORITY     ((1 << 20) | (1 << 21) | (1 << 22)) // 20-22
+#define DMA_DPCR_MASK_DMA5_ENABLE       (1 << 23)                           // 23
+
+// DMA6 (OTC) - Bits 24-27
+#define DMA_DPCR_MASK_DMA6_PRIORITY     ((1 << 24) | (1 << 25) | (1 << 26)) // 24-26
+#define DMA_DPCR_MASK_DMA6_ENABLE       (1 << 27)                           // 27
+
+// Unknown bits - Bits 28-31
+#define DMA_DPCR_MASK_UNKNOWN_OFFSET    ((1 << 28) | (1 << 29) | (1 << 30)) // 28-30
+#define DMA_DPCR_MASK_UNKNOWN_BIT31     (1 << 31)                           // 31
+
+// Shift amounts for priority fields
+#define DMA_DPCR_DMA0_PRIORITY_SHIFT    0
+#define DMA_DPCR_DMA1_PRIORITY_SHIFT    4
+#define DMA_DPCR_DMA2_PRIORITY_SHIFT    8
+#define DMA_DPCR_DMA3_PRIORITY_SHIFT    12
+#define DMA_DPCR_DMA4_PRIORITY_SHIFT    16
+#define DMA_DPCR_DMA5_PRIORITY_SHIFT    20
+#define DMA_DPCR_DMA6_PRIORITY_SHIFT    24
+#define DMA_DPCR_UNKNOWN_OFFSET_SHIFT   28
+
+// Priority values (0=Highest, 7=Lowest)
+#define DMA_PRIORITY_HIGHEST            0
+#define DMA_PRIORITY_HIGH               3
+#define DMA_PRIORITY_MEDIUM             5
+#define DMA_PRIORITY_LOWEST             7
+
+// Enable/Disable values
+#define DMA_DISABLED                    (0 << 0)
+#define DMA_ENABLED                     (1 << 0)
+
+#define DMA_DPCR_SPU_PRIORITY_HIGH      (DMA_PRIORITY_HIGH << DMA_DPCR_DMA4_PRIORITY_SHIFT)
+#define DMA_DPCR_SPU_PRIORITY_LOW       (DMA_PRIORITY_MEDIUM << DMA_DPCR_DMA4_PRIORITY_SHIFT)
+
+// Default DPCR value from documentation
+#define DMA_DPCR_DEFAULT_VALUE          0x07654321
 
 #endif
