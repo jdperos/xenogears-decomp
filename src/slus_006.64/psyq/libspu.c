@@ -245,6 +245,7 @@ extern volatile long* _spu_delay;
 extern volatile long* _spu_sys_pcr;
 extern u_short _spu_tsa;
 extern long _spu_transMode;
+extern long _spu_addrMode;
 extern long _spu_mem_mode;
 extern long _spu_mem_mode_plus;
 extern long _spu_mem_mode_unit;
