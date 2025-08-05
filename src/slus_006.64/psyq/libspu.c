@@ -19,7 +19,16 @@ typedef struct {
     u16 loop_addr;
 } SPU_VOICE_REG;
 
-#define NUM_VOICES 24
+#define SPU_VOICE_REG_VOLUME_L    0
+#define SPU_VOICE_REG_VOLUME_R    1
+#define SPU_VOICE_REG_PITCH       2
+#define SPU_VOICE_REG_ADDR        3
+#define SPU_VOICE_REG_ADSR1       4
+#define SPU_VOICE_REG_ADSR2       5
+#define SPU_VOICE_REG_VOLUMEX     6
+#define SPU_VOICE_REG_LOOP_ADDR   7
+#define SPU_VOICE_REG_SIZE        8
+#define NUM_VOICES               24
 
 typedef struct {
     // APF Displacement registers (1F801DC0h - 1F801DC2h)
@@ -776,8 +785,26 @@ void _SpuCallback(SpuIRQCallbackProc func) {
     InterruptCallback(9, func);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuGetVoiceEnvelopeAttr);
+void SpuGetVoiceEnvelopeAttr(int vNum, long* keyStat, short* envx) {
+    u_short volx;
+    long offset;
 
+    offset = (vNum * SPU_VOICE_REG_SIZE) + SPU_VOICE_REG_VOLUMEX;
+    volx = _spu_RXX->raw[offset];
+
+    *envx = volx;
+    if (_spu_keystat & (1 << vNum)) {
+        if ((volx << 16) > 0) {
+            *keyStat = SPU_ON;
+        } else {
+            *keyStat = SPU_ON_ENV_OFF;
+        }
+    } else if ((volx << 16) > 0) {
+        *keyStat = SPU_OFF_ENV_ON;
+    } else {
+        *keyStat = SPU_OFF;
+    }
+}
 u_long SpuRead(u_char* addr, u_long size) {
 
     if (size > SPU_MAX_TRANSFER_SIZE) {
