@@ -280,6 +280,15 @@ typedef struct {
 #define SPU_ADDRESS_MODE_SPU (-1)
 #define SPU_ADDRESS_MODE_ALIGNED (-2)
 
+// rodata
+extern const char D_8001946C[]; // "SPU:T/O [%s]\n"
+extern const char D_8001947C[]; // "wait (reset)"
+extern const char D_8001948C[]; // "wait (wrdy H -> L)"
+extern const char D_800194A0[]; // "wait (dmaf clear/W)"
+extern const char D_800194B4[]; // "SPU:T/O [%s]\n"
+extern const char D_800194C4[]; // "wait (IRQ/ON)"
+extern const char D_800194D4[]; // "wait (IRQ/OFF)"
+
 extern long _spu_EVdma;
 extern u_long _spu_keystat;
 extern long _spu_trans_mode;
@@ -321,6 +330,15 @@ extern volatile u_short _spu_RQ[10];
 
 void _spu_FiDMA(void); // Forward declare for SpuStart()
 s32 _spu_t(s32, ...); // Forward declare for _spu_Fr and _spu_Fw
+
+static inline void _memcpy(void* _dst, void* _src, u32 _size) {
+    char *pDst = (char*)_dst;
+    char *pSrc = (char*)_src;
+
+    while (_size--) {
+        *pDst++ = *pSrc++;
+    }
+}
 
 void SpuInit(void) {
     _SpuInit(0);
@@ -378,7 +396,74 @@ void SpuStart(void) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_init);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FwriteByIO);
+static void _spu_FwriteByIO(void* data, u32 size) {
+    u16 initStatus;
+    s32 dmaTimer;
+    s32 blockSize;
+    u16 spucnt;
+    u16* data16 = data;
+
+	// TODO(jperos): 0x7FF is the 11 lowest bits. Should macro this in a way that makes sense for whatever this represents
+    initStatus = _spu_RXX->rxx.spustat & 0x7FF;
+    _spu_RXX->rxx.trans_addr = _spu_tsa;
+    _spu_Fw1ts();
+
+    while (size != 0)
+    {
+		// TODO(jperos): I've seen 0x40 in a few other transfers - is this max chunk size?
+        if (size <= 0x40)
+        {
+            blockSize = size;
+        }
+        else
+        {
+            blockSize = 0x40;
+        }
+
+        dmaTimer = 0;
+        while (dmaTimer < blockSize)
+        {
+            _spu_RXX->rxx.trans_fifo = *data16++;
+             dmaTimer += 2;
+        }
+
+        spucnt = _spu_RXX->rxx.spucnt;
+        spucnt &= ~SPU_CTRL_TRANSFER_MODE_DMA_READ;
+        spucnt |= SPU_CTRL_TRANSFER_MODE_MANUAL_WRITE;
+        _spu_RXX->rxx.spucnt = spucnt;
+        _spu_Fw1ts();
+
+        dmaTimer = 0;
+        while (_spu_RXX->rxx.spustat & SPU_STAT_MASK_DATA_TRANSFER_BUSY)
+        {
+            if (++dmaTimer > DMA_TIMEOUT)
+            {
+                printf(D_8001946C, D_8001948C);
+                break;
+            }
+        }
+
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+
+        size -= blockSize;
+    }
+
+    spucnt = _spu_RXX->rxx.spucnt;
+    spucnt &= ~SPU_CTRL_TRANSFER_MODE_DMA_READ;
+    spucnt |= SPU_CTRL_TRANSFER_MODE_STOP;
+    _spu_RXX->rxx.spucnt = spucnt;
+
+    dmaTimer = 0;
+    while ((_spu_RXX->rxx.spustat & 0x7FF) != initStatus)
+    {
+        if (++dmaTimer > DMA_TIMEOUT)
+        {
+            printf(D_8001946C, D_800194A0);
+            break;
+        }
+    }
+}
 
 void _spu_FiDMA(void) {
     s32 i;
@@ -653,7 +738,7 @@ long SpuSetNoiseClock(long n_clock) {
     return clamped;
 }
 
-long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2.56)
+long SpuSetReverb (long on_off)
 {
     long spuControlRegister;
 
@@ -872,16 +957,6 @@ SpuTransferCallbackProc SpuSetTransferCallback(SpuTransferCallbackProc func) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetCommonAttr);
 
-#define _spu_getCurrRevParamM(_dst) {\
-    char *pDst = (char*)_dst; \
-    char *pSrc = (char*)(&_spu_rev_param[_spu_rev_attr.mode]); \
-    int sz = sizeof(ReverbPreset);\
-    \
-    while (sz--) {\
-        *pDst++ = *pSrc++;\
-    }\
-}
-
 long SpuSetReverbModeType(long mode) {
     ReverbPreset preset;
     s32 bClearWorkArea;
@@ -906,7 +981,7 @@ long SpuSetReverbModeType(long mode) {
     _spu_rev_attr.mode = mode;
     _spu_rev_offsetaddr = _spu_rev_startaddr[mode];
 
-    _spu_getCurrRevParamM(&preset);
+    _memcpy(&preset, &_spu_rev_param[mode], sizeof(ReverbPreset));
 
     preset.m_Mask = 0;
     switch (mode) {
@@ -1132,22 +1207,6 @@ void SpuSetReverbModeDepth(short DepthL, short DepthR)
     _spu_rev_attr.depth.right = DepthR;
 }
 
-// From Mc-Muffin:
-// Needed by SpuSetReverbModeFeedback and SpuSetReverbModeDelayTime
-// to reload _spu_rev_attr.mode, as _spu_rev_attr isn't volatile
-// using the inline works to reload it
-// Though, SpuSetReverbModeType has the same code yet doesn't reload
-// _spu_rev_attr.mode, so we use the macro version there
-static inline void _spu_getCurrRevPreset(void* _dst) {
-    char *pDst = (char*)_dst;
-    char *pSrc = (char*)(&_spu_rev_param[_spu_rev_attr.mode]);
-    int sz = sizeof(ReverbPreset);
-
-    while (sz--) {
-        *pDst++ = *pSrc++;
-    }
-}
-
 void SpuSetReverbModeDelayTime(long delay) {
     ReverbPreset preset;
     s32 scaledDelay;
@@ -1161,7 +1220,7 @@ void SpuSetReverbModeDelayTime(long delay) {
         return;
     }
 
-    _spu_getCurrRevPreset(&preset);
+    _memcpy(&preset, &_spu_rev_param[_spu_rev_attr.mode], sizeof(ReverbPreset));
 
     preset.m_Mask = SPU_REV_MASK_mLSAME
         | SPU_REV_MASK_mRSAME
@@ -1195,7 +1254,7 @@ void SpuSetReverbModeFeedback(long feedback) {
         return;
     }
 
-    _spu_getCurrRevPreset(&preset);
+    _memcpy(&preset, &_spu_rev_param[_spu_rev_attr.mode], sizeof(ReverbPreset));
 
     _spu_rev_attr.feedback = feedback;
     preset.m_Mask = SPU_REV_MASK_vWALL;
