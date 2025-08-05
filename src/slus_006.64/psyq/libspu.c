@@ -5,6 +5,11 @@
 #include "libdma.h"
 #include "libmctrl.h"
 
+typedef struct tagSpuMalloc {
+    u32 addr;
+    u32 size;
+} SPU_MALLOC;
+
 typedef struct {
     SpuVolume volume;
     u16 pitch;
@@ -13,6 +18,8 @@ typedef struct {
     u16 volumex;
     u16 loop_addr;
 } SPU_VOICE_REG;
+
+#define NUM_VOICES 24
 
 typedef struct {
     // APF Displacement registers (1F801DC0h - 1F801DC2h)
@@ -69,7 +76,7 @@ typedef struct {
 } ReverbRegisters;
 
 typedef struct {
-    SPU_VOICE_REG voice[24];
+    SPU_VOICE_REG voice[NUM_VOICES];
     // Volumes
     SpuVolume main_vol; // 1-bit for Volume Mode, 15-bits for Volume
     SpuVolume rev_vol; // Full 16 bits for volume
@@ -108,6 +115,52 @@ typedef struct {
 
     ReverbRegisters m_Reverb;
 } SPU_RXX;
+
+// Voice Registers (0x00 - 0xBF)
+#define SPU_RXX_VOICE_BASE              0x00    // Voice registers start (24 voices × 8 regs each)
+#define SPU_RXX_VOICE_SIZE              8       // Registers per voice
+#define SPU_RXX_VOICE_END               0xBF    // Last voice register
+// Global Volume Registers (0xC0 - 0xC3)
+#define SPU_RXX_MAIN_VOL_L              0xC0    // Main volume left
+#define SPU_RXX_MAIN_VOL_R              0xC1    // Main volume right
+#define SPU_RXX_REV_VOL_L               0xC2    // Reverb volume left
+#define SPU_RXX_REV_VOL_R               0xC3    // Reverb volume right
+// Voice Flag Registers (0xC4 - 0xCF) - 32-bit values stored as pairs
+#define SPU_RXX_KEY_ON_LOW              0xC4    // Key on flags (bits 0-15)
+#define SPU_RXX_KEY_ON_HIGH             0xC5    // Key on flags (bits 16-31)
+#define SPU_RXX_KEY_OFF_LOW             0xC6    // Key off flags (bits 0-15)
+#define SPU_RXX_KEY_OFF_HIGH            0xC7    // Key off flags (bits 16-31)
+#define SPU_RXX_PITCH_MOD_LOW           0xC8    // Pitch modulation flags (bits 0-15)
+#define SPU_RXX_PITCH_MOD_HIGH          0xC9    // Pitch modulation flags (bits 16-31)
+#define SPU_RXX_NOISE_LOW               0xCA    // Noise flags (bits 0-15)
+#define SPU_RXX_NOISE_HIGH              0xCB    // Noise flags (bits 16-31)
+#define SPU_RXX_REVERB_LOW              0xCC    // Reverb flags (bits 0-15)
+#define SPU_RXX_REVERB_HIGH             0xCD    // Reverb flags (bits 16-31)
+#define SPU_RXX_ENDX_LOW                0xCE    // End flags (bits 0-15)
+#define SPU_RXX_ENDX_HIGH               0xCF    // End flags (bits 16-31)
+// Memory Address Registers (0xD0 - 0xD4)
+#define SPU_RXX_UNKNOWN_D0              0xD0    // Unknown register
+#define SPU_RXX_REV_WA_START_ADDR       0xD1    // Reverb work area start address
+#define SPU_RXX_IRQ_ADDR                0xD2    // IRQ address
+#define SPU_RXX_TRANS_ADDR              0xD3    // Transfer address
+#define SPU_RXX_TRANS_FIFO              0xD4    // Transfer FIFO
+// Control Registers (0xD5 - 0xD7)
+#define SPU_RXX_SPUCNT                  0xD5    // SPU control register
+#define SPU_RXX_TRANS_CTRL              0xD6    // Transfer control
+#define SPU_RXX_SPUSTAT                 0xD7    // SPU status register
+// Audio Input Volume Registers (0xD8 - 0xDB)
+#define SPU_RXX_CD_VOL_L                0xD8    // CD input volume left
+#define SPU_RXX_CD_VOL_R                0xD9    // CD input volume right
+#define SPU_RXX_EXT_VOL_L               0xDA    // External input volume left
+#define SPU_RXX_EXT_VOL_R               0xDB    // External input volume right
+// Current Volume Registers (0xDC - 0xDD)
+#define SPU_RXX_CURR_MAIN_VOL_L         0xDC    // Current main volume left
+#define SPU_RXX_CURR_MAIN_VOL_R         0xDD    // Current main volume right
+// Unknown Register (0xDE - 0xDF)
+#define SPU_RXX_UNKNOWN2_LOW            0xDE    // Unknown register (bits 0-15)
+#define SPU_RXX_UNKNOWN2_HIGH           0xDF    // Unknown register (bits 16-31)
+// Reverb Registers start at 0xE0
+#define SPU_RXX_REVERB_BASE             0xE0    // Reverb parameter registers start
 
 // SPU Control Register (SPUCNT) bit masks
 #define SPU_CTRL_MASK_CD_AUDIO_ENABLE        (1 <<  0)              // 0
@@ -200,42 +253,36 @@ typedef struct {
     ReverbRegisters m_Regs;
 } ReverbPreset;
 
-#define SPU_MIN_ADDR 0x1010
-#define SPU_MAX_SIZE 512 * 1024
-#define SPU_MAX_ALIGNED_ADDR (SPU_MAX_SIZE - 8) // 0x7fff8 - largest 8-byte aligned addr < 512KB
-#define SPU_MAX_VALID_OFFSET (SPU_MAX_ALIGNED_ADDR - SPU_MIN_ADDR)  // 0x7efe8
+#define SPU_RAM_SIZE             512 * 1024 // 512KB of SPU RAM
+#define _SPU_RAM_SIZE            (SPU_RAM_SIZE >> 3) // SPU-ranged address
+#define SPU_DECODED_DATA_AREA    0x1000  // 4KB decoded data area 0x000-0xFFF
+#define SPU_SYSTEM_RESERVED_AREA 0x10 // 16 bytes system area 0x1000-0x100F
+#define SPU_RESERVED_TOTAL       (SPU_DECODED_DATA_AREA + SPU_SYSTEM_RESERVED_AREA) // 0x1010
+#define SPU_MIN_ADDR             SPU_RESERVED_TOTAL // Writing of samples starts after reserved area at 0x1010
+#define SPU_MAX_ALIGNED_ADDR     (SPU_RAM_SIZE - 8) // 0x7fff8 - largest 8-byte aligned addr < 512KB
+#define SPU_MAX_VALID_OFFSET     (SPU_MAX_ALIGNED_ADDR - SPU_MIN_ADDR)  // 0x7efe8
+#define SPU_MAX_TRANSFER_SIZE    (SPU_RAM_SIZE - SPU_RESERVED_TOTAL) // 0x7EFF0
 
 #define SPU_DMA_CMD_READ 0
 #define SPU_DMA_CMD_WRITE 1
 #define SPU_DMA_CMD_SETADDR 2
 #define SPU_DMA_CMD_EXEC 3
 
-
-#define SPU_CONTROL_FLAG_CD_AUDIO_ENABLE    (1u <<  0)
-#define SPU_CONTROL_FLAG_EXT_AUDIO_ENABLE   (1u <<  1)
-#define SPU_CONTROL_FLAG_CD_AUDIO_REVERB    (1u <<  2)
-#define SPU_CONTROL_FLAG_EXT_AUDIO_REVERB   (1u <<  3)
-#define SPU_CONTROL_SRAM_TRANSFER_MODE      (1u <<  4) // 2 bits
-#define SPU_CONTROL_FLAG_IRQ9_ENABLE        (1u <<  6)
-#define SPU_CONTROL_FLAG_MASTER_REVERB      (1u <<  7)
-#define SPU_CONTROL_NOISE_FREQUENCY_STEP    (1u <<  8) // 2 bits
-#define SPU_CONTROL_NOISE_FREQUENCY_SHIFT   (1u << 10) // 4 bits
-#define SPU_CONTROL_FLAG_MUTE_SPU           (1u << 14)
-#define SPU_CONTROL_FLAG_SPU_ENABLE         (1u << 15)
-
 #define SPU_ADDRESS_MODE_SPU (-1)
 #define SPU_ADDRESS_MODE_ALIGNED (-2)
 
-extern long g_SpuEVdma;
-extern long g_SpuTransferMode;
-extern long g_SpuReverbFlag;
-extern long g_bSpuReserveWorkArea;
-extern long g_SpuReverbOffsetAddress;
-extern volatile long g_ReverbMode;
-extern short g_ReverbVolumeLeft;
-extern short g_ReverbVolumeRight;
-extern long g_ReverbDelay;
-extern long g_ReverbFeedback;
+extern long _spu_EVdma;
+extern u_long _spu_keystat;
+extern long _spu_trans_mode;
+extern long _spu_rev_flag;
+extern long _spu_rev_reserve_wa;
+extern long _spu_rev_offsetaddr;
+extern SpuReverbAttr _spu_rev_attr;
+extern long _spu_RQvoice;
+extern volatile long _spu_RQmask;
+extern u_short _spu_voice_centerNote[NUM_VOICES];
+extern char _spu_zerobuf[1024];
+extern long _spu_env;
 extern long g_SpuRunning;
 extern union SpuUnion* _spu_RXX;
 extern volatile long* _spu_madr;
@@ -256,7 +303,11 @@ extern volatile SpuIRQCallbackProc _spu_IRQCallback;
 extern long _spu_dma_mode;
 extern long _spu_transfer_startaddr;
 extern long _spu_transfer_time;
-extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
+extern long _spu_AllocBlockNum;
+extern long _spu_AllocLastNum;
+extern char* _spu_memList;
+extern long _spu_rev_startaddr[];
+extern ReverbPreset _spu_rev_param[SPU_REV_MODE_MAX];
 extern volatile u_short _spu_RQ[10];
 
 void _spu_FiDMA(void); // Forward declare for SpuStart()
@@ -266,7 +317,40 @@ void SpuInit(void) {
     _SpuInit(0);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuInit);
+void _SpuInit(s32 bHot) {
+    s32 i;
+
+    ResetCallback();
+    _spu_init(bHot);
+
+    if (bHot == 0)
+    {
+        for(i = 0; i < NUM_VOICES; i++)
+        {
+            _spu_voice_centerNote[i] = 0xC000;
+        }
+    }
+
+    SpuStart();
+    _spu_rev_flag = 0;
+    _spu_rev_reserve_wa = 0;
+    _spu_rev_attr.mode = 0;
+    _spu_rev_attr.depth.left = 0;
+    _spu_rev_attr.depth.right = 0;
+    _spu_rev_attr.delay = 0;
+    _spu_rev_attr.feedback = 0;
+    _spu_rev_offsetaddr = _spu_rev_startaddr[0];
+    _spu_FsetRXX(SPU_RXX_REV_WA_START_ADDR, _spu_rev_offsetaddr, 0);
+    _spu_AllocBlockNum = 0;
+    _spu_AllocLastNum = 0;
+    _spu_memList = 0;
+    _spu_trans_mode = 0;
+    _spu_transMode = 0;
+    _spu_keystat = 0;
+    _spu_RQmask = 0;
+    _spu_RQvoice = 0;
+    _spu_env = 0;
+}
 
 void SpuStart(void) {
     s32 event;
@@ -277,7 +361,7 @@ void SpuStart(void) {
         _SpuDataCallback(_spu_FiDMA);
         // TODO: who knows what these constants do
         event = OpenEvent(0xF0000009U, 0x20, 0x2000, NULL);
-        g_SpuEVdma = event;
+        _spu_EVdma = event;
         EnableEvent(event);
         ExitCriticalSection();
     }
@@ -531,8 +615,8 @@ void SpuQuit(void) {
         _spu_transferCallback = NULL;
         _spu_IRQCallback = NULL;
         _SpuDataCallback(NULL);
-        CloseEvent(g_SpuEVdma);
-        DisableEvent(g_SpuEVdma);
+        CloseEvent(_spu_EVdma);
+        DisableEvent(_spu_EVdma);
         ExitCriticalSection();
     }
 }
@@ -566,33 +650,95 @@ long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2
 
     switch( on_off ) {
     case SPU_OFF:
-        g_SpuReverbFlag = SPU_OFF;
+        _spu_rev_flag = SPU_OFF;
         spuControlRegister = _spu_RXX->_rxx.spucnt;
-        spuControlRegister &= ~SPU_CONTROL_FLAG_MASTER_REVERB;
+        spuControlRegister &= ~SPU_CTRL_MASK_REVERB_MASTER_ENABLE;
         _spu_RXX->_rxx.spucnt = spuControlRegister;
         break;
         
     case SPU_ON:
-        if( g_bSpuReserveWorkArea != on_off && _SpuIsInAllocateArea_(g_SpuReverbOffsetAddress) ) {
-            g_SpuReverbFlag = SPU_OFF;
+        if( _spu_rev_reserve_wa != on_off && _SpuIsInAllocateArea_(_spu_rev_offsetaddr) ) {
+            _spu_rev_flag = SPU_OFF;
             spuControlRegister = _spu_RXX->_rxx.spucnt;
-            spuControlRegister &= ~SPU_CONTROL_FLAG_MASTER_REVERB;
+            spuControlRegister &= ~SPU_CTRL_MASK_REVERB_MASTER_ENABLE;
             _spu_RXX->_rxx.spucnt = spuControlRegister;
         } else {
-            g_SpuReverbFlag = on_off;
+            _spu_rev_flag = on_off;
             spuControlRegister = _spu_RXX->_rxx.spucnt;
-            spuControlRegister |= SPU_CONTROL_FLAG_MASTER_REVERB;
+            spuControlRegister |= SPU_CTRL_MASK_REVERB_MASTER_ENABLE;
             _spu_RXX->_rxx.spucnt = spuControlRegister;
         }
         break;
     }
 
-    return g_SpuReverbFlag;
+    return _spu_rev_flag;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuIsInAllocateArea);
+// TODO(jperos): This all compiles, but I am currently unsure as to the significance of these flags. Current best guesses here
+#define SPU_MALLOC_UNK_FLAG_1      (1 << 28)
+#define SPU_MALLOC_UNK_FLAG_2      (1 << 29)
+#define SPU_MALLOC_END_MARKER      (1 << 30)
+#define SPU_MALLOC_SKIP_ENTRY      (1 << 31)
+#define SPU_MALLOC_FLAGS           (SPU_MALLOC_UNK_FLAG_1 | SPU_MALLOC_UNK_FLAG_2 | SPU_MALLOC_END_MARKER | SPU_MALLOC_SKIP_ENTRY)
+#define SPU_MALLOC_ADDR_MASK       (~SPU_MALLOC_FLAGS)
+long _SpuIsInAllocateArea(u_long addr) {
+    SPU_MALLOC* mem_entry;
+    long index;
+    SPU_MALLOC* mem_list = (SPU_MALLOC*)_spu_memList;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuIsInAllocateArea_);
+    if (_spu_memList == NULL) {
+        return 0;
+    }
+
+    for (index = 0; 1; index++) {
+        mem_entry = &mem_list[index];
+
+        if (mem_entry->addr & SPU_MALLOC_SKIP_ENTRY) continue;
+
+        if (mem_entry->addr & SPU_MALLOC_END_MARKER) break;
+
+        if ((mem_entry->addr & SPU_MALLOC_ADDR_MASK) >= addr) {
+            return 1;
+        }
+
+        if (((mem_entry->addr & SPU_MALLOC_ADDR_MASK) + mem_entry->size) > addr) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+// The same as _SpuIsInAllocateArea, but with an SPU-ranged memory address
+long _SpuIsInAllocateArea_(long addr) {
+    SPU_MALLOC* mem_entry;
+    long index;
+    SPU_MALLOC* mem_list = (SPU_MALLOC*)_spu_memList;
+
+    addr <<= _spu_mem_mode_plus;
+
+    if (_spu_memList == NULL) {
+        return 0;
+    }
+
+    for (index = 0; 1; index++) {
+        mem_entry = &mem_list[index];
+
+        if (mem_entry->addr & SPU_MALLOC_SKIP_ENTRY) continue;
+
+        if (mem_entry->addr & SPU_MALLOC_END_MARKER) break;
+
+        if ((mem_entry->addr & SPU_MALLOC_ADDR_MASK) >= addr) {
+            return 1;
+        }
+
+        if (((mem_entry->addr & SPU_MALLOC_ADDR_MASK) + mem_entry->size) > addr) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
 
 // TODO(jperos): Replace these constants as soon as the docs make sense
 long SpuReadDecodedData(SpuDecodedData *d_data, long flag) {
@@ -634,8 +780,8 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuGetVoiceEnvelopeAttr)
 
 u_long SpuRead(u_char* addr, u_long size) {
 
-    if (size > 0x7EFF0U) {
-        size = 0x7EFF0;
+    if (size > SPU_MAX_TRANSFER_SIZE) {
+        size = SPU_MAX_TRANSFER_SIZE;
     }
     _spu_Fr(addr, size);
     if (_spu_transferCallback == 0) {
@@ -644,8 +790,18 @@ u_long SpuRead(u_char* addr, u_long size) {
     return size;
 }
 
-// Possible SpuWrite
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D878);
+u_long SpuWrite(u_char *addr, u_long size) {
+    if (size > SPU_MAX_TRANSFER_SIZE) {
+        size = SPU_MAX_TRANSFER_SIZE;
+    }
+
+    _spu_Fw(addr, size);
+    if (_spu_transferCallback == NULL) {
+        _spu_inTransfer = 0;
+    }
+
+    return size;
+}
 
 u_long SpuSetTransferStartAddr(u_long addr) {
     u32 offset;
@@ -674,7 +830,7 @@ long SpuSetTransferMode(long mode) {
     default:
         value = 0;
     }
-    g_SpuTransferMode = mode;
+    _spu_trans_mode = mode;
     _spu_transMode = value;
     return value;
 }
@@ -689,7 +845,85 @@ SpuTransferCallbackProc SpuSetTransferCallback(SpuTransferCallbackProc func) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetCommonAttr);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetReverbModeType);
+#define _spu_getCurrRevParamM(_dst) {\
+    char *pDst = (char*)_dst; \
+    char *pSrc = (char*)(&_spu_rev_param[_spu_rev_attr.mode]); \
+    int sz = sizeof(ReverbPreset);\
+    \
+    while (sz--) {\
+        *pDst++ = *pSrc++;\
+    }\
+}
+
+long SpuSetReverbModeType(long mode) {
+    ReverbPreset preset;
+    s32 bClearWorkArea;
+    u32 bMasterReverbEnableFlag;
+    u16 spucnt;
+
+    bClearWorkArea = 0;
+
+    if (mode & SPU_REV_MODE_CLEAR_WA) {
+        mode &= ~SPU_REV_MODE_CLEAR_WA;
+        bClearWorkArea = 1;
+    }
+
+    if (mode < 0 || mode >= SPU_REV_MODE_MAX) {
+        return SPU_ERROR;
+    }
+
+    if (_SpuIsInAllocateArea_(_spu_rev_startaddr[mode])) {
+        return SPU_ERROR;
+    }
+
+    _spu_rev_attr.mode = mode;
+    _spu_rev_offsetaddr = _spu_rev_startaddr[mode];
+
+    _spu_getCurrRevParamM(&preset);
+
+    preset.m_Mask = 0;
+    switch (mode) {
+        case SPU_REV_MODE_ECHO:
+            _spu_rev_attr.feedback = 0x7F;
+            _spu_rev_attr.delay = 0x7F;
+            break;
+        case SPU_REV_MODE_DELAY:
+            _spu_rev_attr.feedback = 0;
+            _spu_rev_attr.delay = 0x7F;
+            break;
+        default:
+            _spu_rev_attr.feedback = 0;
+            _spu_rev_attr.delay = 0;
+            break;
+    }
+
+    bMasterReverbEnableFlag = (_spu_RXX->rxx.spucnt & SPU_CTRL_MASK_REVERB_MASTER_ENABLE) != 0;
+    if (bMasterReverbEnableFlag) {
+        spucnt = _spu_RXX->rxx.spucnt;
+        spucnt &= ~SPU_CTRL_MASK_REVERB_MASTER_ENABLE;
+        _spu_RXX->rxx.spucnt = spucnt;
+    }
+
+    _spu_RXX->rxx.rev_vol.left = 0;
+    _spu_RXX->rxx.rev_vol.right = 0;
+    _spu_rev_attr.depth.left = 0;
+    _spu_rev_attr.depth.right = 0;
+
+    _spu_setReverbAttr(&preset);
+
+    if (bClearWorkArea) {
+        SpuClearReverbWorkArea(mode);
+    }
+
+    _spu_FsetRXX(SPU_RXX_REV_WA_START_ADDR, _spu_rev_offsetaddr, 0);
+
+    if (bMasterReverbEnableFlag) {
+        spucnt = _spu_RXX->rxx.spucnt;
+        spucnt |= SPU_CTRL_MASK_REVERB_MASTER_ENABLE;
+        _spu_RXX->rxx.spucnt = spucnt;
+    }
+    return SPU_SUCCESS;
+}
 
 void _spu_setReverbAttr(ReverbPreset* preset) {
     s32 Mask;
@@ -795,10 +1029,71 @@ void _spu_setReverbAttr(ReverbPreset* preset) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuClearReverbWorkArea);
+// TODO(jperos): The significance of these constants is yet not understood by me
+long SpuClearReverbWorkArea (long mode) {
+    volatile s32 callback;
+    s32 oldTransmode;
+    s32 addr;
+    s32 bTransferring;
+    s32 bTansmodeCleared;
+    u32 size;
+    u32 remaining;
 
-// Probable WaitEvent()
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004E564);
+    callback = 0;
+    bTansmodeCleared = 0;
+
+    if ((mode >= (u_long)SPU_REV_MODE_MAX) ||
+        (_SpuIsInAllocateArea_(_spu_rev_startaddr[mode]))) {
+        return SPU_ERROR;
+    }
+
+    if (mode == SPU_REV_MODE_OFF) {
+        remaining = 0x10 << _spu_mem_mode_plus;
+        addr = 0xFFF0 << _spu_mem_mode_plus;
+    } else {
+        remaining = (_SPU_RAM_SIZE - _spu_rev_startaddr[mode]) << _spu_mem_mode_plus;
+        addr = _spu_rev_startaddr[mode] << _spu_mem_mode_plus;
+    }
+
+    oldTransmode = _spu_transMode;
+    if (_spu_transMode == 1) {
+        _spu_transMode = 0;
+        bTansmodeCleared = 1;
+    }
+
+    bTransferring = 1;
+    if (_spu_transferCallback != 0) {
+        callback = _spu_transferCallback;
+        _spu_transferCallback = 0;
+    }
+
+    while (bTransferring) {
+        size = remaining;
+        if (!(remaining < (0x400U + 1))) {
+            size = 0x400;
+        } else {
+            bTransferring = 0;
+        }
+        _spu_t(SPU_DMA_CMD_SETADDR, addr);
+        _spu_t(SPU_DMA_CMD_WRITE);
+        _spu_t(SPU_DMA_CMD_EXEC, &_spu_zerobuf, size);
+        WaitEvent(_spu_EVdma);
+        remaining -= 0x400;
+        addr += 0x400;
+    };
+
+    if (bTansmodeCleared) {
+        _spu_transMode = oldTransmode;
+    }
+
+    if (callback) {
+        _spu_transferCallback = callback;
+    }
+
+    return SPU_SUCCESS;
+}
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", WaitEvent);
 
 void SpuSetReverbModeDepth(short DepthL, short DepthR)
 {
@@ -806,77 +1101,82 @@ void SpuSetReverbModeDepth(short DepthL, short DepthR)
     short* RR = &_spu_RXX->_rxx.rev_vol.right;
     *RL = DepthL;
     *RR = DepthR;
-    g_ReverbVolumeLeft = DepthL;
-    g_ReverbVolumeRight = DepthR;
+    _spu_rev_attr.depth.left = DepthL;
+    _spu_rev_attr.depth.right = DepthR;
 }
 
-void SpuSetReverbModeDelayTime(long delayTime) {
+// From Mc-Muffin:
+// Needed by SpuSetReverbModeFeedback and SpuSetReverbModeDelayTime
+// to reload _spu_rev_attr.mode, as _spu_rev_attr isn't volatile
+// using the inline works to reload it
+// Though, SpuSetReverbModeType has the same code yet doesn't reload
+// _spu_rev_attr.mode, so we use the macro version there
+static inline void _spu_getCurrRevPreset(void* _dst) {
+    char *pDst = (char*)_dst;
+    char *pSrc = (char*)(&_spu_rev_param[_spu_rev_attr.mode]);
+    int sz = sizeof(ReverbPreset);
+
+    while (sz--) {
+        *pDst++ = *pSrc++;
+    }
+}
+
+void SpuSetReverbModeDelayTime(long delay) {
     ReverbPreset preset;
-    u8* pSrc;
-    u8* pDst;
-    s32 bytesToCopy;
     s32 scaledDelay;
     s32 scaledDelay2;
 
-    s32 mode = g_ReverbMode;
-    if (mode <= SPU_REV_MODE_DELAY)
-    {
-        if (SPU_REV_MODE_ECHO <= mode)
-        {
-            pDst = (u8*)&preset;
-            bytesToCopy = sizeof(ReverbPreset) - 1;
-            pSrc = (u8*)&g_ReverbParameterTable[g_ReverbMode];
-
-            while (bytesToCopy != -1) {
-                *pDst++ = *pSrc++;
-                bytesToCopy--;
-            };
-            
-            preset.m_Mask = SPU_REV_MASK_mLSAME | SPU_REV_MASK_mRSAME | SPU_REV_MASK_mLCOMB1 
-                          | SPU_REV_MASK_dLSAME | SPU_REV_MASK_mLAPF1 | SPU_REV_MASK_mRAPF1;
-            
-            scaledDelay  = (delayTime << 12) / 127;  /* delayTime * 4096 / 127 */
-            scaledDelay2 = (delayTime << 13) / 127;  /* delayTime * 8192 / 127 */
-            
-            preset.m_Regs.m_mLSAME  = scaledDelay2 - preset.m_Regs.m_dAPF1;
-            preset.m_Regs.m_mRSAME  = scaledDelay  - preset.m_Regs.m_dAPF2;
-            preset.m_Regs.m_mLCOMB1 = preset.m_Regs.m_mRCOMB1 + scaledDelay;
-            preset.m_Regs.m_dLSAME  = preset.m_Regs.m_dRSAME + scaledDelay;
-            preset.m_Regs.m_mLAPF1  = preset.m_Regs.m_mLAPF2 + scaledDelay;
-            preset.m_Regs.m_mRAPF1  = preset.m_Regs.m_mRAPF2 + scaledDelay;
-            g_ReverbDelay = delayTime;
-            _spu_setReverbAttr(&preset);
-        }
+    if (_spu_rev_attr.mode > SPU_REV_MODE_DELAY) {
+        return;
     }
+
+    if (_spu_rev_attr.mode < SPU_REV_MODE_ECHO) {
+        return;
+    }
+
+    _spu_getCurrRevPreset(&preset);
+
+    preset.m_Mask = SPU_REV_MASK_mLSAME
+        | SPU_REV_MASK_mRSAME
+        | SPU_REV_MASK_mLCOMB1
+        | SPU_REV_MASK_dLSAME
+        | SPU_REV_MASK_mLAPF1
+        | SPU_REV_MASK_mRAPF1;
+
+    scaledDelay  = (delay << 12) / 127;  /* delay * 4096 / 127 */
+    scaledDelay2 = (delay << 13) / 127;  /* delay * 8192 / 127 */
+
+    preset.m_Regs.m_mLSAME  = scaledDelay2 - preset.m_Regs.m_dAPF1;
+    preset.m_Regs.m_mRSAME  = scaledDelay  - preset.m_Regs.m_dAPF2;
+    preset.m_Regs.m_mLCOMB1 = preset.m_Regs.m_mRCOMB1 + scaledDelay;
+    preset.m_Regs.m_dLSAME  = preset.m_Regs.m_dRSAME + scaledDelay;
+    preset.m_Regs.m_mLAPF1  = preset.m_Regs.m_mLAPF2 + scaledDelay;
+    preset.m_Regs.m_mRAPF1  = preset.m_Regs.m_mRAPF2 + scaledDelay;
+
+    _spu_rev_attr.delay = delay;
+    _spu_setReverbAttr(&preset);
 }
 
 void SpuSetReverbModeFeedback(long feedback) {
     ReverbPreset preset;
-    u8* pSrc;
-    u8* pDst;
-    s32 bytesToCopy;
-    s32 mode = g_ReverbMode;
 
-    if (mode <= SPU_REV_MODE_DELAY) {
-        if (SPU_REV_MODE_ECHO <= mode) {
-            pDst = (u8*)&preset;
-            bytesToCopy = sizeof(ReverbPreset) - 1;
-            pSrc = (u8*)&g_ReverbParameterTable[g_ReverbMode];
-            
-            while (bytesToCopy != -1) {
-                *pDst++ = *pSrc++;
-                bytesToCopy--;
-            };
-            
-            g_ReverbFeedback = feedback;
-            preset.m_Mask = SPU_REV_MASK_vWALL;
-            preset.m_Regs.m_vWALL = (feedback * 0x8100) / 127;
-            _spu_setReverbAttr(&preset);
-        }
+    if (_spu_rev_attr.mode > SPU_REV_MODE_DELAY) {
+        return;
     }
+
+    if (_spu_rev_attr.mode < SPU_REV_MODE_ECHO) {
+        return;
+    }
+
+    _spu_getCurrRevPreset(&preset);
+
+    _spu_rev_attr.feedback = feedback;
+    preset.m_Mask = SPU_REV_MASK_vWALL;
+    preset.m_Regs.m_vWALL = (feedback * 0x8100) / 127;
+    _spu_setReverbAttr(&preset);
 }
 
 void SpuGetReverbModeType(long* type)
 {
-    *type = g_ReverbMode;
+    *type = _spu_rev_attr.mode;
 }
