@@ -205,11 +205,15 @@ typedef struct {
     ReverbRegisters m_Regs;
 } ReverbPreset;
 
-#define SPU_MIN_ADDR 0x1010
-#define SPU_MAX_SIZE 512 * 1024
-#define SPU_MAX_ALIGNED_ADDR (SPU_MAX_SIZE - 8) // 0x7fff8 - largest 8-byte aligned addr < 512KB
-#define SPU_MAX_VALID_OFFSET (SPU_MAX_ALIGNED_ADDR - SPU_MIN_ADDR)  // 0x7efe8
-#define SPU_RAM_SIZE 0x10000 // 512kb (64 << 3) total SPU RAM
+#define SPU_RAM_SIZE             512 * 1024 // 512KB of SPU RAM
+#define _SPU_RAM_SIZE            (SPU_RAM_SIZE >> 3) // SPU-ranged address
+#define SPU_DECODED_DATA_AREA    0x1000  // 4KB decoded data area 0x000-0xFFF
+#define SPU_SYSTEM_RESERVED_AREA 0x10 // 16 bytes system area 0x1000-0x100F
+#define SPU_RESERVED_TOTAL       (SPU_DECODED_DATA_AREA + SPU_SYSTEM_RESERVED_AREA) // 0x1010
+#define SPU_MIN_ADDR             SPU_RESERVED_TOTAL // Writing of samples starts after reserved area at 0x1010
+#define SPU_MAX_ALIGNED_ADDR     (SPU_RAM_SIZE - 8) // 0x7fff8 - largest 8-byte aligned addr < 512KB
+#define SPU_MAX_VALID_OFFSET     (SPU_MAX_ALIGNED_ADDR - SPU_MIN_ADDR)  // 0x7efe8
+#define SPU_MAX_TRANSFER_SIZE    (SPU_RAM_SIZE - SPU_RESERVED_TOTAL) // 0x7EFF0
 
 #define SPU_DMA_CMD_READ 0
 #define SPU_DMA_CMD_WRITE 1
@@ -705,8 +709,8 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuGetVoiceEnvelopeAttr)
 
 u_long SpuRead(u_char* addr, u_long size) {
 
-    if (size > 0x7EFF0U) {
-        size = 0x7EFF0;
+    if (size > SPU_MAX_TRANSFER_SIZE) {
+        size = SPU_MAX_TRANSFER_SIZE;
     }
     _spu_Fr(addr, size);
     if (_spu_transferCallback == 0) {
@@ -715,8 +719,18 @@ u_long SpuRead(u_char* addr, u_long size) {
     return size;
 }
 
-// Possible SpuWrite
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", func_8004D878);
+u_long SpuWrite(u_char *addr, u_long size) {
+    if (size > SPU_MAX_TRANSFER_SIZE) {
+        size = SPU_MAX_TRANSFER_SIZE;
+    }
+
+    _spu_Fw(addr, size);
+    if (_spu_transferCallback == NULL) {
+        _spu_inTransfer = 0;
+    }
+
+    return size;
+}
 
 u_long SpuSetTransferStartAddr(u_long addr) {
     u32 offset;
@@ -888,7 +902,7 @@ long SpuClearReverbWorkArea (long mode) {
         remaining = 0x10 << _spu_mem_mode_plus;
         addr = 0xFFF0 << _spu_mem_mode_plus;
     } else {
-        remaining = (SPU_RAM_SIZE - _spu_rev_startaddr[mode]) << _spu_mem_mode_plus;
+        remaining = (_SPU_RAM_SIZE - _spu_rev_startaddr[mode]) << _spu_mem_mode_plus;
         addr = _spu_rev_startaddr[mode] << _spu_mem_mode_plus;
     }
 

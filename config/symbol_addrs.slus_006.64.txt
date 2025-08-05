@@ -492,6 +492,7 @@ SpuSetIRQCallback = 0x8004D740;
 _SpuCallback = 0x8004D784;
 SpuGetVoiceEnvelopeAttr = 0x8004D7A8;
 SpuRead = 0x8004D818;
+SpuWrite = 0x8004D878;
 SpuSetTransferStartAddr = 0x8004D8D8;
 SpuSetTransferMode = 0x8004D930;
 SpuSetTransferCallback = 0x8004D964;
