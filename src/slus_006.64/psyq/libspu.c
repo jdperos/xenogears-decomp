@@ -804,7 +804,26 @@ void SpuQuit(void) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuInitMalloc);
+// TODO(jperos): This all compiles, but I am currently unsure as to the significance of these flags. Current best guesses here
+#define SPU_MALLOC_UNK_FLAG_1      (1 << 28)
+#define SPU_MALLOC_UNK_FLAG_2      (1 << 29)
+#define SPU_MALLOC_END_MARKER      (1 << 30)
+#define SPU_MALLOC_SKIP_ENTRY      (1 << 31)
+#define SPU_MALLOC_FLAGS           (SPU_MALLOC_UNK_FLAG_1 | SPU_MALLOC_UNK_FLAG_2 | SPU_MALLOC_END_MARKER | SPU_MALLOC_SKIP_ENTRY)
+#define SPU_MALLOC_ADDR_MASK       (~SPU_MALLOC_FLAGS)
+
+long SpuInitMalloc(long num, char *top) {
+    if (num > 0) {
+        ((SPU_MALLOC *)top)->addr = SPU_MALLOC_END_MARKER | SPU_RESERVED_TOTAL;
+        ((SPU_MALLOC *)top)->size = (_SPU_RAM_SIZE << _spu_mem_mode_plus) - SPU_RESERVED_TOTAL;
+        _spu_memList = top;
+        _spu_AllocLastNum = 0;
+        _spu_AllocBlockNum = num;
+        return num;
+    }
+
+    return 0;
+}
 
 long SpuSetNoiseClock(long n_clock) {
     long clamped;
@@ -857,13 +876,6 @@ long SpuSetReverb (long on_off)
     return _spu_rev_flag;
 }
 
-// TODO(jperos): This all compiles, but I am currently unsure as to the significance of these flags. Current best guesses here
-#define SPU_MALLOC_UNK_FLAG_1      (1 << 28)
-#define SPU_MALLOC_UNK_FLAG_2      (1 << 29)
-#define SPU_MALLOC_END_MARKER      (1 << 30)
-#define SPU_MALLOC_SKIP_ENTRY      (1 << 31)
-#define SPU_MALLOC_FLAGS           (SPU_MALLOC_UNK_FLAG_1 | SPU_MALLOC_UNK_FLAG_2 | SPU_MALLOC_END_MARKER | SPU_MALLOC_SKIP_ENTRY)
-#define SPU_MALLOC_ADDR_MASK       (~SPU_MALLOC_FLAGS)
 long _SpuIsInAllocateArea(u_long addr) {
     SPU_MALLOC* mem_entry;
     long index;
