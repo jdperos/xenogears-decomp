@@ -5,6 +5,11 @@
 #include "libdma.h"
 #include "libmctrl.h"
 
+typedef struct tagSpuMalloc {
+    u32 addr;
+    u32 size;
+} SPU_MALLOC;
+
 typedef struct {
     SpuVolume volume;
     u16 pitch;
@@ -258,6 +263,7 @@ extern volatile SpuIRQCallbackProc _spu_IRQCallback;
 extern long _spu_dma_mode;
 extern long _spu_transfer_startaddr;
 extern long _spu_transfer_time;
+extern char* _spu_memList;
 extern long _spu_rev_startaddr[];
 extern ReverbPreset g_ReverbParameterTable[SPU_REV_MODE_MAX];
 extern volatile u_short _spu_RQ[10];
@@ -593,7 +599,40 @@ long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2
     return g_SpuReverbFlag;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuIsInAllocateArea);
+// TODO(jperos): This all compiles, but I am currently unsure as to the significance of these flags. Current best guesses here
+#define SPU_MALLOC_UNK_FLAG_1      (1 << 28)
+#define SPU_MALLOC_UNK_FLAG_2      (1 << 29)
+#define SPU_MALLOC_END_MARKER      (1 << 30)
+#define SPU_MALLOC_SKIP_ENTRY      (1 << 31)
+#define SPU_MALLOC_FLAGS           (SPU_MALLOC_UNK_FLAG_1 | SPU_MALLOC_UNK_FLAG_2 | SPU_MALLOC_END_MARKER | SPU_MALLOC_SKIP_ENTRY)
+#define SPU_MALLOC_ADDR_MASK       (~SPU_MALLOC_FLAGS)
+s32 _SpuIsInAllocateArea(u32 addr) {
+    SPU_MALLOC* mem_entry;
+    int index;
+    SPU_MALLOC* mem_list = (SPU_MALLOC*)_spu_memList;
+
+    if (_spu_memList == NULL) {
+        return 0;
+    }
+
+    for (index = 0; 1; index++) {
+        mem_entry = &mem_list[index];
+
+        if (mem_entry->addr & SPU_MALLOC_SKIP_ENTRY) continue;
+
+        if (mem_entry->addr & SPU_MALLOC_END_MARKER) break;
+
+        if ((mem_entry->addr & SPU_MALLOC_ADDR_MASK) >= addr) {
+            return 1;
+        }
+
+        if (((mem_entry->addr & SPU_MALLOC_ADDR_MASK) + mem_entry->size) > addr) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _SpuIsInAllocateArea_);
 
