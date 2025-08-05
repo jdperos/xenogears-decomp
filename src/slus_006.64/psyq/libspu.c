@@ -116,6 +116,52 @@ typedef struct {
     ReverbRegisters m_Reverb;
 } SPU_RXX;
 
+// Voice Registers (0x00 - 0xBF)
+#define SPU_RXX_VOICE_BASE              0x00    // Voice registers start (24 voices × 8 regs each)
+#define SPU_RXX_VOICE_SIZE              8       // Registers per voice
+#define SPU_RXX_VOICE_END               0xBF    // Last voice register
+// Global Volume Registers (0xC0 - 0xC3)
+#define SPU_RXX_MAIN_VOL_L              0xC0    // Main volume left
+#define SPU_RXX_MAIN_VOL_R              0xC1    // Main volume right
+#define SPU_RXX_REV_VOL_L               0xC2    // Reverb volume left
+#define SPU_RXX_REV_VOL_R               0xC3    // Reverb volume right
+// Voice Flag Registers (0xC4 - 0xCF) - 32-bit values stored as pairs
+#define SPU_RXX_KEY_ON_LOW              0xC4    // Key on flags (bits 0-15)
+#define SPU_RXX_KEY_ON_HIGH             0xC5    // Key on flags (bits 16-31)
+#define SPU_RXX_KEY_OFF_LOW             0xC6    // Key off flags (bits 0-15)
+#define SPU_RXX_KEY_OFF_HIGH            0xC7    // Key off flags (bits 16-31)
+#define SPU_RXX_PITCH_MOD_LOW           0xC8    // Pitch modulation flags (bits 0-15)
+#define SPU_RXX_PITCH_MOD_HIGH          0xC9    // Pitch modulation flags (bits 16-31)
+#define SPU_RXX_NOISE_LOW               0xCA    // Noise flags (bits 0-15)
+#define SPU_RXX_NOISE_HIGH              0xCB    // Noise flags (bits 16-31)
+#define SPU_RXX_REVERB_LOW              0xCC    // Reverb flags (bits 0-15)
+#define SPU_RXX_REVERB_HIGH             0xCD    // Reverb flags (bits 16-31)
+#define SPU_RXX_ENDX_LOW                0xCE    // End flags (bits 0-15)
+#define SPU_RXX_ENDX_HIGH               0xCF    // End flags (bits 16-31)
+// Memory Address Registers (0xD0 - 0xD4)
+#define SPU_RXX_UNKNOWN_D0              0xD0    // Unknown register
+#define SPU_RXX_REV_WA_START_ADDR       0xD1    // Reverb work area start address
+#define SPU_RXX_IRQ_ADDR                0xD2    // IRQ address
+#define SPU_RXX_TRANS_ADDR              0xD3    // Transfer address
+#define SPU_RXX_TRANS_FIFO              0xD4    // Transfer FIFO
+// Control Registers (0xD5 - 0xD7)
+#define SPU_RXX_SPUCNT                  0xD5    // SPU control register
+#define SPU_RXX_TRANS_CTRL              0xD6    // Transfer control
+#define SPU_RXX_SPUSTAT                 0xD7    // SPU status register
+// Audio Input Volume Registers (0xD8 - 0xDB)
+#define SPU_RXX_CD_VOL_L                0xD8    // CD input volume left
+#define SPU_RXX_CD_VOL_R                0xD9    // CD input volume right
+#define SPU_RXX_EXT_VOL_L               0xDA    // External input volume left
+#define SPU_RXX_EXT_VOL_R               0xDB    // External input volume right
+// Current Volume Registers (0xDC - 0xDD)
+#define SPU_RXX_CURR_MAIN_VOL_L         0xDC    // Current main volume left
+#define SPU_RXX_CURR_MAIN_VOL_R         0xDD    // Current main volume right
+// Unknown Register (0xDE - 0xDF)
+#define SPU_RXX_UNKNOWN2_LOW            0xDE    // Unknown register (bits 0-15)
+#define SPU_RXX_UNKNOWN2_HIGH           0xDF    // Unknown register (bits 16-31)
+// Reverb Registers start at 0xE0
+#define SPU_RXX_REVERB_BASE             0xE0    // Reverb parameter registers start
+
 // SPU Control Register (SPUCNT) bit masks
 #define SPU_CTRL_MASK_CD_AUDIO_ENABLE        (1 <<  0)              // 0
 #define SPU_CTRL_MASK_EXT_AUDIO_ENABLE       (1 <<  1)              // 1
@@ -222,19 +268,6 @@ typedef struct {
 #define SPU_DMA_CMD_SETADDR 2
 #define SPU_DMA_CMD_EXEC 3
 
-
-#define SPU_CONTROL_FLAG_CD_AUDIO_ENABLE    (1u <<  0)
-#define SPU_CONTROL_FLAG_EXT_AUDIO_ENABLE   (1u <<  1)
-#define SPU_CONTROL_FLAG_CD_AUDIO_REVERB    (1u <<  2)
-#define SPU_CONTROL_FLAG_EXT_AUDIO_REVERB   (1u <<  3)
-#define SPU_CONTROL_SRAM_TRANSFER_MODE      (1u <<  4) // 2 bits
-#define SPU_CONTROL_FLAG_IRQ9_ENABLE        (1u <<  6)
-#define SPU_CONTROL_FLAG_MASTER_REVERB      (1u <<  7)
-#define SPU_CONTROL_NOISE_FREQUENCY_STEP    (1u <<  8) // 2 bits
-#define SPU_CONTROL_NOISE_FREQUENCY_SHIFT   (1u << 10) // 4 bits
-#define SPU_CONTROL_FLAG_MUTE_SPU           (1u << 14)
-#define SPU_CONTROL_FLAG_SPU_ENABLE         (1u << 15)
-
 #define SPU_ADDRESS_MODE_SPU (-1)
 #define SPU_ADDRESS_MODE_ALIGNED (-2)
 
@@ -307,7 +340,7 @@ void _SpuInit(s32 bHot) {
     _spu_rev_attr.delay = 0;
     _spu_rev_attr.feedback = 0;
     _spu_rev_offsetaddr = _spu_rev_startaddr[0];
-    _spu_FsetRXX(0xD1, _spu_rev_offsetaddr, 0); // Set _spu_RXX.ReverbWorkStartAddr
+    _spu_FsetRXX(SPU_RXX_REV_WA_START_ADDR, _spu_rev_offsetaddr, 0);
     _spu_AllocBlockNum = 0;
     _spu_AllocLastNum = 0;
     _spu_memList = 0;
@@ -619,7 +652,7 @@ long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2
     case SPU_OFF:
         _spu_rev_flag = SPU_OFF;
         spuControlRegister = _spu_RXX->_rxx.spucnt;
-        spuControlRegister &= ~SPU_CONTROL_FLAG_MASTER_REVERB;
+        spuControlRegister &= ~SPU_CTRL_MASK_REVERB_MASTER_ENABLE;
         _spu_RXX->_rxx.spucnt = spuControlRegister;
         break;
         
@@ -627,12 +660,12 @@ long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2
         if( _spu_rev_reserve_wa != on_off && _SpuIsInAllocateArea_(_spu_rev_offsetaddr) ) {
             _spu_rev_flag = SPU_OFF;
             spuControlRegister = _spu_RXX->_rxx.spucnt;
-            spuControlRegister &= ~SPU_CONTROL_FLAG_MASTER_REVERB;
+            spuControlRegister &= ~SPU_CTRL_MASK_REVERB_MASTER_ENABLE;
             _spu_RXX->_rxx.spucnt = spuControlRegister;
         } else {
             _spu_rev_flag = on_off;
             spuControlRegister = _spu_RXX->_rxx.spucnt;
-            spuControlRegister |= SPU_CONTROL_FLAG_MASTER_REVERB;
+            spuControlRegister |= SPU_CTRL_MASK_REVERB_MASTER_ENABLE;
             _spu_RXX->_rxx.spucnt = spuControlRegister;
         }
         break;
@@ -835,7 +868,7 @@ long SpuSetReverbModeType(long mode) {
         bClearWorkArea = 1;
     }
 
-    if ((u_long)mode >= SPU_REV_MODE_MAX) {
+    if (mode < 0 || mode >= SPU_REV_MODE_MAX) {
         return SPU_ERROR;
     }
 
@@ -864,10 +897,10 @@ long SpuSetReverbModeType(long mode) {
             break;
     }
 
-    bMasterReverbEnableFlag = (_spu_RXX->rxx.spucnt & SPU_CONTROL_FLAG_MASTER_REVERB) != 0;
+    bMasterReverbEnableFlag = (_spu_RXX->rxx.spucnt & SPU_CTRL_MASK_REVERB_MASTER_ENABLE) != 0;
     if (bMasterReverbEnableFlag) {
         spucnt = _spu_RXX->rxx.spucnt;
-        spucnt &= ~SPU_CONTROL_FLAG_MASTER_REVERB;
+        spucnt &= ~SPU_CTRL_MASK_REVERB_MASTER_ENABLE;
         _spu_RXX->rxx.spucnt = spucnt;
     }
 
@@ -882,11 +915,11 @@ long SpuSetReverbModeType(long mode) {
         SpuClearReverbWorkArea(mode);
     }
 
-    _spu_FsetRXX(0xD1, _spu_rev_offsetaddr, 0);
+    _spu_FsetRXX(SPU_RXX_REV_WA_START_ADDR, _spu_rev_offsetaddr, 0);
 
     if (bMasterReverbEnableFlag) {
         spucnt = _spu_RXX->rxx.spucnt;
-        spucnt |= SPU_CONTROL_FLAG_MASTER_REVERB;
+        spucnt |= SPU_CTRL_MASK_REVERB_MASTER_ENABLE;
         _spu_RXX->rxx.spucnt = spucnt;
     }
     return SPU_SUCCESS;
