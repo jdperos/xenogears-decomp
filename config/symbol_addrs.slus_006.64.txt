@@ -607,6 +607,7 @@ _spu_mem_mode_unitM      = 0x80058E38;
 _spu_inTransfer          = 0x80058E3C;
 _spu_transferCallback    = 0x80058E40;
 _spu_IRQCallback         = 0x80058E44;
+_spu_dummy               = 0x80058E48; // size:0x20
 _spu_dma_mode            = 0x80058E58;
 _spu_transfer_startaddr  = 0x80058E5C;
 _spu_transfer_time       = 0x80058E60;

@@ -91,36 +91,33 @@ typedef struct {
     SpuVolume rev_vol; // Full 16 bits for volume
 
     // Voice Flags
-    u32 m_KeyOnFlags;
-    u32 m_KeyOffFlags;
-    u32 m_PitchModFlags;
-    u32 m_NoiseFlags;
-    u32 m_ReverbFlags;
+    u16 key_on[2];
+    u16 key_off[2];
+    u16 chan_fm[2];
+    u16 noise_mode[2];
+    u16 rev_mode[2];
     u32 m_EndxFlags;
 
-    u16 m_Unknown;
+    u16 unk;
 
     // Memory
-    u16 m_ReverbWorkStartAddr;
-    u16 m_IrqAddress;
+    u16 rev_work_addr;
+    u16 irq_addr;
     u16 trans_addr;
     u16 trans_fifo;
 
     // Control
     u16 spucnt;
-    u16 m_TransferControl;
+    u16 data_trans;
     u16 spustat;
 
     // Aux volumes
-    s16 m_CdInputVolumeL;
-    s16 m_CdInputVolumeR;
-    s16 m_ExtInputVolumeL;
-    s16 m_ExtInputVolumeR;
+    SpuVolume cd_vol;
+    SpuVolume ex_vol;
 
-    s16 m_CurrentMainVolL;
-    s16 m_CurrentMainVolR;
+    SpuVolume main_volx;
 
-    u32 m_Unknown2;
+    u32 unk2;
 
     ReverbRegisters m_Reverb;
 } SPU_RXX;
@@ -262,15 +259,19 @@ typedef struct {
     ReverbRegisters m_Regs;
 } ReverbPreset;
 
-#define SPU_RAM_SIZE             512 * 1024 // 512KB of SPU RAM
-#define _SPU_RAM_SIZE            (SPU_RAM_SIZE >> 3) // SPU-ranged address
-#define SPU_DECODED_DATA_AREA    0x1000  // 4KB decoded data area 0x000-0xFFF
-#define SPU_SYSTEM_RESERVED_AREA 0x10 // 16 bytes system area 0x1000-0x100F
-#define SPU_RESERVED_TOTAL       (SPU_DECODED_DATA_AREA + SPU_SYSTEM_RESERVED_AREA) // 0x1010
-#define SPU_MIN_ADDR             SPU_RESERVED_TOTAL // Writing of samples starts after reserved area at 0x1010
-#define SPU_MAX_ALIGNED_ADDR     (SPU_RAM_SIZE - 8) // 0x7fff8 - largest 8-byte aligned addr < 512KB
-#define SPU_MAX_VALID_OFFSET     (SPU_MAX_ALIGNED_ADDR - SPU_MIN_ADDR)  // 0x7efe8
-#define SPU_MAX_TRANSFER_SIZE    (SPU_RAM_SIZE - SPU_RESERVED_TOTAL) // 0x7EFF0
+#define SPU_RAM_SIZE                   512 * 1024 // 512KB of SPU RAM
+#define _SPU_RAM_SIZE                  (SPU_RAM_SIZE >> 3) // SPU-ranged address
+#define SPU_DECODED_DATA_AREA_START    0x0
+#define SPU_DECODED_DATA_AREA_SIZE     0x1000  // 4KB decoded data area 0x000-0xFFF
+#define SPU_SYSTEM_RESERVED_AREA_START SPU_DECODED_DATA_AREA_SIZE // 16 bytes system area 0x1000-0x100F
+#define SPU_SYSTEM_RESERVED_AREA_SIZE  0x10 // 16 bytes system area 0x1000-0x100F
+#define SPU_RESERVED_TOTAL             (SPU_DECODED_DATA_AREA_SIZE + SPU_SYSTEM_RESERVED_AREA_SIZE) // 0x1010
+#define SPU_DEFAULT_ADDR               SPU_SYSTEM_RESERVED_AREA_START
+#define _SPU_DEFAULT_ADDR              (SPU_DEFAULT_ADDR >> 3)
+#define SPU_MIN_ADDR                   SPU_RESERVED_TOTAL // Writing of samples starts after reserved area at 0x1010
+#define SPU_MAX_ALIGNED_ADDR           (SPU_RAM_SIZE - 8) // 0x7fff8 - largest 8-byte aligned addr < 512KB
+#define SPU_MAX_VALID_OFFSET           (SPU_MAX_ALIGNED_ADDR - SPU_MIN_ADDR)  // 0x7efe8
+#define SPU_MAX_TRANSFER_SIZE          (SPU_RAM_SIZE - SPU_RESERVED_TOTAL) // 0x7EFF0
 
 #define SPU_DMA_CMD_READ 0
 #define SPU_DMA_CMD_WRITE 1
@@ -318,6 +319,7 @@ extern long _spu_mem_mode_unitM;
 extern long _spu_inTransfer;
 extern volatile SpuTransferCallbackProc _spu_transferCallback;
 extern volatile SpuIRQCallbackProc _spu_IRQCallback;
+extern u_char _spu_dummy[16];
 extern long _spu_dma_mode;
 extern long _spu_transfer_startaddr;
 extern long _spu_transfer_time;
@@ -394,7 +396,94 @@ void SpuStart(void) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_init);
+long _spu_init(long bHot) {
+    u32 dmaTimer;
+    int i;
+
+    *_spu_sys_pcr |= DMA_DPCR_SPU_PRIORITY_HIGH | DMA_DPCR_MASK_DMA4_ENABLE;
+    _spu_RXX->rxx.main_vol.left = 0;
+    _spu_RXX->rxx.main_vol.right = 0;
+    _spu_RXX->rxx.spucnt = 0;
+    _spu_transMode = 0;
+    _spu_addrMode = 0;
+    _spu_tsa = 0;
+    _spu_Fw1ts();
+    _spu_RXX->rxx.main_vol.left = 0;
+    _spu_RXX->rxx.main_vol.right = 0;
+
+    dmaTimer = 0;
+    while (_spu_RXX->rxx.spustat & 0x7FF)
+    {
+        if (++dmaTimer > DMA_TIMEOUT)
+        {
+            printf(D_8001946C, D_8001947C);
+            break;
+        }
+    }
+
+	// TODO(jperos): These are definitely macros
+    _spu_mem_mode = 2;
+    _spu_mem_mode_plus = 3;
+    _spu_mem_mode_unit = 8;
+    _spu_mem_mode_unitM = 7;
+    _spu_RXX->rxx.data_trans = 4;
+
+    _spu_RXX->rxx.rev_vol.left = 0;
+    _spu_RXX->rxx.rev_vol.right = 0;
+    _spu_RXX->rxx.key_off[0] = 0xFFFF;
+    _spu_RXX->rxx.key_off[1] = 0xFFFF;
+    _spu_RXX->rxx.rev_mode[0] = 0;
+    _spu_RXX->rxx.rev_mode[1] = 0;
+
+    for (i = 0; i < 10; i++)
+    {
+        _spu_RQ[i] = 0;
+    }
+
+    if (!bHot)
+    {
+        _spu_RXX->rxx.chan_fm[0] = 0;
+        _spu_RXX->rxx.chan_fm[1] = 0;
+        _spu_RXX->rxx.noise_mode[0] = 0;
+        _spu_RXX->rxx.noise_mode[1] = 0;
+        _spu_RXX->rxx.cd_vol.left = 0;
+        _spu_RXX->rxx.cd_vol.right = 0;
+        _spu_RXX->rxx.ex_vol.left = 0;
+        _spu_RXX->rxx.ex_vol.right = 0;
+        _spu_tsa = _SPU_DEFAULT_ADDR;
+
+        _spu_FwriteByIO(&_spu_dummy, ARRAY_COUNT(_spu_dummy));
+
+        for(i = 0; i < NUM_VOICES; i++)
+        {
+            _spu_RXX->rxx.voice[i].volume.left = 0; /* left volume */
+            _spu_RXX->rxx.voice[i].volume.right = 0; /* right volume */
+            _spu_RXX->rxx.voice[i].pitch = 0x3fff;  /* pitch */
+            _spu_RXX->rxx.voice[i].addr = _SPU_DEFAULT_ADDR;  /* addr */
+            _spu_RXX->rxx.voice[i].adsr[0] = 0; /* adsr1 */
+            _spu_RXX->rxx.voice[i].adsr[1] = 0; /* adsr2 */
+        }
+
+        _spu_RXX->rxx.key_on[0] = 0xFFFF;
+        _spu_RXX->rxx.key_on[1] = 0xFF;
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+        _spu_RXX->rxx.key_off[0] = 0xFFFF;
+        _spu_RXX->rxx.key_off[1] = 0xFF;
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+    }
+
+    _spu_inTransfer = 1;
+    _spu_RXX->rxx.spucnt = SPU_CTRL_MASK_MUTE_SPU | SPU_CTRL_MASK_SPU_ENABLE;
+    _spu_transferCallback = NULL;
+    _spu_IRQCallback = NULL;
+    return 0;
+}
 
 static void _spu_FwriteByIO(void* data, u32 size) {
     u16 initStatus;
@@ -890,6 +979,7 @@ void SpuGetVoiceEnvelopeAttr(int vNum, long* keyStat, short* envx) {
         *keyStat = SPU_OFF;
     }
 }
+
 u_long SpuRead(u_char* addr, u_long size) {
 
     if (size > SPU_MAX_TRANSFER_SIZE) {
