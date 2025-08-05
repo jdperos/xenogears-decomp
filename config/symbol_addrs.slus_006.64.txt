@@ -613,7 +613,7 @@ _spu_AllocBlockNum       = 0x80058E64;
 _spu_AllocLastNum        = 0x80058E68;
 _spu_memList             = 0x80058E6C;
 _spu_rev_startaddr       = 0x80058E70;
-g_ReverbParameterTable   = 0x80058EC0;
+_spu_rev_param           = 0x80058EC0;
 _spu_RQ                  = 0x8005A4C8;
 
 // Main
