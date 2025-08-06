@@ -592,7 +592,35 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EBF0);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EEA0);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundTryAssignAndPlayVoiceOnChannel);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundTryAssignAndPlayVoiceOnChannel(SoundVoiceData* voiceData, u32 channelIndex)
+{
+    SoundVoiceData* currentVoice;
+    SoundVoiceData** pChannel;
+
+    pChannel = &g_SoundVoiceDataPointerArray[channelIndex];
+    if (channelIndex < NUM_VOICES) {
+        currentVoice = *pChannel;
+
+        // Skip assignment if voice already assigned
+        if (currentVoice != voiceData) {
+            if (currentVoice && currentVoice->priority > voiceData->priority) {
+                return;
+            }
+
+            // Assign voice to channel
+            voiceData->flags = 0xFFFF;
+            voiceData->assignedVoice = channelIndex;
+            g_SoundVoiceDataPointerArray[channelIndex] = voiceData;
+
+            // Mark for voice processing
+            g_unk_VoicesNeedingProcessing = (1 << channelIndex) | g_unk_VoicesNeedingProcessing;
+        }
+
+        // Always trigger playback on this channel
+        g_SoundKeyOnFlags = (1 << channelIndex) | g_SoundKeyOnFlags;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EFA0);
 

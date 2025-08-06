@@ -60,13 +60,15 @@ extern SoundFile* g_SoundSedsLinkedList;
 
 extern void* g_pSoundSpuRegisters;
 
-extern u_long g_unk_SoundEvent;
+extern u32 g_unk_SoundEvent;
 extern short g_SoundSpuErrorId;
+extern long g_unk_VoicesNeedingProcessing;
 extern short g_SoundControlFlags;
 extern SpuIRQCallbackProc g_SoundSpuIrqCallbackFn;
 extern int g_SoundSpuIRQCount;
 
-extern SoundVoiceData g_SoundVoiceDataPointerArray;
+extern u32 g_SoundKeyOnFlags;
+extern SoundVoiceData* g_SoundVoiceDataPointerArray[24];
 
 extern SpuVolume g_SoundUnkVolume;
 
