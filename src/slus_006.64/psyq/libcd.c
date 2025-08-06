@@ -1,5 +1,5 @@
 #include "common.h"
-#include "libdma.h"
+#include "psyq/libdma.h"
 #include "psyq/libcd.h"
 #include "psyq/stdio.h"
 

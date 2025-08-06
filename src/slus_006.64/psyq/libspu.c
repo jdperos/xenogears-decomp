@@ -2,8 +2,8 @@
 #include "psyq/libspu.h"
 #include "psyq/libapi.h"
 #include "psyq/stdarg.h"
-#include "libdma.h"
-#include "libmctrl.h"
+#include "psyq/libdma.h"
+#include "psyq/libmctrl.h"
 
 typedef struct tagSpuMalloc {
     u32 addr;
