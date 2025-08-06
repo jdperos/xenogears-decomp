@@ -37,7 +37,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037F44);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037F88);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037FD8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundLoadWdsFile);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800380D0);
 
@@ -152,9 +152,9 @@ void func_80038E6C(s16 volume, SpuVolume* pVolume, u16 arg2) {
 }
 */
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038EC0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundHeapInitialize);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038F18);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundHeapAllocate);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039024);
 
@@ -314,9 +314,9 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BB08);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BB40);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BB64);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundOnTransferCallback);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BC10);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundQueueSpuWriteCommand);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BC34);
 
@@ -324,15 +324,15 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BC58);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BC7C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BCA0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundQueueTransferCommand);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BDBC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundTransferQueueSync);
 
 void func_8003BDF4(void) {}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BDFC);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BE68);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundProcessTransferCommand);
 
 void SoundSpuIRQHandler(void) {
     g_SoundControlFlags |= 4;
