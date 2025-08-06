@@ -69,7 +69,7 @@ extern int g_SoundSpuIRQCount;
 
 extern u32 g_SoundKeyOnFlags;
 extern u32 g_SoundKeyOffFlags;
-extern SoundVoiceData* g_SoundVoiceDataPointerArray[24];
+extern SoundVoiceData* g_SoundChannels[24];
 
 extern SpuVolume g_SoundUnkVolume;
 

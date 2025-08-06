@@ -178,6 +178,8 @@ SoundMuteAllSpuChannels = 0x80037EE4;
 SoundAddSedsEntry = 0x80038428;
 SoundSpuIRQHandler = 0x8003BFA0;
 SoundClearVoiceDataPointers = 0x8003E700;
+SoundAssignVoiceToChannel = 0x8003E724;
+SoundReleaseVoiceFromChannel = 0x8003E83C;
 SoundTryAssignAndPlayVoiceOnChannel = 0x8003EF04;
 SoundStopVoiceOnChannel = 0x8003EFA0;
 SoundSetVoiceKeyOn = 0x8003F468;
@@ -695,7 +697,7 @@ g_unk_VoicesNeedingProcessing = 0x80059554;
 g_SoundControlFlags           = 0x8005957C;
 g_unk_SoundEvent              = 0x800595BC;
 g_SoundSpuCommonAttr          = 0x8005A3C0; // type:SpuCommonAttr size:0x28
-g_SoundVoiceDataPointerArray  = 0x8006252C;
+g_SoundChannels  = 0x8006252C;
 g_SoundSpuMemoryTableStart    = 0x8006FAC8;
 
 // Controller
