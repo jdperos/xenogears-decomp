@@ -18,4 +18,6 @@
 #define STATIC_ASSERT_SIZEOF(type, size) \
     typedef char static_assertion_sizeof_##type[(sizeof(type) == (size)) ? 1 : -1]
 
+#define ARRAY_COUNT(x) (sizeof(x) / sizeof(x[0]))
+
 #endif
