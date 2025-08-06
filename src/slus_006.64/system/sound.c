@@ -622,7 +622,14 @@ void SoundTryAssignAndPlayVoiceOnChannel(SoundVoiceData* voiceData, u32 channelI
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EFA0);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundStopVoiceOnChannel(SoundVoiceData* in_Data, u32 in_Index) {
+
+    if( in_Index < NUM_VOICES && g_SoundVoiceDataPointerArray[in_Index] == in_Data ) {
+
+        g_SoundKeyOffFlags = (1 << in_Index) | g_SoundKeyOffFlags;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EFE4);
 
