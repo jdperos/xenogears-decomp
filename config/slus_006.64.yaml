@@ -45,6 +45,7 @@ options:
   string_encoding: ASCII
   data_string_encoding: ASCII
   rodata_string_guesser_level: 2
+  migrate_rodata_to_functions: false
   data_string_guesser_level: 2
 
   ld_bss_is_noload: True
@@ -72,7 +73,8 @@ segments:
       - [0x9858, rodata]
       #- [0x9BD4, .rodata, psyq/libetc]
       #- [0x9C08, rodata]
-      - [0x9CE0, asm] 
+      - [0x9C6C, rodata, psyq/libspu]
+      - [0x9D24, asm]
       - [0x9D60, hasm]
       - [0x9D78, c, main/main] # main
       - [0xA164, asm]

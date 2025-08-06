@@ -19,7 +19,16 @@ typedef struct {
     u16 loop_addr;
 } SPU_VOICE_REG;
 
-#define NUM_VOICES 24
+#define SPU_VOICE_REG_VOLUME_L    0
+#define SPU_VOICE_REG_VOLUME_R    1
+#define SPU_VOICE_REG_PITCH       2
+#define SPU_VOICE_REG_ADDR        3
+#define SPU_VOICE_REG_ADSR1       4
+#define SPU_VOICE_REG_ADSR2       5
+#define SPU_VOICE_REG_VOLUMEX     6
+#define SPU_VOICE_REG_LOOP_ADDR   7
+#define SPU_VOICE_REG_SIZE        8
+#define NUM_VOICES               24
 
 typedef struct {
     // APF Displacement registers (1F801DC0h - 1F801DC2h)
@@ -82,36 +91,33 @@ typedef struct {
     SpuVolume rev_vol; // Full 16 bits for volume
 
     // Voice Flags
-    u32 m_KeyOnFlags;
-    u32 m_KeyOffFlags;
-    u32 m_PitchModFlags;
-    u32 m_NoiseFlags;
-    u32 m_ReverbFlags;
+    u16 key_on[2];
+    u16 key_off[2];
+    u16 chan_fm[2];
+    u16 noise_mode[2];
+    u16 rev_mode[2];
     u32 m_EndxFlags;
 
-    u16 m_Unknown;
+    u16 unk;
 
     // Memory
-    u16 m_ReverbWorkStartAddr;
-    u16 m_IrqAddress;
+    u16 rev_work_addr;
+    u16 irq_addr;
     u16 trans_addr;
     u16 trans_fifo;
 
     // Control
     u16 spucnt;
-    u16 m_TransferControl;
+    u16 data_trans;
     u16 spustat;
 
     // Aux volumes
-    s16 m_CdInputVolumeL;
-    s16 m_CdInputVolumeR;
-    s16 m_ExtInputVolumeL;
-    s16 m_ExtInputVolumeR;
+    SpuVolume cd_vol;
+    SpuVolume ex_vol;
 
-    s16 m_CurrentMainVolL;
-    s16 m_CurrentMainVolR;
+    SpuVolume main_volx;
 
-    u32 m_Unknown2;
+    u32 unk2;
 
     ReverbRegisters m_Reverb;
 } SPU_RXX;
@@ -253,15 +259,19 @@ typedef struct {
     ReverbRegisters m_Regs;
 } ReverbPreset;
 
-#define SPU_RAM_SIZE             512 * 1024 // 512KB of SPU RAM
-#define _SPU_RAM_SIZE            (SPU_RAM_SIZE >> 3) // SPU-ranged address
-#define SPU_DECODED_DATA_AREA    0x1000  // 4KB decoded data area 0x000-0xFFF
-#define SPU_SYSTEM_RESERVED_AREA 0x10 // 16 bytes system area 0x1000-0x100F
-#define SPU_RESERVED_TOTAL       (SPU_DECODED_DATA_AREA + SPU_SYSTEM_RESERVED_AREA) // 0x1010
-#define SPU_MIN_ADDR             SPU_RESERVED_TOTAL // Writing of samples starts after reserved area at 0x1010
-#define SPU_MAX_ALIGNED_ADDR     (SPU_RAM_SIZE - 8) // 0x7fff8 - largest 8-byte aligned addr < 512KB
-#define SPU_MAX_VALID_OFFSET     (SPU_MAX_ALIGNED_ADDR - SPU_MIN_ADDR)  // 0x7efe8
-#define SPU_MAX_TRANSFER_SIZE    (SPU_RAM_SIZE - SPU_RESERVED_TOTAL) // 0x7EFF0
+#define SPU_RAM_SIZE                   512 * 1024 // 512KB of SPU RAM
+#define _SPU_RAM_SIZE                  (SPU_RAM_SIZE >> 3) // SPU-ranged address
+#define SPU_DECODED_DATA_AREA_START    0x0
+#define SPU_DECODED_DATA_AREA_SIZE     0x1000  // 4KB decoded data area 0x000-0xFFF
+#define SPU_SYSTEM_RESERVED_AREA_START SPU_DECODED_DATA_AREA_SIZE // 16 bytes system area 0x1000-0x100F
+#define SPU_SYSTEM_RESERVED_AREA_SIZE  0x10 // 16 bytes system area 0x1000-0x100F
+#define SPU_RESERVED_TOTAL             (SPU_DECODED_DATA_AREA_SIZE + SPU_SYSTEM_RESERVED_AREA_SIZE) // 0x1010
+#define SPU_DEFAULT_ADDR               SPU_SYSTEM_RESERVED_AREA_START
+#define _SPU_DEFAULT_ADDR              (SPU_DEFAULT_ADDR >> 3)
+#define SPU_MIN_ADDR                   SPU_RESERVED_TOTAL // Writing of samples starts after reserved area at 0x1010
+#define SPU_MAX_ALIGNED_ADDR           (SPU_RAM_SIZE - 8) // 0x7fff8 - largest 8-byte aligned addr < 512KB
+#define SPU_MAX_VALID_OFFSET           (SPU_MAX_ALIGNED_ADDR - SPU_MIN_ADDR)  // 0x7efe8
+#define SPU_MAX_TRANSFER_SIZE          (SPU_RAM_SIZE - SPU_RESERVED_TOTAL) // 0x7EFF0
 
 #define SPU_DMA_CMD_READ 0
 #define SPU_DMA_CMD_WRITE 1
@@ -270,6 +280,15 @@ typedef struct {
 
 #define SPU_ADDRESS_MODE_SPU (-1)
 #define SPU_ADDRESS_MODE_ALIGNED (-2)
+
+// rodata
+extern const char D_8001946C[]; // "SPU:T/O [%s]\n"
+extern const char D_8001947C[]; // "wait (reset)"
+extern const char D_8001948C[]; // "wait (wrdy H -> L)"
+extern const char D_800194A0[]; // "wait (dmaf clear/W)"
+extern const char D_800194B4[]; // "SPU:T/O [%s]\n"
+extern const char D_800194C4[]; // "wait (IRQ/ON)"
+extern const char D_800194D4[]; // "wait (IRQ/OFF)"
 
 extern long _spu_EVdma;
 extern u_long _spu_keystat;
@@ -300,6 +319,7 @@ extern long _spu_mem_mode_unitM;
 extern long _spu_inTransfer;
 extern volatile SpuTransferCallbackProc _spu_transferCallback;
 extern volatile SpuIRQCallbackProc _spu_IRQCallback;
+extern u_char _spu_dummy[16];
 extern long _spu_dma_mode;
 extern long _spu_transfer_startaddr;
 extern long _spu_transfer_time;
@@ -312,6 +332,15 @@ extern volatile u_short _spu_RQ[10];
 
 void _spu_FiDMA(void); // Forward declare for SpuStart()
 s32 _spu_t(s32, ...); // Forward declare for _spu_Fr and _spu_Fw
+
+static inline void _memcpy(void* _dst, void* _src, u32 _size) {
+    char *pDst = (char*)_dst;
+    char *pSrc = (char*)_src;
+
+    while (_size--) {
+        *pDst++ = *pSrc++;
+    }
+}
 
 void SpuInit(void) {
     _SpuInit(0);
@@ -367,9 +396,163 @@ void SpuStart(void) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_init);
+long _spu_init(long bHot) {
+    u32 dmaTimer;
+    int i;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", _spu_FwriteByIO);
+    *_spu_sys_pcr |= DMA_DPCR_SPU_PRIORITY_HIGH | DMA_DPCR_MASK_DMA4_ENABLE;
+    _spu_RXX->rxx.main_vol.left = 0;
+    _spu_RXX->rxx.main_vol.right = 0;
+    _spu_RXX->rxx.spucnt = 0;
+    _spu_transMode = 0;
+    _spu_addrMode = 0;
+    _spu_tsa = 0;
+    _spu_Fw1ts();
+    _spu_RXX->rxx.main_vol.left = 0;
+    _spu_RXX->rxx.main_vol.right = 0;
+
+    dmaTimer = 0;
+    while (_spu_RXX->rxx.spustat & 0x7FF)
+    {
+        if (++dmaTimer > DMA_TIMEOUT)
+        {
+            printf(D_8001946C, D_8001947C);
+            break;
+        }
+    }
+
+	// TODO(jperos): These are definitely macros
+    _spu_mem_mode = 2;
+    _spu_mem_mode_plus = 3;
+    _spu_mem_mode_unit = 8;
+    _spu_mem_mode_unitM = 7;
+    _spu_RXX->rxx.data_trans = 4;
+
+    _spu_RXX->rxx.rev_vol.left = 0;
+    _spu_RXX->rxx.rev_vol.right = 0;
+    _spu_RXX->rxx.key_off[0] = 0xFFFF;
+    _spu_RXX->rxx.key_off[1] = 0xFFFF;
+    _spu_RXX->rxx.rev_mode[0] = 0;
+    _spu_RXX->rxx.rev_mode[1] = 0;
+
+    for (i = 0; i < 10; i++)
+    {
+        _spu_RQ[i] = 0;
+    }
+
+    if (!bHot)
+    {
+        _spu_RXX->rxx.chan_fm[0] = 0;
+        _spu_RXX->rxx.chan_fm[1] = 0;
+        _spu_RXX->rxx.noise_mode[0] = 0;
+        _spu_RXX->rxx.noise_mode[1] = 0;
+        _spu_RXX->rxx.cd_vol.left = 0;
+        _spu_RXX->rxx.cd_vol.right = 0;
+        _spu_RXX->rxx.ex_vol.left = 0;
+        _spu_RXX->rxx.ex_vol.right = 0;
+        _spu_tsa = _SPU_DEFAULT_ADDR;
+
+        _spu_FwriteByIO(&_spu_dummy, ARRAY_COUNT(_spu_dummy));
+
+        for(i = 0; i < NUM_VOICES; i++)
+        {
+            _spu_RXX->rxx.voice[i].volume.left = 0; /* left volume */
+            _spu_RXX->rxx.voice[i].volume.right = 0; /* right volume */
+            _spu_RXX->rxx.voice[i].pitch = 0x3fff;  /* pitch */
+            _spu_RXX->rxx.voice[i].addr = _SPU_DEFAULT_ADDR;  /* addr */
+            _spu_RXX->rxx.voice[i].adsr[0] = 0; /* adsr1 */
+            _spu_RXX->rxx.voice[i].adsr[1] = 0; /* adsr2 */
+        }
+
+        _spu_RXX->rxx.key_on[0] = 0xFFFF;
+        _spu_RXX->rxx.key_on[1] = 0xFF;
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+        _spu_RXX->rxx.key_off[0] = 0xFFFF;
+        _spu_RXX->rxx.key_off[1] = 0xFF;
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+    }
+
+    _spu_inTransfer = 1;
+    _spu_RXX->rxx.spucnt = SPU_CTRL_MASK_MUTE_SPU | SPU_CTRL_MASK_SPU_ENABLE;
+    _spu_transferCallback = NULL;
+    _spu_IRQCallback = NULL;
+    return 0;
+}
+
+static void _spu_FwriteByIO(void* data, u32 size) {
+    u16 initStatus;
+    s32 dmaTimer;
+    s32 blockSize;
+    u16 spucnt;
+    u16* data16 = data;
+
+	// TODO(jperos): 0x7FF is the 11 lowest bits. Should macro this in a way that makes sense for whatever this represents
+    initStatus = _spu_RXX->rxx.spustat & 0x7FF;
+    _spu_RXX->rxx.trans_addr = _spu_tsa;
+    _spu_Fw1ts();
+
+    while (size != 0)
+    {
+		// TODO(jperos): I've seen 0x40 in a few other transfers - is this max chunk size?
+        if (size <= 0x40)
+        {
+            blockSize = size;
+        }
+        else
+        {
+            blockSize = 0x40;
+        }
+
+        dmaTimer = 0;
+        while (dmaTimer < blockSize)
+        {
+            _spu_RXX->rxx.trans_fifo = *data16++;
+             dmaTimer += 2;
+        }
+
+        spucnt = _spu_RXX->rxx.spucnt;
+        spucnt &= ~SPU_CTRL_TRANSFER_MODE_DMA_READ;
+        spucnt |= SPU_CTRL_TRANSFER_MODE_MANUAL_WRITE;
+        _spu_RXX->rxx.spucnt = spucnt;
+        _spu_Fw1ts();
+
+        dmaTimer = 0;
+        while (_spu_RXX->rxx.spustat & SPU_STAT_MASK_DATA_TRANSFER_BUSY)
+        {
+            if (++dmaTimer > DMA_TIMEOUT)
+            {
+                printf(D_8001946C, D_8001948C);
+                break;
+            }
+        }
+
+        _spu_Fw1ts();
+        _spu_Fw1ts();
+
+        size -= blockSize;
+    }
+
+    spucnt = _spu_RXX->rxx.spucnt;
+    spucnt &= ~SPU_CTRL_TRANSFER_MODE_DMA_READ;
+    spucnt |= SPU_CTRL_TRANSFER_MODE_STOP;
+    _spu_RXX->rxx.spucnt = spucnt;
+
+    dmaTimer = 0;
+    while ((_spu_RXX->rxx.spustat & 0x7FF) != initStatus)
+    {
+        if (++dmaTimer > DMA_TIMEOUT)
+        {
+            printf(D_8001946C, D_800194A0);
+            break;
+        }
+    }
+}
 
 void _spu_FiDMA(void) {
     s32 i;
@@ -621,7 +804,26 @@ void SpuQuit(void) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuInitMalloc);
+// TODO(jperos): This all compiles, but I am currently unsure as to the significance of these flags. Current best guesses here
+#define SPU_MALLOC_UNK_FLAG_1      (1 << 28)
+#define SPU_MALLOC_UNK_FLAG_2      (1 << 29)
+#define SPU_MALLOC_END_MARKER      (1 << 30)
+#define SPU_MALLOC_SKIP_ENTRY      (1 << 31)
+#define SPU_MALLOC_FLAGS           (SPU_MALLOC_UNK_FLAG_1 | SPU_MALLOC_UNK_FLAG_2 | SPU_MALLOC_END_MARKER | SPU_MALLOC_SKIP_ENTRY)
+#define SPU_MALLOC_ADDR_MASK       (~SPU_MALLOC_FLAGS)
+
+long SpuInitMalloc(long num, char *top) {
+    if (num > 0) {
+        ((SPU_MALLOC *)top)->addr = SPU_MALLOC_END_MARKER | SPU_RESERVED_TOTAL;
+        ((SPU_MALLOC *)top)->size = (_SPU_RAM_SIZE << _spu_mem_mode_plus) - SPU_RESERVED_TOTAL;
+        _spu_memList = top;
+        _spu_AllocLastNum = 0;
+        _spu_AllocBlockNum = num;
+        return num;
+    }
+
+    return 0;
+}
 
 long SpuSetNoiseClock(long n_clock) {
     long clamped;
@@ -644,7 +846,7 @@ long SpuSetNoiseClock(long n_clock) {
     return clamped;
 }
 
-long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2.56)
+long SpuSetReverb (long on_off)
 {
     long spuControlRegister;
 
@@ -674,13 +876,6 @@ long SpuSetReverb (long on_off) // 100% matching on PSYQ4.0 (gcc 2.7.2 + aspsx 2
     return _spu_rev_flag;
 }
 
-// TODO(jperos): This all compiles, but I am currently unsure as to the significance of these flags. Current best guesses here
-#define SPU_MALLOC_UNK_FLAG_1      (1 << 28)
-#define SPU_MALLOC_UNK_FLAG_2      (1 << 29)
-#define SPU_MALLOC_END_MARKER      (1 << 30)
-#define SPU_MALLOC_SKIP_ENTRY      (1 << 31)
-#define SPU_MALLOC_FLAGS           (SPU_MALLOC_UNK_FLAG_1 | SPU_MALLOC_UNK_FLAG_2 | SPU_MALLOC_END_MARKER | SPU_MALLOC_SKIP_ENTRY)
-#define SPU_MALLOC_ADDR_MASK       (~SPU_MALLOC_FLAGS)
 long _SpuIsInAllocateArea(u_long addr) {
     SPU_MALLOC* mem_entry;
     long index;
@@ -761,7 +956,32 @@ long SpuReadDecodedData(SpuDecodedData *d_data, long flag) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetIRQ);
+long SpuSetIRQ(long on_off) {
+    u_long dmaTimer;
+
+    if ((on_off == SPU_OFF) || (on_off == SPU_RESET)) {
+        _spu_RXX->rxx.spucnt &= ~SPU_STAT_MASK_IRQ9_FLAG;
+        dmaTimer = 0;
+        while (_spu_RXX->rxx.spucnt & SPU_STAT_MASK_IRQ9_FLAG) {
+            if (++dmaTimer > DMA_TIMEOUT) {
+                printf(D_800194B4, D_800194C4);
+                return SPU_ERROR;
+            }
+        }
+
+    }
+    if ((on_off == SPU_ON) || (on_off == SPU_RESET)) {
+        _spu_RXX->rxx.spucnt |= SPU_STAT_MASK_IRQ9_FLAG;
+        dmaTimer = 0;
+        while ( !(_spu_RXX->rxx.spucnt & SPU_STAT_MASK_IRQ9_FLAG) ) {
+            if (++dmaTimer > DMA_TIMEOUT) {
+                printf(D_800194B4, D_800194D4);
+                return SPU_ERROR;
+            }
+        }
+    }
+    return on_off;
+}
 
 SpuIRQCallbackProc SpuSetIRQCallback(SpuIRQCallbackProc func) {
     SpuIRQCallbackProc callback = _spu_IRQCallback;
@@ -776,7 +996,26 @@ void _SpuCallback(SpuIRQCallbackProc func) {
     InterruptCallback(9, func);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuGetVoiceEnvelopeAttr);
+void SpuGetVoiceEnvelopeAttr(int vNum, long* keyStat, short* envx) {
+    u_short volx;
+    long offset;
+
+    offset = (vNum * SPU_VOICE_REG_SIZE) + SPU_VOICE_REG_VOLUMEX;
+    volx = _spu_RXX->raw[offset];
+
+    *envx = volx;
+    if (_spu_keystat & (1 << vNum)) {
+        if ((volx << 16) > 0) {
+            *keyStat = SPU_ON;
+        } else {
+            *keyStat = SPU_ON_ENV_OFF;
+        }
+    } else if ((volx << 16) > 0) {
+        *keyStat = SPU_OFF_ENV_ON;
+    } else {
+        *keyStat = SPU_OFF;
+    }
+}
 
 u_long SpuRead(u_char* addr, u_long size) {
 
@@ -845,16 +1084,6 @@ SpuTransferCallbackProc SpuSetTransferCallback(SpuTransferCallbackProc func) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libspu", SpuSetCommonAttr);
 
-#define _spu_getCurrRevParamM(_dst) {\
-    char *pDst = (char*)_dst; \
-    char *pSrc = (char*)(&_spu_rev_param[_spu_rev_attr.mode]); \
-    int sz = sizeof(ReverbPreset);\
-    \
-    while (sz--) {\
-        *pDst++ = *pSrc++;\
-    }\
-}
-
 long SpuSetReverbModeType(long mode) {
     ReverbPreset preset;
     s32 bClearWorkArea;
@@ -879,7 +1108,7 @@ long SpuSetReverbModeType(long mode) {
     _spu_rev_attr.mode = mode;
     _spu_rev_offsetaddr = _spu_rev_startaddr[mode];
 
-    _spu_getCurrRevParamM(&preset);
+    _memcpy(&preset, &_spu_rev_param[mode], sizeof(ReverbPreset));
 
     preset.m_Mask = 0;
     switch (mode) {
@@ -1105,22 +1334,6 @@ void SpuSetReverbModeDepth(short DepthL, short DepthR)
     _spu_rev_attr.depth.right = DepthR;
 }
 
-// From Mc-Muffin:
-// Needed by SpuSetReverbModeFeedback and SpuSetReverbModeDelayTime
-// to reload _spu_rev_attr.mode, as _spu_rev_attr isn't volatile
-// using the inline works to reload it
-// Though, SpuSetReverbModeType has the same code yet doesn't reload
-// _spu_rev_attr.mode, so we use the macro version there
-static inline void _spu_getCurrRevPreset(void* _dst) {
-    char *pDst = (char*)_dst;
-    char *pSrc = (char*)(&_spu_rev_param[_spu_rev_attr.mode]);
-    int sz = sizeof(ReverbPreset);
-
-    while (sz--) {
-        *pDst++ = *pSrc++;
-    }
-}
-
 void SpuSetReverbModeDelayTime(long delay) {
     ReverbPreset preset;
     s32 scaledDelay;
@@ -1134,7 +1347,7 @@ void SpuSetReverbModeDelayTime(long delay) {
         return;
     }
 
-    _spu_getCurrRevPreset(&preset);
+    _memcpy(&preset, &_spu_rev_param[_spu_rev_attr.mode], sizeof(ReverbPreset));
 
     preset.m_Mask = SPU_REV_MASK_mLSAME
         | SPU_REV_MASK_mRSAME
@@ -1168,7 +1381,7 @@ void SpuSetReverbModeFeedback(long feedback) {
         return;
     }
 
-    _spu_getCurrRevPreset(&preset);
+    _memcpy(&preset, &_spu_rev_param[_spu_rev_attr.mode], sizeof(ReverbPreset));
 
     _spu_rev_attr.feedback = feedback;
     preset.m_Mask = SPU_REV_MASK_vWALL;
