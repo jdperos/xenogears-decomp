@@ -220,13 +220,15 @@ void* SoundHeapAllocate(unsigned int allocSize) {
     return NULL;
 }
 
+// SoundHeapAllocate, but slightly different
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039024);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039144);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundHeapFree);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800391CC);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039248);
+// SoundHeapSetBlockMemory (void* pBlockMemory, void* pSrc, int size)
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundHeapSetBlockMemory);
 
 void SoundHeapClearBlockMemory(void* pMemory, int size) {
     unsigned int nCount;
