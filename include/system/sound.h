@@ -53,7 +53,7 @@ typedef struct {
     /* 0x4 */ u32 unk4;
     /* 0x8 */ void* pPrev;
     /* 0xC */ void* pNext;
-} SoundHeapBlock;
+} SoundHeapBlockHeader;
 
 // Possible a more general queue to sending commands to the SPU,
 // but all supported commands has to do with data transfer.
@@ -83,7 +83,7 @@ struct SoundFile_t {
 typedef struct SoundFile_t SoundFile;
 
 // Heap
-extern SoundHeapBlock* g_SoundHeapHead;
+extern SoundHeapBlockHeader* g_SoundHeapHead;
 extern u32 g_SoundHeapEnd;
 extern u32 g_SoundHeapSize;
 

@@ -160,11 +160,11 @@ void func_80038E6C(s16 volume, SpuVolume* pVolume, u16 arg2) {
 
 // Does not match on GCC 2.7.2-970404 + ASPSX 2.63, so likely start of a new TU here
 void SoundHeapInitialize(void* startAddress, unsigned int size) {
-    SoundHeapBlock* pHeapBlock;
+    SoundHeapBlockHeader* pHeapBlock;
     unsigned int nAlignedSize;
 
     // Align start address and size
-    pHeapBlock = (SoundHeapBlock*) startAddress;
+    pHeapBlock = (SoundHeapBlockHeader*) startAddress;
     nAlignedSize = size & ~0xF;
     if ((u32)pHeapBlock & 0xF) {
         nAlignedSize -= 0x10;
@@ -183,29 +183,29 @@ void SoundHeapInitialize(void* startAddress, unsigned int size) {
 
 void* SoundHeapAllocate(unsigned int allocSize) {
     void* pMemory;
-    SoundHeapBlock* pNewBlock;
-    unsigned int nAlignedAllocSize;
+    SoundHeapBlockHeader* pNewBlock;
+    unsigned int nTotalSize;
     unsigned int nSize;
-    SoundHeapBlock* pNext;
-    SoundHeapBlock* pHeapBlock;
+    SoundHeapBlockHeader* pNext;
+    SoundHeapBlockHeader* pHeapBlock;
 
     DisableEvent(g_unk_SoundEvent);
-    nAlignedAllocSize = ((allocSize + 0xF) & ~0xF) + 0x10;
+    nTotalSize = ((allocSize + 0xF) & ~0xF) + sizeof(SoundHeapBlockHeader);
     
     for (pHeapBlock = g_SoundHeapHead; pHeapBlock->pNext != NULL; pHeapBlock = pHeapBlock->pNext) {
         pNext = pHeapBlock->pNext;
         nSize = (u32)pHeapBlock->pNext - (u32)pHeapBlock->pPrev;
-        if (nSize >= nAlignedAllocSize) {
+        if (nSize >= nTotalSize) {
             goto alloc_new_block;
         }
     }
     
-    pNext = (SoundHeapBlock*)g_SoundHeapEnd;
-    if ((u32)pNext - (u32)pHeapBlock->pPrev >= nAlignedAllocSize) {
+    pNext = (SoundHeapBlockHeader*)g_SoundHeapEnd;
+    if ((u32)pNext - (u32)pHeapBlock->pPrev >= nTotalSize) {
     alloc_new_block:
-        pNewBlock = (SoundHeapBlock*)(((u32)pHeapBlock->pPrev + 0xF) & ~0xF);
+        pNewBlock = (SoundHeapBlockHeader*)(((u32)pHeapBlock->pPrev + 0xF) & ~0xF);
         pMemory = pNewBlock + 1;
-        pNewBlock->pPrev = (SoundHeapBlock*)((u32)pMemory + allocSize);
+        pNewBlock->pPrev = (SoundHeapBlockHeader*)((u32)pMemory + allocSize);
         pNewBlock->pNext = NULL;
         pNewBlock->unk4 = 0;
         pNewBlock->unk0 = 2;
@@ -213,7 +213,7 @@ void* SoundHeapAllocate(unsigned int allocSize) {
         pNewBlock->pNext = pHeapBlock->pNext;
         pHeapBlock->pNext = pNewBlock;
         EnableEvent(g_unk_SoundEvent);
-        func_800392EC(pMemory, allocSize);
+        SoundHeapClearBlockMemory(pMemory, allocSize);
         return pMemory;
     }
     
@@ -228,7 +228,30 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800391CC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039248);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800392EC);
+void SoundHeapClearBlockMemory(void* pMemory, int size) {
+    unsigned int nCount;
+    u32* pDword;
+    u8* pByte;
+
+    pDword = pMemory;
+
+    for (nCount = size >> 4; nCount != 0; nCount--) {
+        pDword[3] = 0;
+        pDword[2] = 0;
+        pDword[1] = 0;
+        pDword[0] = 0;
+        pDword += 4;
+    }
+    
+    for (nCount = (size >> 2) & 3; nCount != 0; nCount--) {
+        *pDword++ = 0;
+    }
+    
+    pByte = (u8*) pDword;
+    for (nCount = size & 3; nCount != 0; nCount--) {
+        *pByte++ = 0;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039360);
 
