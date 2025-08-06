@@ -2,6 +2,8 @@
 #include "system/sound.h"
 #include "psyq/kernel.h"
 
+#define NUM_VOICES 24
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundInitialize);
 
 void SoundReset(void) {
@@ -20,7 +22,7 @@ void SoundReset(void) {
     StopRCnt(RCntCNT2);
     CloseEvent(D_800595BC);
     ExitCriticalSection();
-    for (i = 0; i < 0x18; i++) {
+    for (i = 0; i < NUM_VOICES; i++) {
         func_8003F5BC(i, 6, 3);
     }
     SoundSetVoiceKeyOff(0xFFFFFF); // Release all voices
@@ -35,7 +37,12 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundMuteAllSpuChannels
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037F44);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037F88);
+void func_80037F88(void) {
+    if (g_SoundControlFlags & 1) {
+        DisableEvent(D_800595BC);
+        g_SoundControlFlags &= ~1;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037FD8);
 
