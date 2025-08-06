@@ -18,14 +18,14 @@ void SoundReset(void) {
     SpuSetTransferCallback(NULL);
     SpuSetIRQCallback(NULL);
     StopRCnt(RCntCNT2);
-    CloseEvent(D_800595BC);
+    CloseEvent(g_unk_SoundEvent);
     ExitCriticalSection();
-    for (i = 0; i < 0x18; i++) {
+    for (i = 0; i < NUM_VOICES; i++) {
         func_8003F5BC(i, 6, 3);
     }
     SoundSetVoiceKeyOff(0xFFFFFF); // Release all voices
     SpuSetReverbModeDepth(0, 0);
-    SpuSetReverbModeType(0);
+    SpuSetReverbModeType(SPU_REV_MODE_OFF);
     g_SoundSpuErrorId = 0;
 }
 
@@ -35,7 +35,12 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundMuteAllSpuChannels
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037F44);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037F88);
+void func_80037F88(void) {
+    if (g_SoundControlFlags & 1) {
+        DisableEvent(g_unk_SoundEvent);
+        g_SoundControlFlags &= ~1;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037FD8);
 
@@ -75,13 +80,13 @@ void SoundAddSedsEntry(SoundFile* pSoundFile) {
     }
 
     // Add the SED Entry to the linked list
-    DisableEvent(D_800595BC);
+    DisableEvent(g_unk_SoundEvent);
     pList = &g_SoundSedsLinkedList;
     while (*pList != NULL)
         pList = &((*pList)->pNext);
     *pList = pSoundFile;
     pSoundFile->pNext = NULL;
-    EnableEvent(D_800595BC);
+    EnableEvent(g_unk_SoundEvent);
 }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003852C);
@@ -110,6 +115,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038B4C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038C68);
 
+// TODO(jperos): CD Volume globals
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038D18);
 
 void func_80038DB4(long reverb, long mix) {
@@ -178,7 +184,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800396E0);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039748);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003977C);
+s32 func_8003977C(void) { return 0; }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039784);
 
@@ -335,14 +341,15 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BDFC);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BE68);
 
 void SoundSpuIRQHandler(void) {
-    g_SoundControlFlags |= 4;
+    g_SoundControlFlags |= SOUND_CTL_FLAG_IRQ_HANDLER;
     g_SoundSpuIRQCount++;
     if (g_SoundSpuIrqCallbackFn) {
         g_SoundSpuIrqCallbackFn();
     }
-    g_SoundControlFlags &= 0xFFFB;
+    g_SoundControlFlags &= ~SOUND_CTL_FLAG_IRQ_HANDLER;
 }
 
+// TODO(jperos): SetSpuIrqCallBack
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C010);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C020);
@@ -564,16 +571,33 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E6C0);
 void SoundClearVoiceDataPointers(void) {
     s32 offset = sizeof(SoundVoiceData*) * (NUM_VOICES - 1);
     while( offset >= 0 ) {
-        *(u32*)((u8*)&g_SoundVoiceDataPointerArray + offset) = NULL;
+        *(u32*)((u8*)&g_SoundChannels + offset) = NULL;
         offset -= sizeof(SoundVoiceData*);
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E724);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundAssignVoiceToChannel);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E7E0);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E83C);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundReleaseVoiceFromChannel(SoundVoiceData* voiceData, uint channelIndex)
+{
+    SoundVoiceData** channelPtr;
+    uint channelBitMask;
+
+    channelPtr = &g_SoundChannels[channelIndex];
+    if (channelIndex < NUM_VOICES) {
+        if (*channelPtr == voiceData) {
+            *channelPtr = NULL;
+            channelBitMask = 1 << channelIndex;
+            g_unk_VoicesNeedingProcessing = channelBitMask | g_unk_VoicesNeedingProcessing;
+
+            // Clear key-on flag to prevent playback
+            g_SoundKeyOnFlags = ~channelBitMask & g_SoundKeyOnFlags;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E8A4);
 
@@ -585,9 +609,44 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EBF0);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EEA0);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EF04);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundTryAssignAndPlayVoiceOnChannel(SoundVoiceData* voiceData, u32 channelIndex)
+{
+    SoundVoiceData* currentVoice;
+    SoundVoiceData** pChannel;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EFA0);
+    pChannel = &g_SoundChannels[channelIndex];
+    if (channelIndex < NUM_VOICES) {
+        currentVoice = *pChannel;
+
+        // Skip assignment if voice already assigned
+        if (currentVoice != voiceData) {
+            if (currentVoice && currentVoice->priority > voiceData->priority) {
+                return;
+            }
+
+            // Assign voice to channel
+            voiceData->flags = 0xFFFF;
+            voiceData->assignedVoice = channelIndex;
+            g_SoundChannels[channelIndex] = voiceData;
+
+            // Mark for voice processing
+            g_unk_VoicesNeedingProcessing = (1 << channelIndex) | g_unk_VoicesNeedingProcessing;
+        }
+
+        // Always trigger playback on this channel
+        g_SoundKeyOnFlags = (1 << channelIndex) | g_SoundKeyOnFlags;
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void SoundStopVoiceOnChannel(SoundVoiceData* voiceData, u32 channelIndex) {
+
+    if( channelIndex < NUM_VOICES && g_SoundChannels[channelIndex] == voiceData ) {
+
+        g_SoundKeyOffFlags = (1 << channelIndex) | g_SoundKeyOffFlags;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EFE4);
 
@@ -611,28 +670,34 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F42C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F43C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F468);
+void SoundSetVoiceKeyOn(u32 voiceFlags) {
+    u16* pSoundRegisters = g_pSoundSpuRegisters;
+    // TODO: Clean up this
+    *(pSoundRegisters + 0xC4) = voiceFlags;
+    *(pSoundRegisters + 0xC5) = (voiceFlags >> 0x10);
+}
 
 // Set the SPU_VOICE_KEY_OFF register, which will release / fade out voices according to the flags
-void SoundSetVoiceKeyOff(unsigned int voiceFlags) {
-    unsigned short* pSoundRegisters = g_pSoundSpuRegisters;
+void SoundSetVoiceKeyOff(u32 voiceFlags) {
+    u16* pSoundRegisters = g_pSoundSpuRegisters;
     // TODO: Clean up this
     *(pSoundRegisters + 0xC6) = voiceFlags;
     *(pSoundRegisters + 0xC7) = (voiceFlags >> 0x10);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F4A0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetReverbVoices);
 
 void func_8003F4BC(void) {}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F4C4);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoiceStartAddress);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F4E0);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoiceLoopAddress);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F4FC);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoiceVolume);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F518);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoicePitch);
 
+// ADSR Functions
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F530);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F560);
@@ -642,6 +707,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F588);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F5BC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F5EC);
+// End ADSR functions
 
 int SoundValidateFile(SoundFile* pSoundFile, u32 magicBytes, unsigned short targetValue) {
     unsigned char bIsError;

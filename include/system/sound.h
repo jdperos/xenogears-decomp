@@ -9,27 +9,27 @@
 extern SpuCommonAttr g_SoundSpuCommonAttr;
 
 typedef struct {
-    u8 m_Unk0[2];
-    u16 m_ModeFlags;
-    u8 m_Unk4[2];
-    u16 m_Flags;
-    s16 m_VolumeL;
-    s16 m_VolumeR;
-    u8 m_UnkC[8];
-    u16 m_Pitch;
-    u8 Unk16[6];
-    u32 m_StartAddress;
-    u32 m_LoopAddress;
-    u8 m_UnkAdsr1;
-    u8 m_UnkAdsr2;
-    u8 m_UnkAdsr3;
-    u8 m_UnkAdsr4;
-    u8 m_AdsrDR;
-    u8 m_UnkAdsr5;
-    u8 m_UnkAdsr6;
-    u8 m_AdsrSR;
+    s16 assignedVoice;
+    u16 modeFlags;
+    s16 priority;
+    u16 flags;
+    SpuVolume volume;
+    u8 unkC[8];
+    u16 pitch;
+    u8 unk16[6];
+    u32 startAddress;
+    u32 loopAddress;
+    u8 unkAdsr1;
+    u8 unkAdsr2;
+    u8 unkAdsr3;
+    u8 unkAdsr4;
+    u8 adsrDR;
+    u8 unkAdsr5;
+    u8 unkAdsr6;
+    u8 adsrSR;
 } SoundVoiceData;
 
+#define SOUND_CTL_FLAG_IRQ_HANDLER (1 << 2)
 
 #define SOUND_STATUS_OK 0x0
 #define SOUND_ERR_INVALID_SIGNATURE 0x1
@@ -60,12 +60,16 @@ extern SoundFile* g_SoundSedsLinkedList;
 
 extern void* g_pSoundSpuRegisters;
 
+extern u32 g_unk_SoundEvent;
 extern short g_SoundSpuErrorId;
+extern long g_unk_VoicesNeedingProcessing;
 extern short g_SoundControlFlags;
 extern SpuIRQCallbackProc g_SoundSpuIrqCallbackFn;
 extern int g_SoundSpuIRQCount;
 
-extern SoundVoiceData g_SoundVoiceDataPointerArray;
+extern u32 g_SoundKeyOnFlags;
+extern u32 g_SoundKeyOffFlags;
+extern SoundVoiceData* g_SoundChannels[24];
 
 extern SpuVolume g_SoundUnkVolume;
 
