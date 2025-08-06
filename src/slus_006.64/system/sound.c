@@ -761,10 +761,43 @@ void SoundClearVoiceDataPointers(void) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundAssignVoiceToChannel);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundAssignVoiceToChannel(SoundVoiceData* voiceData, u32 channelIndex) {
+
+    SoundVoiceData* currentVoice;
+    SoundVoiceData** pChannel;
+
+    pChannel = &g_SoundChannels[channelIndex];
+    if (channelIndex < NUM_VOICES) {
+        currentVoice = *pChannel;
+
+        // Mark current voice as needing update
+        if (currentVoice == voiceData) {
+            g_unk_VoicesNeedingProcessing = (1 << channelIndex) | g_unk_VoicesNeedingProcessing;
+            return;
+        }
+
+        // Do not steal a higher priority voices
+        if (currentVoice && currentVoice->priority > voiceData->priority) {
+            return;
+        }
+
+        // Assign voice to channel
+        voiceData->flags = 0xFFFF;
+        voiceData->assignedVoice = channelIndex;
+        g_SoundChannels[channelIndex] = voiceData;
+
+        // Mark for voice processing
+        g_unk_VoicesNeedingProcessing = (1 << channelIndex) | g_unk_VoicesNeedingProcessing;
+
+        // Stop any current key ons for this channel
+        g_SoundKeyOnFlags = ~(1 << channelIndex) & g_SoundKeyOnFlags;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E7E0);
 
+//----------------------------------------------------------------------------------------------------------------------
 void SoundReleaseVoiceFromChannel(SoundVoiceData* voiceData, uint channelIndex)
 {
     SoundVoiceData** channelPtr;
