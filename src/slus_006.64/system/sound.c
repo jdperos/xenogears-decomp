@@ -181,8 +181,8 @@ void SoundHeapInitialize(void* startAddress, unsigned int size) {
     pHeapBlock->pNext = NULL;
 }
 
-SoundHeapBlock* SoundHeapAllocate(u32 allocSize) {
-    SoundHeapBlock* pNextBlock;
+void* SoundHeapAllocate(unsigned int allocSize) {
+    void* pMemory;
     SoundHeapBlock* pNewBlock;
     unsigned int nAlignedAllocSize;
     unsigned int nSize;
@@ -204,8 +204,8 @@ SoundHeapBlock* SoundHeapAllocate(u32 allocSize) {
     if ((u32)pNext - (u32)pHeapBlock->pPrev >= nAlignedAllocSize) {
     alloc_new_block:
         pNewBlock = (SoundHeapBlock*)(((u32)pHeapBlock->pPrev + 0xF) & ~0xF);
-        pNextBlock = pNewBlock + 1;
-        pNewBlock->pPrev = (SoundHeapBlock*)((u32)pNextBlock + allocSize);
+        pMemory = pNewBlock + 1;
+        pNewBlock->pPrev = (SoundHeapBlock*)((u32)pMemory + allocSize);
         pNewBlock->pNext = NULL;
         pNewBlock->unk4 = 0;
         pNewBlock->unk0 = 2;
@@ -213,8 +213,8 @@ SoundHeapBlock* SoundHeapAllocate(u32 allocSize) {
         pNewBlock->pNext = pHeapBlock->pNext;
         pHeapBlock->pNext = pNewBlock;
         EnableEvent(g_unk_SoundEvent);
-        func_800392EC(pNextBlock, allocSize);
-        return pNextBlock;
+        func_800392EC(pMemory, allocSize);
+        return pMemory;
     }
     
     return NULL;
