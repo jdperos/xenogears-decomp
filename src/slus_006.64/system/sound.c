@@ -46,15 +46,54 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundLoadWdsFile);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800380D0);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800381F4);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSpuMemoryAllocateWDS);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038264);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003827C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038310);
+void SoundFreeWdsEntry(SoundWDSEntry* pTargetEntry) {
+    SoundWDSEntry* pPrev;
+    SoundWDSEntry* pCurrent;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800383EC);
+    pPrev = NULL;
+    for (pCurrent = g_SoundWdsLinkedList; pCurrent != NULL; pCurrent = pCurrent->pNext) {
+        if (pCurrent == pTargetEntry) 
+            break;
+        
+        pPrev = pCurrent;
+    }
+
+    if (pCurrent == NULL) {
+        SoundHandleError(0x11U);
+        return;
+    }
+
+    DisableEvent(g_unk_SoundEvent);
+    if (pPrev != NULL)
+        pPrev->pNext = pTargetEntry->pNext;
+    else 
+        g_SoundWdsLinkedList = pTargetEntry->pNext;
+    EnableEvent(g_unk_SoundEvent);
+    
+    if (pTargetEntry->spuMemoryAddress != SoundSpuMemoryFreeBlock(pTargetEntry->spuMemoryAddress)) {
+        SoundHandleError(0x24U);
+    }
+    
+    SoundHeapFree(pTargetEntry);
+}
+
+SoundWDSEntry* SoundFindWdsEntry(int targetID) {
+    SoundWDSEntry* pCurrent;
+
+    for (pCurrent = g_SoundWdsLinkedList; pCurrent != NULL; pCurrent = pCurrent->pNext) {
+        if (pCurrent->id == targetID) {
+            return pCurrent;
+        }
+    }
+    return pCurrent;
+}
+
 
 void SoundAddSedsEntry(SoundFile* pSoundFile) {
     SoundFile* pEntry;
@@ -227,8 +266,40 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundHeapFree);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800391CC);
 
-// SoundHeapSetBlockMemory (void* pBlockMemory, void* pSrc, int size)
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundHeapSetBlockMemory);
+void SoundHeapSetBlockMemory(void* pBlockMemory, void* pSrc, int size) {
+    u32* pCurSrc;
+    u32* pCurDst;
+    u32* pNextSrc;
+    u32* pNextDst;
+    u32 v0,v1,v2,v3;
+
+    unsigned int nCount;
+    pCurDst = pBlockMemory;
+    pCurSrc = pSrc;
+    
+    for (nCount = size >> 4; nCount != 0; nCount--) {
+        v0 = pCurSrc[0];
+        v1 = pCurSrc[1];
+        v2 = pCurSrc[2];
+        v3 = pCurSrc[3];
+        
+        pCurDst[0] = v0;
+        pCurDst[1] = v1;
+        pCurDst[2] = v2;
+        pCurDst[3] = v3;
+
+        pCurSrc += 4;
+        pCurDst += 4;
+    }
+
+    for (nCount = (size >> 2) & 3; nCount != 0; nCount--) {
+        *pCurDst++ = *pCurSrc++;
+    }
+
+    for (nCount = size & 3; nCount != 0; nCount--) {
+        *((u8*)pCurDst)++ = *((u8*)pCurSrc)++;
+    }
+}
 
 void SoundHeapClearBlockMemory(void* pMemory, int size) {
     unsigned int nCount;
@@ -255,23 +326,83 @@ void SoundHeapClearBlockMemory(void* pMemory, int size) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039360);
+//INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSpuMemoryInitialize);
+void SoundSpuMemoryInitialize(void) {
+    int i;
+    
+    for (i = MAX_SPU_MEMORY_BLOCKS - 1; i >= 0; i--) {
+        g_SoundSpuMemoryBlocks[i].flags = SPU_MEMORY_FREE;
+    }
+    
+    g_SoundSpuMemoryBlocks[0].flags = SPU_MEMORY_RESERVED | SPU_MEMORY_IN_USE;
+    g_SoundSpuMemoryBlocks[0].unk1 = 5;
+    g_SoundSpuMemoryBlocks[0].spuAddress = 0;
+    g_SoundSpuMemoryBlocks[0].size = 0x1010;
+    g_SoundSpuMemoryBlocks[0].nextBlockIndex = 0;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800393B8);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSpuMemoryAllocateBlock);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800394B8);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800395B8);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSpuMemoryAllocateBlockAtAddress);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800396E0);
+int SoundSpuMemoryFreeBlock(int targetAddress) {
+    SoundSpuMemoryBlock* pCurBlock;
+    SoundSpuMemoryBlock* pPrevBlock;
+    short nNextIndex;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039748);
+    pCurBlock = g_SoundSpuMemoryBlocks;
+    pPrevBlock = NULL;
+
+    while (1) {
+        if (pCurBlock->spuAddress == targetAddress) {
+            pPrevBlock->nextBlockIndex = pCurBlock->nextBlockIndex;
+            pCurBlock->flags = SPU_MEMORY_FREE;
+            pCurBlock->unk1 = 0;
+            pCurBlock->spuAddress = 0x0;
+            pCurBlock->nextBlockIndex = 0;
+            return targetAddress;
+        }
+        
+        nNextIndex = pCurBlock->nextBlockIndex;
+        pPrevBlock = pCurBlock;
+        
+        if (nNextIndex != 0) {
+            pCurBlock = &g_SoundSpuMemoryBlocks[nNextIndex];
+            continue;
+        }
+        
+        return NULL;
+    }
+}
+
+void func_80039748(int targetAddress, u_char value) {
+    SoundSpuMemoryBlock *pBlock;
+
+    pBlock = SoundSpuMemoryFindBlock(targetAddress);
+    if (pBlock != NULL) {
+        pBlock->unk1 = value;
+    }
+}
 
 s32 func_8003977C(void) { return 0; }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039784);
+int SoundSpuMemoryGetFreeBlock() {
+    int i = 0;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800397C0);
+    while (i < MAX_SPU_MEMORY_BLOCKS) {
+        if (g_SoundSpuMemoryBlocks[i].flags == SPU_MEMORY_FREE)
+            return i;
+        i++;
+    }
+
+    return 0;
+}
+
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSpuMemoryFindBlock);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800397FC);
 

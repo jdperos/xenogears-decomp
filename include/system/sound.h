@@ -55,6 +55,22 @@ typedef struct {
     /* 0xC */ void* pNext;
 } SoundHeapBlockHeader;
 
+
+#define MAX_SPU_MEMORY_BLOCKS 0xC
+
+#define SPU_MEMORY_FREE 0x0
+#define SPU_MEMORY_RESERVED 0x1 // Or last block?
+#define SPU_MEMORY_IN_USE 0x80
+
+typedef struct {
+    /* 0x0 */ unsigned char flags;
+    /* 0x1 */ unsigned char unk1; // Type of memory/data?
+    /* 0x2 */ short nextBlockIndex;
+    /* 0x4 */ int spuAddress;
+    /* 0x8 */ int size;
+    /* 0xC */ unsigned int unkC; // Padding?
+} SoundSpuMemoryBlock;
+
 // Possible a more general queue to sending commands to the SPU,
 // but all supported commands has to do with data transfer.
 typedef struct {
@@ -82,6 +98,21 @@ struct SoundFile_t {
 };
 typedef struct SoundFile_t SoundFile;
 
+struct SoundWDSEntry_t {
+    /* 0x0  */ u_char _unk0[0x10];
+    /* 0x10 */ unsigned int headerSizeMby;
+    /* 0x14 */ unsigned int adpcmDataSize; // Sample size
+    /* 0x18 */ unsigned int adpcmDataOffset; // Offset to data to write to SPU
+    /* 0x1C */ u_int unk1C;
+    /* 0x20 */ unsigned short id;
+    /* 0x22 */ u_short unk22;
+    /* 0x24 */ u_int unk24;
+    /* 0x28 */ int spuMemoryAddress; // Optional
+    /* 0x2C */ struct SoundWDSEntry_t* pNext;
+};
+typedef struct SoundWDSEntry_t SoundWDSEntry;
+
+
 // Heap
 extern SoundHeapBlockHeader* g_SoundHeapHead;
 extern u32 g_SoundHeapEnd;
@@ -93,11 +124,13 @@ extern SoundTransferCommand* g_SoundTransferQueue;
 extern u16 g_SoundTransferQueueReadIndex;
 extern u16 g_SoundTransferQueueWriteIndex;
 
-
+// SPU Memory Management
+extern SoundSpuMemoryBlock g_SoundSpuMemoryBlocks[MAX_SPU_MEMORY_BLOCKS];
 
 extern u_long g_unk_SoundEvent; // Event Descriptor
 
 extern SoundFile* g_SoundSedsLinkedList;
+extern SoundWDSEntry* g_SoundWdsLinkedList;
 
 extern void* g_pSoundSpuRegisters;
 
