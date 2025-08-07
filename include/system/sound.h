@@ -43,6 +43,9 @@ typedef struct {
 #define SOUND_SPU_COMMAND_WRITE 0x1
 #define SOUND_SPU_COMMAND_READ 0x2
 
+#define SOUND_WDS_ALLOCATE_AT_ADDRESS 0
+#define SOUND_WDS_ALLOCATE_AUTOMATIC -1
+
 #define FILE_SIGNATURE(a, b, c, d) (d<<24)+(c<<16)+(b<<8)+a
 
 typedef void (*SoundCommandCallback_t)(void);
@@ -103,7 +106,8 @@ struct SoundWDSEntry_t {
     /* 0x10 */ unsigned int headerSizeMby;
     /* 0x14 */ unsigned int adpcmDataSize; // Sample size
     /* 0x18 */ unsigned int adpcmDataOffset; // Offset to data to write to SPU
-    /* 0x1C */ u_int unk1C;
+    /* 0x1C */ unsigned short unk1C;
+    /* 0x1E */ unsigned short unk1E;
     /* 0x20 */ unsigned short id;
     /* 0x22 */ u_short unk22;
     /* 0x24 */ u_int unk24;
@@ -131,6 +135,9 @@ extern u_long g_unk_SoundEvent; // Event Descriptor
 
 extern SoundFile* g_SoundSedsLinkedList;
 extern SoundWDSEntry* g_SoundWdsLinkedList;
+
+extern int g_SoundWdsCurSpuAddress;
+extern int g_SoundWdsRemainingBytes;
 
 extern void* g_pSoundSpuRegisters;
 

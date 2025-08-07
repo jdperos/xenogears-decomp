@@ -42,15 +42,34 @@ void func_80037F88(void) {
     }
 }
 
+
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundLoadWdsFile);
 
+// Loads part of a WDS file, basically a sized SoundLoadWdsFile?
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800380D0);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSpuMemoryAllocateWDS);
+void SoundSpuMemoryAllocateWDS(SoundWDSEntry* pWdsFile, int mode) {
+    if (mode == SOUND_WDS_ALLOCATE_AT_ADDRESS) {
+        mode = pWdsFile->spuMemoryAddress;
+    } else if (mode == SOUND_WDS_ALLOCATE_AUTOMATIC) {
+        mode = 0;
+    }
+    
+    if (mode == 0) {
+        SoundSpuMemoryAllocateBlock(pWdsFile->adpcmDataSize, pWdsFile->unk1E);
+        return;
+    }
+    
+    SoundSpuMemoryAllocateBlockAtAddress(pWdsFile->adpcmDataSize, pWdsFile->spuMemoryAddress, pWdsFile->unk1E);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038264);
+void SoundWdsSetTransferParamters(int transferAddress, int numBytesToTransfer) {
+    g_SoundWdsCurSpuAddress = transferAddress;
+    g_SoundWdsRemainingBytes = numBytesToTransfer;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003827C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundTransferWdsPart);
 
 void SoundFreeWdsEntry(SoundWDSEntry* pTargetEntry) {
     SoundWDSEntry* pPrev;
@@ -326,7 +345,6 @@ void SoundHeapClearBlockMemory(void* pMemory, int size) {
     }
 }
 
-//INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSpuMemoryInitialize);
 void SoundSpuMemoryInitialize(void) {
     int i;
     
@@ -401,8 +419,25 @@ int SoundSpuMemoryGetFreeBlock() {
     return 0;
 }
 
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSpuMemoryFindBlock);
+// Possibly misleading name
+SoundSpuMemoryBlock* SoundSpuMemoryFindBlock(int targetAddress) {
+    SoundSpuMemoryBlock* pCurrent;
+    SoundSpuMemoryBlock* pRes;
+    
+    pCurrent = g_SoundSpuMemoryBlocks;
+    pRes = g_SoundSpuMemoryBlocks;
+    
+    while (1) {
+        if (pCurrent->spuAddress != targetAddress) {
+            if (pCurrent->nextBlockIndex != 0) {
+                return NULL;
+            }
+            pCurrent = pRes;
+            continue;
+        }
+        return pCurrent;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800397FC);
 
