@@ -111,7 +111,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", func_8004B834);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", func_8004B864);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", func_8004B894);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", CheckCallback);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", func_8004B8A4);
 
