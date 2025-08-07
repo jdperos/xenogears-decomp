@@ -534,8 +534,9 @@ void SoundSpuIRQHandler(void) {
     g_SoundControlFlags &= ~SOUND_CTL_FLAG_IRQ_HANDLER;
 }
 
-// TODO(jperos): SetSpuIrqCallBack
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C010);
+void SoundSetSpuIrqCallback(u32 func) {
+    g_SoundSpuIrqCallbackFn = func;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C020);
 
@@ -762,7 +763,7 @@ void SoundClearVoiceDataPointers(void) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void SoundAssignVoiceToChannel(SoundVoiceData* voiceData, u32 channelIndex) {
+void SoundAssignVoiceToChannelAndStop(SoundVoiceData* voiceData, u32 channelIndex) {
 
     SoundVoiceData* currentVoice;
     SoundVoiceData** pChannel;
@@ -795,7 +796,22 @@ void SoundAssignVoiceToChannel(SoundVoiceData* voiceData, u32 channelIndex) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E7E0);
+void SoundAssignVoiceToChannel(SoundVoiceData* voiceData, u32 channelIndex) {
+    SoundVoiceData* currentVoice;
+    SoundVoiceData** channelPtr;
+
+    channelPtr = &g_SoundChannels[channelIndex];
+    if (channelIndex < NUM_VOICES) {
+        currentVoice = *channelPtr;
+
+        if (currentVoice == voiceData || (currentVoice && currentVoice->priority > voiceData->priority)) {
+            return;
+        }
+
+        voiceData->assignedVoice = channelIndex;
+        *channelPtr = voiceData;
+    }
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void SoundReleaseVoiceFromChannel(SoundVoiceData* voiceData, uint channelIndex)
@@ -826,7 +842,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EBF0);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EEA0);
 
-void SoundTryAssignAndPlayVoiceOnChannel(SoundVoiceData* voiceData, u32 channelIndex)
+void SoundAssignVoiceToChannelAndPlay(SoundVoiceData* voiceData, u32 channelIndex)
 {
     SoundVoiceData* currentVoice;
     SoundVoiceData** pChannel;
