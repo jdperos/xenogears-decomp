@@ -796,6 +796,7 @@ void SoundAssignVoiceToChannelAndStop(SoundVoiceData* voiceData, u32 channelInde
     }
 }
 
+//----------------------------------------------------------------------------------------------------------------------
 void SoundAssignVoiceToChannel(SoundVoiceData* voiceData, u32 channelIndex) {
     SoundVoiceData* currentVoice;
     SoundVoiceData** channelPtr;
@@ -832,7 +833,14 @@ void SoundReleaseVoiceFromChannel(SoundVoiceData* voiceData, uint channelIndex)
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E8A4);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundCancelVoiceOnChannel(SoundVoiceData* voiceData, u32 channelIndex) {
+
+    if ((channelIndex < NUM_VOICES) && (g_SoundChannels[channelIndex] == voiceData)) {
+        g_unk_VoicesNeedingProcessing = (1 << channelIndex) | g_unk_VoicesNeedingProcessing;
+        g_SoundKeyOnFlags = ~(1 << channelIndex) & g_SoundKeyOnFlags;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E900);
 
@@ -842,6 +850,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EBF0);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EEA0);
 
+//----------------------------------------------------------------------------------------------------------------------
 void SoundAssignVoiceToChannelAndPlay(SoundVoiceData* voiceData, u32 channelIndex)
 {
     SoundVoiceData* currentVoice;

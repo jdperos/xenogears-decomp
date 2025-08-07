@@ -194,6 +194,7 @@ SoundClearVoiceDataPointers = 0x8003E700;
 SoundAssignVoiceToChannelAndStop = 0x8003E724;
 SoundAssignVoiceToChannel = 0x8003E7E0;
 SoundReleaseVoiceFromChannel = 0x8003E83C;
+SoundCancelVoiceOnChannel = 0x8003E8A4;
 SoundAssignVoiceToChannelAndPlay = 0x8003EF04;
 SoundStopVoiceOnChannel = 0x8003EFA0;
 SoundSetVoiceKeyOn = 0x8003F468;
