@@ -66,7 +66,9 @@ define DL_FlagsSwitch
 	$(if
 		$(or 
 			$(filter MAIN,$(patsubst build/src/slus_006.64/system/libarchive%,MAIN,$(1))), 
-			$(filter MAIN,$(patsubst build/asm/slus_006.64/system/libarchive%,MAIN,$(1)))
+			$(filter MAIN,$(patsubst build/asm/slus_006.64/system/libarchive%,MAIN,$(1))),
+			$(filter MAIN,$(patsubst build/src/slus_006.64/system/sound%,MAIN,$(1))),
+			$(filter MAIN,$(patsubst build/asm/slus_006.64/system/sound%,MAIN,$(1)))
 		),
 		$(eval CC = $(TOOLS_DIR)/gcc-2.6.0-psx/cc1),
 		$(eval CC = $(TOOLS_DIR)/gcc-2.7.2-psx/cc1)
