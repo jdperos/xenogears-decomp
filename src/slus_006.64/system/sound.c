@@ -966,7 +966,27 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E5BC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E680);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E6C0);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetFlagsOnActiveVoices(AudioManager* manager, s32 flags) {
+    AudioElement* pElement;
+    u32 cnt;
+
+    pElement = &manager->elements[0];
+    cnt = manager->element_count;
+
+    do {
+
+        if (pElement->active_flag) {
+            // this doesn't feel right, considering SoundVoiceData::flags is a 16-bit flag
+            // I know that SoundVoiceData::volume is 16-bits from SoundVoiceData::flags from func_8003E900
+            // but I get a reg swap if flags is 16 bits
+            pElement->voice_data.flags |= (u16)flags;
+        }
+
+        pElement++;
+        cnt--;
+    } while (cnt);
+}
 
 void SoundClearVoiceDataPointers(void) {
     s32 offset = sizeof(SoundVoiceData*) * (NUM_VOICES - 1);

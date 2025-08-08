@@ -204,6 +204,7 @@ SoundProcessTransferCommand = 0x8003BE68;
 SoundSpuIRQHandler = 0x8003BFA0;
 SoundSetSpuIrqCallback = 0x8003C010;
 SoundClearVoiceDataPointers = 0x8003E700;
+SoundSetFlagsOnActiveVoices = 0x8003E6C0;
 SoundAssignVoiceToChannelAndStop = 0x8003E724;
 SoundAssignVoiceToChannel = 0x8003E7E0;
 SoundReleaseVoiceFromChannel = 0x8003E83C;
