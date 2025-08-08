@@ -82,6 +82,23 @@ struct SoundFile_t {
 };
 typedef struct SoundFile_t SoundFile;
 
+typedef struct {
+    u16 active_flag;                // 0x00 - checked for != 0
+    s8 unknown_data[0x25];          // 0x02 - 0x26
+    u8 voice_number;                // 0x27 - SPU voice index
+    s8 padding[0x8];                // 0x28 - 0x2F
+    SoundVoiceData voice_data;      // 0x30 - passed to cancel function
+    u8 unk[252]                     // Size of this struct during iteration seems to be 0x158
+} AudioElement;
+
+typedef struct {
+    // Manager header (0x00 - 0x93)
+    s8 header_data[0x14];
+    u8 element_count;             // 0x14
+    s8 more_header[0x7F];         // 0x15 - 0x93
+    AudioElement elements[24];    // Array of audio elements starts at 0x94 (no idea that it has to be 24)
+} AudioManager;
+
 // Heap
 extern SoundHeapBlockHeader* g_SoundHeapHead;
 extern u32 g_SoundHeapEnd;

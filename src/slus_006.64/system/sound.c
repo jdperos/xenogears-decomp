@@ -371,9 +371,39 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003AF24);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003AFA0);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003AFFC);
+//----------------------------------------------------------------------------------------------------------------------
+// NOTE(jperos): This matches on gcc 2.6.3 found here: https://decomp.me/scratch/hBvXX
+void SoundAbortAllVoices(AudioManager* manager) {
+    AudioElement* pElement;
+    u32 cnt;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B060);
+    cnt = manager->element_count;
+    pElement = &manager->elements[0];
+
+    do {
+
+        if (pElement->active_flag) {
+            SoundAbortVoiceOnChannel(&pElement->voice_data, pElement->voice_number);
+        }
+        pElement++;
+        cnt--;
+    } while (cnt);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void SoundReleaseAllVoices(AudioManager* manager) {
+    AudioElement* pElement;
+    u32 cnt;
+
+    cnt = manager->element_count;
+    pElement = &manager->elements[0];
+
+    do {
+        SoundReleaseVoiceFromChannel(&pElement->voice_data, pElement->voice_number);
+        pElement++;
+        cnt--;
+    } while (cnt);
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B0AC);
 
@@ -834,7 +864,7 @@ void SoundReleaseVoiceFromChannel(SoundVoiceData* voiceData, uint channelIndex)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void SoundCancelVoiceOnChannel(SoundVoiceData* voiceData, u32 channelIndex) {
+void SoundAbortVoiceOnChannel(SoundVoiceData* voiceData, u32 channelIndex) {
 
     if ((channelIndex < NUM_VOICES) && (g_SoundChannels[channelIndex] == voiceData)) {
         g_unk_VoicesNeedingProcessing = (1 << channelIndex) | g_unk_VoicesNeedingProcessing;
