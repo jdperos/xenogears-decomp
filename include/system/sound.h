@@ -43,6 +43,9 @@ typedef struct {
 #define SOUND_SPU_COMMAND_WRITE 0x1
 #define SOUND_SPU_COMMAND_READ 0x2
 
+#define SOUND_WDS_ALLOCATE_AT_ADDRESS 0
+#define SOUND_WDS_ALLOCATE_AUTOMATIC -1
+
 #define FILE_SIGNATURE(a, b, c, d) (d<<24)+(c<<16)+(b<<8)+a
 
 typedef void (*SoundCommandCallback_t)(void);
@@ -54,6 +57,22 @@ typedef struct {
     /* 0x8 */ void* pPrev;
     /* 0xC */ void* pNext;
 } SoundHeapBlockHeader;
+
+
+#define MAX_SPU_MEMORY_BLOCKS 0xC
+
+#define SPU_MEMORY_FREE 0x0
+#define SPU_MEMORY_RESERVED 0x1 // Or last block?
+#define SPU_MEMORY_IN_USE 0x80
+
+typedef struct {
+    /* 0x0 */ unsigned char flags;
+    /* 0x1 */ unsigned char unk1; // Type of memory/data?
+    /* 0x2 */ short nextBlockIndex;
+    /* 0x4 */ int spuAddress;
+    /* 0x8 */ int size;
+    /* 0xC */ unsigned int unkC; // Padding?
+} SoundSpuMemoryBlock;
 
 // Possible a more general queue to sending commands to the SPU,
 // but all supported commands has to do with data transfer.
@@ -82,9 +101,26 @@ struct SoundFile_t {
 };
 typedef struct SoundFile_t SoundFile;
 
+struct SoundWDSEntry_t {
+    /* 0x0  */ u_char _unk0[0x10];
+    /* 0x10 */ unsigned int headerSizeMby;
+    /* 0x14 */ unsigned int adpcmDataSize; // Sample size
+    /* 0x18 */ unsigned int adpcmDataOffset; // Offset to data to write to SPU
+    /* 0x1C */ unsigned short unk1C;
+    /* 0x1E */ unsigned short unk1E;
+    /* 0x20 */ unsigned short id;
+    /* 0x22 */ u_short unk22;
+    /* 0x24 */ u_int unk24;
+    /* 0x28 */ int spuMemoryAddress; // Optional
+    /* 0x2C */ struct SoundWDSEntry_t* pNext;
+};
+typedef struct SoundWDSEntry_t SoundWDSEntry;
+
+
 typedef struct {
     u16 active_flag;                // 0x00 - checked for != 0
-    s8 unknown_data[0x25];          // 0x02 - 0x26
+    u16 status_flags;               // 0x02 - contains bit flags of some sort
+    s8 unknown_data[0x23];          // 0x04 - 0x26
     u8 voice_number;                // 0x27 - SPU voice index
     s8 padding[0x8];                // 0x28 - 0x2F
     SoundVoiceData voice_data;      // 0x30 - passed to cancel function
@@ -110,11 +146,16 @@ extern SoundTransferCommand* g_SoundTransferQueue;
 extern u16 g_SoundTransferQueueReadIndex;
 extern u16 g_SoundTransferQueueWriteIndex;
 
-
+// SPU Memory Management
+extern SoundSpuMemoryBlock g_SoundSpuMemoryBlocks[MAX_SPU_MEMORY_BLOCKS];
 
 extern u_long g_unk_SoundEvent; // Event Descriptor
 
 extern SoundFile* g_SoundSedsLinkedList;
+extern SoundWDSEntry* g_SoundWdsLinkedList;
+
+extern int g_SoundWdsCurSpuAddress;
+extern int g_SoundWdsRemainingBytes;
 
 extern void* g_pSoundSpuRegisters;
 
