@@ -535,10 +535,28 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003AE84);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003AF24);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003AFA0);
+//----------------------------------------------------------------------------------------------------------------------
+void func_8003AFA0(AudioManager* manager) {
+    AudioElement* pElement;
+    u32 cnt;
+
+    cnt = manager->element_count;
+    pElement = &manager->elements[0];
+
+    do {
+        // What's going on here? Are the first two fields just a u32?
+        if ((*(u32*)pElement & 0x101) == 0x101) {
+            // I'm beginning to think that this isn't just a flag for activity considering this mask
+            if ((pElement->active_flag & 0x30) == 0) {
+                pElement->status_flags |= 0x1;
+            }
+        }
+        pElement++;
+        cnt--;
+    } while (cnt);
+}
 
 //----------------------------------------------------------------------------------------------------------------------
-// NOTE(jperos): This matches on gcc 2.6.3 found here: https://decomp.me/scratch/hBvXX
 void SoundAbortAllVoices(AudioManager* manager) {
     AudioElement* pElement;
     u32 cnt;

@@ -119,7 +119,8 @@ typedef struct SoundWDSEntry_t SoundWDSEntry;
 
 typedef struct {
     u16 active_flag;                // 0x00 - checked for != 0
-    s8 unknown_data[0x25];          // 0x02 - 0x26
+    u16 status_flags;               // 0x02 - contains bit flags of some sort
+    s8 unknown_data[0x23];          // 0x04 - 0x26
     u8 voice_number;                // 0x27 - SPU voice index
     s8 padding[0x8];                // 0x28 - 0x2F
     SoundVoiceData voice_data;      // 0x30 - passed to cancel function
