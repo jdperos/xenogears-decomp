@@ -322,6 +322,7 @@ CheckCallback = 0x8004B894;
 callback = 0x80042CA8;
 CdReadSync = 0x80043670;
 CdReadCallback = 0x8004373C;
+CdReadMode = 0x80043754;
 CD_cbsync = 0x800564A8;
 CD_debug = 0x800564B4;
 CD_status = 0x800564B8;
@@ -332,7 +333,7 @@ CD_mode = 0x800564C8;
 CD_com = 0x800564C9;
 CD_comstr = 0x800564D0; // size:0x80
 CD_intstr = 0x80056550; // size:0x20
-ComAttr = 0x800565F0; // size:0x200
+ComAttr = 0x800565F0; // size:0x180
 reg0 = 0x80056770;
 reg1 = 0x80056774;
 reg2 = 0x80056778;
@@ -350,6 +351,7 @@ Alarm = 0x8005A228; // size:0xC
 
 // PSY-Q Std library?
 puts = 0x80042D8C;
+putchar = 0x80042DDC;
 
 // PSY-Q Graphics (libgpu)
 SetDefDrawEnv = 0x80043928;

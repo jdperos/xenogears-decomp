@@ -25,7 +25,10 @@ typedef struct Alarm_t {
 extern int CD_debug;
 extern CdCallbackFn_t* CD_cbsync;
 extern CdCallbackFn_t* CD_cbready;
-extern void callback;
+void callback();
+extern int Vsync(int mode);
+int CheckCallback();
+int getintr();
 
 /**
   State.
@@ -53,13 +56,14 @@ extern volatile u32* d_pcr;
 extern volatile u32* d3_madr;
 extern volatile u32* d3_bcr;
 extern volatile u32* d3_chcr;
+extern volatile u32* _spu;
 
 extern u32 D_8005A234;
 extern u8 D_800567C1[];
 extern char D_80018F18;
 extern char D_80018F24;
 extern int D_8005678C;
-extern volatile u32* _spu;
+extern int D_80056878;
 
 /**
   Strings
@@ -90,11 +94,12 @@ extern char* CD_intstr[];
 //      "DataEnd", "DiskError", "?",        "?",
 //  };
 
-extern char* CD_str0; // "CD timeout: "
-extern char* CD_str1; // "%s:(%s) Sync=%s, Ready=%s\n"
-extern char* CD_str2; // "%s...\n"
-extern char* CD_str3; // "%s: no param\n"
-extern char* CD_str4; // "CD_cw"
+extern char* CD_str0;    // "CD timeout: "
+extern char* CD_str1;    // "%s:(%s) Sync=%s, Ready=%s\n"
+extern char* CD_str2;    // "%s...\n"
+extern char* CD_str3;    // "%s: no param\n"
+extern char* CD_str4;    // "CD_cw"
+extern char* D_80018F3C; // "<NULL>"
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdInit);
 
@@ -223,11 +228,19 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_sync);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_ready);
 
-extern int Vsync(int mode);
-extern int CheckCallback();
-extern int getintr();
+static inline void _memcpy(void* _dst, void* _src, u32 _size) {
+    char* pDst = (char*)_dst;
+    char* pSrc = (char*)_src;
 
-static inline void handle_cb() {
+    if (pDst == 0)
+        return;
+
+    while (_size--) {
+        *pDst++ = *pSrc++;
+    }
+}
+
+static inline void _callback() {
     u8 masked;
     u32 status;
 
@@ -241,18 +254,6 @@ static inline void handle_cb() {
         }
     }
     *reg0 = masked;
-}
-
-static inline void _memcpy(void* _dst, void* _src, u32 _size) {
-    char* pDst = (char*)_dst;
-    char* pSrc = (char*)_src;
-
-    if (pDst == 0)
-        return;
-
-    while (_size--) {
-        *pDst++ = *pSrc++;
-    }
 }
 
 int CD_cw(u8 arg0, u8* arg1, u8* arg2, int arg3) {
@@ -318,7 +319,7 @@ int CD_cw(u8 arg0, u8* arg1, u8* arg2, int arg3) {
         }
 
         if (CheckCallback() != 0) {
-            handle_cb();
+            _callback();
         }
     }
 
@@ -453,30 +454,41 @@ int CD_getsector2(void* madr, size_t size) {
 }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042C98);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", callback);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", puts);
+void callback() {
+    return _callback();
+}
 
-void func_80042DDC(u8 byte) {
-    if (byte != 0x9) {
-        if (byte == 0xa) {
-            func_80042DDC(0xd);
+void puts(char* str) {
+    char ch;
+    if (!str)
+        str = (char*)&D_80018F3C;
+
+    while ((ch = *str++)) {
+        putchar(ch);
+    }
+}
+
+void putchar(char ch) {
+    if (ch != 0x9) {
+        if (ch == 0xa) {
+            putchar(0xd);
             D_8005A234 = 0;
-            write(1, &byte, 1);
+            write(1, &ch, 1);
             return;
         }
     } else {
         do {
-            func_80042DDC(0x20);
+            putchar(0x20);
         } while (D_8005A234 & 0x7);
         return;
     }
 
-    if (D_800567C1[byte] & 0x97) {
+    if (D_800567C1[ch] & 0x97) {
         D_8005A234++;
     }
 
-    write(1, &byte, 1);
+    write(1, &ch, 1);
 }
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042E90);
@@ -491,4 +503,9 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReadSync);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReadCallback);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80043754);
+int CdReadMode(int mode) {
+    int prev;
+    prev = *(volatile int*)&D_80056878;
+    *(volatile int*)&D_80056878 = mode;
+    return prev;
+}
