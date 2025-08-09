@@ -964,7 +964,22 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E54C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E5BC);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E680);
+//----------------------------------------------------------------------------------------------------------------------
+void unk_SoundSetFlagsOnActiveVoices(u16 flags, AudioManager* manager) {
+    AudioElement* pElement;
+    u32 cnt;
+
+    pElement = &manager->elements[0];
+    cnt = manager->element_count;
+
+    do {
+        if (pElement->active_flag) {
+            pElement->status_flags = flags | pElement->status_flags;
+        }
+        pElement++;
+        cnt--;
+    } while (cnt);
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void SoundSetFlagsOnActiveVoices(AudioManager* manager, s32 flags) {
