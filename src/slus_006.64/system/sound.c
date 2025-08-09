@@ -535,11 +535,59 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003AE84);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003AF24);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003AFA0);
+//----------------------------------------------------------------------------------------------------------------------
+void func_8003AFA0(AudioManager* manager) {
+    AudioElement* pElement;
+    u32 cnt;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003AFFC);
+    cnt = manager->element_count;
+    pElement = &manager->elements[0];
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B060);
+    do {
+        // What's going on here? Are the first two fields just a u32?
+        if ((*(u32*)pElement & 0x101) == 0x101) {
+            // I'm beginning to think that this isn't just a flag for activity considering this mask
+            if ((pElement->active_flag & 0x30) == 0) {
+                pElement->status_flags |= 0x1;
+            }
+        }
+        pElement++;
+        cnt--;
+    } while (cnt);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void SoundAbortAllVoices(AudioManager* manager) {
+    AudioElement* pElement;
+    u32 cnt;
+
+    cnt = manager->element_count;
+    pElement = &manager->elements[0];
+
+    do {
+
+        if (pElement->active_flag) {
+            SoundAbortVoiceOnChannel(&pElement->voice_data, pElement->voice_number);
+        }
+        pElement++;
+        cnt--;
+    } while (cnt);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void SoundReleaseAllVoices(AudioManager* manager) {
+    AudioElement* pElement;
+    u32 cnt;
+
+    cnt = manager->element_count;
+    pElement = &manager->elements[0];
+
+    do {
+        SoundReleaseVoiceFromChannel(&pElement->voice_data, pElement->voice_number);
+        pElement++;
+        cnt--;
+    } while (cnt);
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B0AC);
 
@@ -700,8 +748,9 @@ void SoundSpuIRQHandler(void) {
     g_SoundControlFlags &= ~SOUND_CTL_FLAG_IRQ_HANDLER;
 }
 
-// TODO(jperos): SetSpuIrqCallBack
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C010);
+void SoundSetSpuIrqCallback(u32 func) {
+    g_SoundSpuIrqCallbackFn = func;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C020);
 
@@ -928,7 +977,7 @@ void SoundClearVoiceDataPointers(void) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void SoundAssignVoiceToChannel(SoundVoiceData* voiceData, u32 channelIndex) {
+void SoundAssignVoiceToChannelAndStop(SoundVoiceData* voiceData, u32 channelIndex) {
 
     SoundVoiceData* currentVoice;
     SoundVoiceData** pChannel;
@@ -961,7 +1010,23 @@ void SoundAssignVoiceToChannel(SoundVoiceData* voiceData, u32 channelIndex) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E7E0);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundAssignVoiceToChannel(SoundVoiceData* voiceData, u32 channelIndex) {
+    SoundVoiceData* currentVoice;
+    SoundVoiceData** channelPtr;
+
+    channelPtr = &g_SoundChannels[channelIndex];
+    if (channelIndex < NUM_VOICES) {
+        currentVoice = *channelPtr;
+
+        if (currentVoice == voiceData || (currentVoice && currentVoice->priority > voiceData->priority)) {
+            return;
+        }
+
+        voiceData->assignedVoice = channelIndex;
+        *channelPtr = voiceData;
+    }
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void SoundReleaseVoiceFromChannel(SoundVoiceData* voiceData, uint channelIndex)
@@ -982,7 +1047,14 @@ void SoundReleaseVoiceFromChannel(SoundVoiceData* voiceData, uint channelIndex)
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E8A4);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundAbortVoiceOnChannel(SoundVoiceData* voiceData, u32 channelIndex) {
+
+    if ((channelIndex < NUM_VOICES) && (g_SoundChannels[channelIndex] == voiceData)) {
+        g_unk_VoicesNeedingProcessing = (1 << channelIndex) | g_unk_VoicesNeedingProcessing;
+        g_SoundKeyOnFlags = ~(1 << channelIndex) & g_SoundKeyOnFlags;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E900);
 
@@ -992,7 +1064,8 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EBF0);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003EEA0);
 
-void SoundTryAssignAndPlayVoiceOnChannel(SoundVoiceData* voiceData, u32 channelIndex)
+//----------------------------------------------------------------------------------------------------------------------
+void SoundAssignVoiceToChannelAndPlay(SoundVoiceData* voiceData, u32 channelIndex)
 {
     SoundVoiceData* currentVoice;
     SoundVoiceData** pChannel;
