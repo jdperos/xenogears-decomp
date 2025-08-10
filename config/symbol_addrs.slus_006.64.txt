@@ -325,6 +325,13 @@ CD_getsector2 = 0x80042BA8;
 CheckCallback = 0x8004B894;
 //...
 callback = 0x80042CA8;
+toupper = 0x80042E90;
+tolower = 0x80042EC0;
+cb_read = 0x80042EF0;
+cb_data = 0x800431C0;
+cd_read_retry = 0x800432BC;
+CdReadBreak = 0x800434D0;
+CdRead = 0x8004356C;
 CdReadSync = 0x80043670;
 CdReadCallback = 0x8004373C;
 CdReadMode = 0x80043754;
@@ -351,6 +358,8 @@ d_pcr = 0x800567A8;
 d3_madr = 0x800567AC;
 d3_bcr = 0x800567B0;
 d3_chcr = 0x800567B4;
+CD_cbread = 0x80056844;
+ReadAttr = 0x80056848; // size:0x3C
 Result = 0x8005A210; // size:0x18
 Alarm = 0x8005A228; // size:0xC
 
