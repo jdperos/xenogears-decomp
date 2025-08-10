@@ -11,20 +11,39 @@ typedef struct {
     unsigned char c;
 } Intr_t;
 
-typedef struct Result_t {
+typedef struct {
     int unk0;
     int unk4;
 } Result_t;
 
-typedef struct Alarm_t {
+typedef struct {
     int unk0;
     int unk4;
     char* unk8;
 } Alarm_t;
 
+typedef struct {
+    int unk0;
+    int unk4;
+    int unk8;
+    int unkC;
+    int unk10;
+    int unk14;
+    int unk18;
+    int unk1C;
+    int unk20;
+    int unk24;
+    int unk28;
+    int unk2C;
+    int mode; // 0: Blocking, 1: Non-blocking
+    int unk34;
+    int unk38;
+} ReadAttr_t;
+
 extern int CD_debug;
-extern CdCallbackFn_t* CD_cbsync;
-extern CdCallbackFn_t* CD_cbready;
+extern CdlCB CD_cbsync;
+extern CdlCB CD_cbready;
+extern CdlCB CD_cbread;
 void callback();
 extern int Vsync(int mode);
 int CheckCallback();
@@ -42,6 +61,7 @@ extern volatile Intr_t Intr;
 extern volatile Alarm_t Alarm;
 extern int ComAttr[];
 extern Result_t Result[3];
+extern volatile ReadAttr_t ReadAttr;
 
 /**
   CD Drive + DMA Registers.
@@ -63,7 +83,7 @@ extern u8 D_800567C1[];
 extern char D_80018F18;
 extern char D_80018F24;
 extern int D_8005678C;
-extern int D_80056878;
+extern int D_80056864; // Keeps track of remaining sectors.
 
 /**
   Strings
@@ -181,17 +201,17 @@ int CdReady(int mode, u_char* result) {
     return nStatus;
 }
 
-CdCallbackFn_t* CdSyncCallback(CdCallbackFn_t* callback) {
-    CdCallbackFn_t* prevCallback;
+CdlCB CdSyncCallback(CdlCB func) {
+    CdlCB prevCallback;
     prevCallback = CD_cbsync;
-    CD_cbsync = callback;
+    CD_cbsync = func;
     return prevCallback;
 }
 
-CdCallbackFn_t* CdReadyCallback(CdCallbackFn_t* callback) {
-    CdCallbackFn_t* prevCallback;
+CdlCB CdReadyCallback(CdlCB func) {
+    CdlCB prevCallback;
     prevCallback = CD_cbready;
-    CD_cbready = callback;
+    CD_cbready = func;
     return prevCallback;
 }
 
@@ -491,21 +511,43 @@ void putchar(char ch) {
     write(1, &ch, 1);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042E90);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042EC0);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042EF0);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800431C0);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800432BC);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_800434D0);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_8004356C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", toupper);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", tolower);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", cb_read);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", cb_data);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", cd_read_retry);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReadBreak);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdRead);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReadSync);
+int CdReadSync(int mode, u_char* result) {
+    int status;
+    while (true) {
+        status = -1;
+        if (Vsync(-1) <= ReadAttr.unk1C + 0x4B0) {
+            if (ReadAttr.unk14 < 0 || Vsync(-1) > ReadAttr.unk18 + 0x3C) {
+                cd_read_retry(1);
+                status = ReadAttr.unk0;
+            } else {
+                status = ReadAttr.unk14;
+            }
+        }
+        if (mode != 0 || status <= 0) {
+            CdReady(1, result);
+            return status;
+        }
+    }
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReadCallback);
+CdlCB CdReadCallback(CdlCB func) {
+    CdlCB prev;
+    prev = CD_cbread;
+    CD_cbread = func;
+    return prev;
+}
 
 int CdReadMode(int mode) {
     int prev;
-    prev = *(volatile int*)&D_80056878;
-    *(volatile int*)&D_80056878 = mode;
+    prev = ReadAttr.mode;
+    ReadAttr.mode = mode;
     return prev;
 }
