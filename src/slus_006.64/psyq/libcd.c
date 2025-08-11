@@ -23,19 +23,19 @@ typedef struct {
 } Alarm_t;
 
 typedef struct {
-    int unk0;
-    int unk4;
+    int nsectors;
+    u_long* buf;
     int unk8;
-    int unkC;
-    int unk10;
-    int unk14;
+    int mode;
+    int secsize;
+    int status;
     int unk18;
-    int unk1C;
+    int vb_start;
     int unk20;
-    int unk24;
-    int unk28;
-    int unk2C;
-    int mode; // 0: Blocking, 1: Non-blocking
+    CdlCB prev_cbsync;
+    CdlCB prev_cbready;
+    CdlCB prev_cbdata;
+    int nonblock; // 0: Blocking, 1: Non-blocking
     int unk34;
     int unk38;
 } ReadAttr_t;
@@ -293,13 +293,13 @@ int CD_cw(u8 arg0, u8* arg1, u8* arg2, int arg3) {
 
     CD_sync(0, 0);
 
-    if (arg0 == 0x2) {
+    if (arg0 == CdlSetloc) {
         for (i = 0; i < 0x4; ++i) {
             *(u8*)((u32)&CD_pos + i) = arg1[i];
         }
     }
 
-    if (arg0 == 0xE) {
+    if (arg0 == CdlSetmode) {
         CD_mode = *arg1;
     }
 
@@ -414,16 +414,17 @@ int CD_init(void) {
     *reg3 = 0;
     *com_delay = 0x1325;
 
-    CD_cw(1, 0, 0, 0);
-    if (CD_status & 0x10) {
-        CD_cw(1, 0, 0, 0);
+    CD_cw(CdlNop, 0, 0, 0);
+    if (CD_status & CdlStatShellOpen) {
+        CD_cw(CdlNop, 0, 0, 0);
     }
 
+    // NOTE: 0xA is the init command.
     if (CD_cw(0xA, 0, 0, 0) != 0) {
         return -1;
     }
 
-    if (CD_cw(0xC, 0, 0, 0) != 0) {
+    if (CD_cw(CdlDemute, 0, 0, 0) != 0) {
         return -1;
     }
 
@@ -517,18 +518,44 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", cb_read);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", cb_data);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", cd_read_retry);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReadBreak);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdRead);
+
+int CdRead(int sectors, u_long* buf, int mode) {
+    ReadAttr.mode = mode;
+    switch (ReadAttr.mode & (CdlModeSize0 | CdlModeSize1)) {
+    case (0):
+        ReadAttr.secsize = 2048 / 4;
+        break;
+    case (CdlModeSize1):
+        ReadAttr.secsize = 2340 / 4;
+        break;
+    default: /* CdlModeSize0 set (alone or with CdlModeSize1) */
+        ReadAttr.secsize = 2328 / 4;
+    }
+    ReadAttr.mode |= 0x20;
+    ReadAttr.buf = buf;
+    ReadAttr.nsectors = sectors;
+    ReadAttr.prev_cbsync = CdSyncCallback(0);
+    ReadAttr.prev_cbready = CdReadyCallback(0);
+    if (ReadAttr.nonblock & 0x1) {
+        ReadAttr.prev_cbdata = CdDataSyncCallback(0);
+    }
+    ReadAttr.vb_start = Vsync(-1);
+    if (CdStatus() & (CdlStatPlay | CdlStatSeek | CdlStatRead)) {
+        CdControlB(CdlPause, 0, 0);
+    }
+    return cd_read_retry(0) > 0;
+}
 
 int CdReadSync(int mode, u_char* result) {
     int status;
     while (true) {
         status = -1;
-        if (Vsync(-1) <= ReadAttr.unk1C + 0x4B0) {
-            if (ReadAttr.unk14 < 0 || Vsync(-1) > ReadAttr.unk18 + 0x3C) {
+        if (Vsync(-1) <= ReadAttr.vb_start + 0x4B0) {
+            if (ReadAttr.status < 0 || Vsync(-1) > ReadAttr.unk18 + 0x3C) {
                 cd_read_retry(1);
-                status = ReadAttr.unk0;
+                status = ReadAttr.nsectors;
             } else {
-                status = ReadAttr.unk14;
+                status = ReadAttr.status;
             }
         }
         if (mode != 0 || status <= 0) {
@@ -547,7 +574,7 @@ CdlCB CdReadCallback(CdlCB func) {
 
 int CdReadMode(int mode) {
     int prev;
-    prev = ReadAttr.mode;
-    ReadAttr.mode = mode;
+    prev = ReadAttr.nonblock;
+    ReadAttr.nonblock = mode;
     return prev;
 }
