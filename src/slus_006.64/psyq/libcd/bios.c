@@ -2,9 +2,10 @@
 #include "psyq/libdma.h"
 #include "psyq/libcd.h"
 #include "psyq/stdio.h"
+
 /**
-  Internal types
-*/
+ * Internal types
+ */
 typedef struct {
     unsigned char sync;
     unsigned char ready;
@@ -22,50 +23,29 @@ typedef struct {
     char* unk8;
 } Alarm_t;
 
-typedef struct {
-    int nsectors;
-    u_long* buf;
-    int unk8;
-    int mode;
-    int secsize;
-    int status;
-    int unk18;
-    int vb_start;
-    int unk20;
-    CdlCB prev_cbsync;
-    CdlCB prev_cbready;
-    CdlCB prev_cbdata;
-    int nonblock; // 0: Blocking, 1: Non-blocking
-    int unk34;
-    int unk38;
-} ReadAttr_t;
-
-extern int CD_debug;
+/**
+ * Callbacks
+ */
 extern CdlCB CD_cbsync;
 extern CdlCB CD_cbready;
-extern CdlCB CD_cbread;
-void callback();
-extern int Vsync(int mode);
-int CheckCallback();
-int getintr();
 
 /**
-  State.
+ * State
  */
-extern unsigned char CD_mode;
-extern unsigned char CD_com;
 extern int CD_status;
 extern int CD_status1;
+extern unsigned char CD_mode;
+extern unsigned char CD_com;
 extern CdlLOC CD_pos;
+extern int CD_debug;
 extern volatile Intr_t Intr;
 extern volatile Alarm_t Alarm;
 extern int ComAttr[];
 extern Result_t Result[3];
-extern volatile ReadAttr_t ReadAttr;
 
 /**
-  CD Drive + DMA Registers.
-*/
+ * CD Drive + DMA Registers
+ */
 extern volatile u8* reg0; // CD Index/Status.
 extern volatile u8* reg1;
 extern volatile u8* reg2;
@@ -78,15 +58,8 @@ extern volatile u32* d3_bcr;
 extern volatile u32* d3_chcr;
 extern volatile u32* _spu;
 
-extern u32 D_8005A234;
-extern u8 D_800567C1[];
-extern char D_80018F18;
-extern char D_80018F24;
-extern int D_8005678C;
-extern int D_80056864; // Keeps track of remaining sectors.
-
 /**
-  Strings
+ * Strings
  */
 extern int CD_comstr[];
 //  char* CD_comstr[32] = {"CdlSync",    "CdlNop",
@@ -120,133 +93,23 @@ extern char* CD_str2;    // "%s...\n"
 extern char* CD_str3;    // "%s: no param\n"
 extern char* CD_str4;    // "CD_cw"
 extern char* D_80018F3C; // "<NULL>"
+extern char D_80018F18;
+extern char D_80018F24;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdInit);
+/**
+ * Unknown
+ */
+extern int D_8005678C;
 
-void _cbsync(void) {
-    DeliverEvent(0xF0000003, 0x20);
-}
+// TODO: Get defs from .h file instead of extern.
+extern int Vsync(int mode);
+extern int CheckCallback();
 
-void _cbready(void) {
-    DeliverEvent(0xF0000003, 0x40);
-}
-
-void _cbread() {
-    DeliverEvent(0xF0000003, 0x40);
-}
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", DeliverEvent);
-
-int CdStatus(void) {
-    // FIXME: CD_status gets loaded as a byte here for some reason.
-    return (*((u8*)&CD_status));
-}
-
-int CdMode(void) {
-    return CD_mode;
-}
-
-int CdLastCom(void) {
-    return CD_com;
-}
-
-CdlLOC* CdLastPos(void) {
-    return &CD_pos;
-}
-
-int CdReset(int mode) {
-    if (mode == 2) {
-        CD_initintr();
-        return 1;
-    }
-
-    if (CD_init() != 0)
-        return 0;
-
-    if (mode == 1) {
-        if (CD_initvol() != 0)
-            return 0;
-    }
-
-    return 1;
-}
-
-void CdFlush(void) {
-    CD_flush();
-}
-
-int CdSetDebug(int level) {
-    int prevLevel;
-
-    prevLevel = CD_debug;
-    CD_debug = level;
-    return prevLevel;
-}
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdComstr);
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdIntstr);
-
-int CdSync(int mode, u_char* result) {
-    int nStatus;
-
-    nStatus = CD_sync(mode, result);
-    return nStatus;
-}
-
-int CdReady(int mode, u_char* result) {
-    int nStatus;
-
-    nStatus = CD_ready(mode, result);
-    return nStatus;
-}
-
-CdlCB CdSyncCallback(CdlCB func) {
-    CdlCB prevCallback;
-    prevCallback = CD_cbsync;
-    CD_cbsync = func;
-    return prevCallback;
-}
-
-CdlCB CdReadyCallback(CdlCB func) {
-    CdlCB prevCallback;
-    prevCallback = CD_cbready;
-    CD_cbready = func;
-    return prevCallback;
-}
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControl);
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControlF);
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdControlB);
-
-int CdMix(CdlATV* vol) {
-    CD_vol(vol);
-    return 1;
-}
-
-int CdGetSector(void* madr, int size) {
-    return CD_getsector(madr, size) == 0;
-}
-
-int CdGetSector2(void* madr, int size) {
-    return CD_getsector2(madr, size) == 0;
-}
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdDataSyncCallback);
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdDataSync);
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdIntToPos);
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdPosToInt);
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", getintr);
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_sync);
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_ready);
+/**
+ * Fn Foward Decls
+ */
+void callback();
+int getintr();
 
 static inline void _memcpy(void* _dst, void* _src, u32 _size) {
     char* pDst = (char*)_dst;
@@ -275,6 +138,12 @@ static inline void _callback() {
     }
     *reg0 = masked;
 }
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/bios", getintr);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/bios", CD_sync);
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/bios", CD_ready);
 
 int CD_cw(u8 arg0, u8* arg1, u8* arg2, int arg3) {
     int i;
@@ -358,7 +227,7 @@ int CD_vol(CdlATV* vol) {
     return 0;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_flush);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/bios", CD_flush);
 
 int CD_initvol(void) {
     CdlATV vol;
@@ -386,7 +255,7 @@ int CD_initvol(void) {
     return 0;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_initintr);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/bios", CD_initintr);
 
 int CD_init(void) {
     puts(&D_80018F18);
@@ -435,7 +304,7 @@ int CD_init(void) {
     return 0;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CD_datasync);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/bios", CD_datasync);
 
 int CD_getsector(void* madr, size_t size) {
     *reg0 = 0;
@@ -474,107 +343,8 @@ int CD_getsector2(void* madr, size_t size) {
     return 0;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", func_80042C98);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/bios", func_80042C98);
 
 void callback() {
     return _callback();
-}
-
-void puts(char* str) {
-    char ch;
-    if (!str)
-        str = (char*)&D_80018F3C;
-
-    while ((ch = *str++)) {
-        putchar(ch);
-    }
-}
-
-void putchar(char ch) {
-    if (ch != 0x9) {
-        if (ch == 0xa) {
-            putchar(0xd);
-            D_8005A234 = 0;
-            write(1, &ch, 1);
-            return;
-        }
-    } else {
-        do {
-            putchar(0x20);
-        } while (D_8005A234 & 0x7);
-        return;
-    }
-
-    if (D_800567C1[ch] & 0x97) {
-        D_8005A234++;
-    }
-
-    write(1, &ch, 1);
-}
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", toupper);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", tolower);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", cb_read);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", cb_data);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", cd_read_retry);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", CdReadBreak);
-
-int CdRead(int sectors, u_long* buf, int mode) {
-    ReadAttr.mode = mode;
-    switch (ReadAttr.mode & (CdlModeSize0 | CdlModeSize1)) {
-    case (0):
-        ReadAttr.secsize = 2048 / 4;
-        break;
-    case (CdlModeSize1):
-        ReadAttr.secsize = 2340 / 4;
-        break;
-    default: /* CdlModeSize0 set (alone or with CdlModeSize1) */
-        ReadAttr.secsize = 2328 / 4;
-    }
-    ReadAttr.mode |= 0x20;
-    ReadAttr.buf = buf;
-    ReadAttr.nsectors = sectors;
-    ReadAttr.prev_cbsync = CdSyncCallback(0);
-    ReadAttr.prev_cbready = CdReadyCallback(0);
-    if (ReadAttr.nonblock & 0x1) {
-        ReadAttr.prev_cbdata = CdDataSyncCallback(0);
-    }
-    ReadAttr.vb_start = Vsync(-1);
-    if (CdStatus() & (CdlStatPlay | CdlStatSeek | CdlStatRead)) {
-        CdControlB(CdlPause, 0, 0);
-    }
-    return cd_read_retry(0) > 0;
-}
-
-int CdReadSync(int mode, u_char* result) {
-    int status;
-    while (true) {
-        status = -1;
-        if (Vsync(-1) <= ReadAttr.vb_start + 0x4B0) {
-            if (ReadAttr.status < 0 || Vsync(-1) > ReadAttr.unk18 + 0x3C) {
-                cd_read_retry(1);
-                status = ReadAttr.nsectors;
-            } else {
-                status = ReadAttr.status;
-            }
-        }
-        if (mode != 0 || status <= 0) {
-            CdReady(1, result);
-            return status;
-        }
-    }
-}
-
-CdlCB CdReadCallback(CdlCB func) {
-    CdlCB prev;
-    prev = CD_cbread;
-    CD_cbread = func;
-    return prev;
-}
-
-int CdReadMode(int mode) {
-    int prev;
-    prev = ReadAttr.nonblock;
-    ReadAttr.nonblock = mode;
-    return prev;
 }

@@ -104,7 +104,10 @@ segments:
       - [0x300E8, c, psyq/libc]
       - [0x30C54, c, psyq/libapi]
       - [0x3137C, asm] # Likely part of libapi
-      - [0x31508, c, psyq/libcd]
+      - [0x31508, c, psyq/libcd/sys]
+      - [0x31DB4, c, psyq/libcd/bios]
+      - [0x3358C, c, psyq/libc2/puts]
+      - [0x336F0, c, psyq/libcd/cdread]
       - [0x33F6C, asm] # Likely part of libgpu
       - [0x34128, c, psyq/libgpu]
       - [0x35B7C, asm]
