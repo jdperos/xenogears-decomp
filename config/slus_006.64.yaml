@@ -110,11 +110,10 @@ segments:
       - [0x35B7C, asm]
       - [0x393C4, c, psyq/libgte]
       - [0x3BB2C, asm] # Part of libetc?
-
       - [0x3BD4C, c, psyq/libetc/vsync]
-      - [0x3BF30, c, psyq/libetc/rcnt]
+      - [0x3BF30, c, psyq/libapi_3]
       - [0x3BF40, c, psyq/libetc/intr]
-      - [0x3BF40, c, psyq/libetc]
+      - [0x3C650, c, psyq/libapi_2]
       - [0x3C720, c, psyq/libetc/intr_vsync]
       - [0x3C848, c, psyq/libetc/intr_dma]
       - [0x3CAF0, c, psyq/libetc/video_mode]
@@ -125,7 +124,7 @@ segments:
       - [0x3F080, asm] # Likely part of libcard
       - [0x3F290, sdata]
       #- [0x480A4, .sdata, psyq/libetc]
-      #- [0x49130, sdata]
+      #- [0x49140, sdata]
       - [0x49A48, .sdata, system/memory]
       - [0x49AB8, .sdata, system/heap_debug]
       - [0x49ABC, data]

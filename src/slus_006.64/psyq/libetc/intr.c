@@ -49,9 +49,15 @@ VoidCallback_t DMACallback(int dma, VoidCallback_t fn) {
     return g_pInterruptControl->setDMAIntrCallback(dma, fn);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", func_8004B7D0);
+//INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc/intr", func_8004B7D0);
+void func_8004B7D0(VoidCallback_t fn) {
+    g_pInterruptControl->setVsyncIntrCallback(4, fn);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", func_8004B804);
+//INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc/intr", func_8004B804);
+int func_8004B804(int ch, VoidCallback_t fn) {
+    return g_pInterruptControl->setVsyncIntrCallback(ch, fn);
+}
 
 void* StopCallback(void) {
     return g_pInterruptControl->intrStopHandler(); 
@@ -97,16 +103,17 @@ void* startIntr() {
     return &g_InterruptEnvironment;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", trapIntr);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc/intr", trapIntr);
 
 extern char D_80019408; // "unexpected interrupt(%04x)\n"
 extern char D_80019424; // "intr timeout(%04x:%04x)\n"
+
 /*
 void trapIntr() {
     int i;
     u_short mask;
 
-    if (!g_InterruptEnvironment.interruptsInitialized) {
+    if (g_InterruptEnvironment.interruptsInitialized == 0) {
         printf(&D_80019408, *g_pI_STAT);
         ReturnFromException();
     }

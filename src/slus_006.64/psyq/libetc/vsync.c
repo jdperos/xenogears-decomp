@@ -3,6 +3,8 @@
 
 // Adapted from https://github.com/sozud/psy-q-decomp
 
+void ChangeClearRCnt(int, int);
+
 int Vsync(int mode) {
     int nGpuStatusReg;
     int nResult;

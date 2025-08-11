@@ -14,9 +14,9 @@ void* startIntrDMA(void) {
     return &setIntrDMA;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", trapIntrDMA);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc/intr_dma", trapIntrDMA);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc", setIntrDMA);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc/intr_dma", setIntrDMA);
 
 static void memclrIntrDMA(void(**callbacks)(void), unsigned int numCallbacks) {
     while (numCallbacks--) {
