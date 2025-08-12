@@ -37,5 +37,5 @@ void putchar(char ch) {
     write(1, &ch, 1);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", toupper);
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd", tolower);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libc2/puts", toupper);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libc2/puts", tolower);
