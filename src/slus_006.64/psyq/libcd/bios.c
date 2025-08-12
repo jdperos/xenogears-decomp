@@ -23,6 +23,8 @@ typedef struct {
     char* unk8;
 } Alarm_t;
 
+extern u32 CD_nopen;
+
 /**
  * Callbacks
  */
@@ -40,7 +42,10 @@ extern CdlLOC CD_pos;
 extern int CD_debug;
 extern volatile Intr_t Intr;
 extern volatile Alarm_t Alarm;
+
+extern int D_80056570[];
 extern int ComAttr[];
+
 extern Result_t Result[3];
 
 /**
@@ -139,7 +144,152 @@ static inline void _callback() {
     *reg0 = masked;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/bios", getintr);
+//INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/bios", getintr);
+
+extern char D_80018E54; // "DiskError: "
+extern char D_80018E60; // "com=&s,code=(%02x:%02x)\n"
+extern char D_80018E7C; // "CDROM unknown intr"
+extern char D_80018E90; // "(%d)\n"
+
+static int getintr(void) {
+    volatile u8 nReg;
+    u8 bHasError;
+    s32 i;
+    s32 j;
+
+    /*
+    After a primitive command is executed, an 8-byte value is always returned.
+    g_CdReadyResult and g_CdSyncResult stores the global return buffers for Ready and Sync.
+    */
+    volatile char buffer[8];
+
+    // CDROM REG0: Set bank to 1
+    *reg0 = 1;
+
+    // CDROM REG3 (HINTSTS): Mask out HC05 interrupt type
+    nReg = *reg3 & 0x7;
+
+    if (nReg == 0) {
+        return 0;
+    }
+
+    bHasError = 0;
+
+    while (nReg != (*reg3 & 7)) {
+        nReg = *reg3 & 0x7;
+    }
+
+    for (i = 0; i < 8; i++) {
+        if ((*reg0 & 0x20) == 0) {
+            break;
+        }
+        buffer[i] = *reg1;
+    }
+
+    for (j = i; j < 8; j++) {
+        buffer[j] = 0;
+    }
+    // REG0: Set bank to 1
+    *reg0 = 1;
+
+    // REG3 (HCLRCTL): Acknowledge and clear HC05 interrupts
+    *reg3 = 0x7;
+
+    // REG2 (HINTMSK): Enable all interrupt types on HC05
+    *reg2 = 0x7;
+
+    // Anything but ACK
+    if ((nReg != 3) || (D_80056570[CD_com + 0x40] != 0)) {
+        if ((CD_status & 0x10) == 0 && (buffer[0] & 0x10) != 0) {
+            CD_nopen++;
+        }
+        
+        CD_status = buffer[0];
+        CD_status1 = buffer[1];
+
+        /*
+        Usually the first return byte is the status byte, depending on the primitive command.
+        
+        Status bit flags:
+        CdlStatPlay 0x80 1: CD-DA playing
+        CdlStatSeek 0x40 1: seeking
+        CdlStatRead 0x20 1: reading data sector
+        CdlStatShellOpen 0x10 1: shell open*
+        CdlStatSeekError 0x04 1: error during seeking/reading
+        CdlStatStandby 0x02 1: motor rotating
+        CdlStatError 0x01 1: command issue error
+        */
+        bHasError = CD_status;
+        bHasError &= (0x1 | 0x4 | 0x8 | 0x10);
+    }
+
+    // DiskError - Log errors if debug level is appropriate
+    if ((nReg == 5) && (0 < CD_debug)) {
+        printf(&D_80018E54);
+        if (CD_debug > 0)
+            printf(&D_80018E60, CD_comstr[CD_com], CD_status, CD_status1);
+    }
+
+    switch (nReg) {
+        // Command ACK
+        case 3:
+            if (bHasError) {
+                Intr.sync = 5;
+                _memcpy(&Result[0], buffer, sizeof(Result_t));
+                return 2;
+            }
+            
+            if (D_80056570[CD_com] != 0) {
+                Intr.sync = 3;
+                _memcpy(&Result[0], buffer, sizeof(Result_t));
+                return 1;
+            }
+
+            Intr.sync = 2;
+            _memcpy(&Result[0], buffer, sizeof(Result_t));
+            return 2;
+        // Command Complete
+        case 2:
+            Intr.sync = bHasError ? 5 : 2;
+            _memcpy(&Result[0], buffer, sizeof(Result_t));
+            return 2;
+
+        // DataReady
+        case 1:
+            if (bHasError && i == 1) {
+                bHasError = 0;
+            }
+
+            Intr.ready = bHasError ? 5 : 1;
+            _memcpy(&Result[1], buffer, sizeof(Result_t));
+
+            // Set bank to 1
+            *reg0 = 0;
+
+            // HCHPCTL
+            *reg3 = 0;
+            return 4;
+
+        // DataEnd
+        case 4:
+            Intr.ready = Intr.c = 4;
+            _memcpy(&Result[2], buffer, sizeof(Result_t));
+            _memcpy(&Result[1], buffer, sizeof(Result_t));
+            return 4;
+        
+        // DiskError
+        case 5:
+            Intr.sync = Intr.ready = 5;
+            _memcpy(&Result[0], buffer, sizeof(Result_t));
+            _memcpy(&Result[1], buffer, sizeof(Result_t));
+            return 6;
+
+        default:
+            puts(&D_80018E7C);
+            printf(&D_80018E90, nReg);
+            return 0;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/bios", CD_sync);
 

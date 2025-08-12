@@ -339,6 +339,7 @@ CD_debug = 0x800564B4;
 CD_status = 0x800564B8;
 CD_status1 = 0x800564BC;
 CD_cbready = 0x800564AC;
+CD_nopen = 0x800564C0;
 CD_pos = 0x800564C4; // type:CdlLOC size:0x4
 CD_mode = 0x800564C8;
 CD_com = 0x800564C9;
