@@ -1,6 +1,9 @@
 #include "common.h"
 #include "psyq/libcd.h"
 
+extern char D_80018CE4; // "none"
+extern char D_80018CCC;
+
 /**
  * State
  */
@@ -16,7 +19,45 @@ extern int CD_debug;
 extern CdlCB CD_cbsync;
 extern CdlCB CD_cbready;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/sys", CdInit);
+extern int CD_comstr[];
+extern char* CD_intstr[];
+
+void _cbsync(void);
+void _cbready(void);
+void _cbread(void);
+
+typedef void (*VoidCallback_t)(void);
+
+int CdInit(void) {
+    int i;
+    int nStatus;
+    int nResult;
+
+    i = 4;
+    while (i != -1) {
+        nStatus = CdReset(1);
+        i--;
+        if (nStatus == 1) {
+            CdSyncCallback(&_cbsync);
+            CdReadyCallback(&_cbready);
+            CdReadCallback(&_cbread);
+            CdReadMode(0);
+            nResult = 1;
+            break;
+        }
+    
+        if (i != -1) {
+            continue;
+        }
+    
+        printf(&D_80018CCC);
+        nResult = 0;
+        break;
+    }
+    
+    return nResult;   
+}
+
 
 void _cbsync(void) {
     DeliverEvent(0xF0000003, 0x20);
@@ -78,9 +119,19 @@ int CdSetDebug(int level) {
     return prevLevel;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/sys", CdComstr);
+char* CdComstr(u_char com) {
+    if (com >= 0x1c) {
+        return &D_80018CE4;
+    }
+    return CD_comstr[com];
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/sys", CdIntstr);
+char* CdIntstr(u_char intr) {
+    if (intr >= 7) {
+        return &D_80018CE4;
+    }
+    return CD_intstr[intr];
+}
 
 int CdSync(int mode, u_char* result) {
     int nStatus;
@@ -129,10 +180,32 @@ int CdGetSector2(void* madr, int size) {
     return CD_getsector2(madr, size) == 0;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/sys", CdDataSyncCallback);
+void CdDataSyncCallback(VoidCallback_t fn) {
+    DMACallback(3, fn);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/sys", CdDataSync);
+void CdDataSync(int mode) { 
+    CD_datasync(mode);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/sys", CdIntToPos);
+CdlLOC* CdIntToPos(int i, CdlLOC* p) {
+    inline int ENCODE_BCD(n) { return ((n / 10) << 4) + (n % 10); }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/sys", CdPosToInt);
+    i += 150;
+    p->sector = ENCODE_BCD(i % 75);
+    p->second = ENCODE_BCD(i / 75 % 60);
+    p->minute = ENCODE_BCD(i / 75 / 60);
+    return p;
+}
+
+int CdPosToInt(CdlLOC* p) {
+    u8 nSector;
+    u8 nSecond;
+    u8 nMinute;
+    nMinute = p->minute;
+    nSecond = p->second;
+    nSector = p->sector;
+    return (((((((nMinute >> 4) * 10) + (nMinute & 0xF)) * 60) + 
+              (((nSecond >> 4) * 10) + (nSecond & 0xF))) * 75) + 
+              (((nSector >> 4) * 10) + (nSector & 0xF))) - 150;
+}
