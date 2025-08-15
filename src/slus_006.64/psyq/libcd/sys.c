@@ -2,12 +2,11 @@
 #include "psyq/libcd.h"
 
 extern char D_80018CE4; // "none"
-extern char D_80018CCC;
 
 /**
  * State
  */
-extern int CD_status;
+extern unsigned char CD_status;
 extern unsigned char CD_mode;
 extern unsigned char CD_com;
 extern CdlLOC CD_pos;
@@ -19,63 +18,14 @@ extern int CD_debug;
 extern CdlCB CD_cbsync;
 extern CdlCB CD_cbready;
 
-extern int CD_comstr[];
+extern char* CD_comstr[];
 extern char* CD_intstr[];
-
-void _cbsync(void);
-void _cbready(void);
-void _cbread(void);
+extern int setloc[];
 
 typedef void (*VoidCallback_t)(void);
 
-int CdInit(void) {
-    int i;
-    int nStatus;
-    int nResult;
-
-    i = 4;
-    while (i != -1) {
-        nStatus = CdReset(1);
-        i--;
-        if (nStatus == 1) {
-            CdSyncCallback(&_cbsync);
-            CdReadyCallback(&_cbready);
-            CdReadCallback(&_cbread);
-            CdReadMode(0);
-            nResult = 1;
-            break;
-        }
-    
-        if (i != -1) {
-            continue;
-        }
-    
-        printf(&D_80018CCC);
-        nResult = 0;
-        break;
-    }
-    
-    return nResult;   
-}
-
-
-void _cbsync(void) {
-    DeliverEvent(0xF0000003, 0x20);
-}
-
-void _cbready(void) {
-    DeliverEvent(0xF0000003, 0x40);
-}
-
-void _cbread() {
-    DeliverEvent(0xF0000003, 0x40);
-}
-
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/sys", DeliverEvent);
-
 int CdStatus(void) {
-    // FIXME: CD_status gets loaded as a byte here for some reason.
-    return (*((u8*)&CD_status));
+    return CD_status;
 }
 
 int CdMode(void) {
@@ -161,11 +111,45 @@ CdlCB CdReadyCallback(CdlCB func) {
     return prevCallback;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/sys", CdControl);
+static int CD_control(u8 com, u8* param, u8* result, int arg3) {
+    int i;
+    void* prev_cb = CD_cbsync;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/sys", CdControlF);
+    for (i = 3; i != -1; i--) {
+        CdSyncCallback(NULL);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libcd/sys", CdControlB);
+        if ((com != 1) && (CdStatus() & CdlStatShellOpen)) {
+            CD_cw(1, NULL, NULL, 0);
+        }
+
+        if (param == 0 || setloc[com] == 0 ||
+            CD_cw(CdlSetloc, param, result, 0) == 0) {
+            CdSyncCallback(prev_cb);
+            if (CD_cw(com, param, result, arg3) == 0) {
+                return 0;
+            }
+        }
+    }
+
+    CdSyncCallback(prev_cb);
+    return -1;
+}
+
+int CdControl(u_char com, u_char* param, u_char* result) {
+    return CD_control(com, param, result, 0) != -1;
+}
+
+int CdControlF(u_char com, u_char* param) {
+    return CD_control(com, param, 0, 1) != -1;
+}
+
+int CdControlB(u_char com, u_char* param, u_char* result) {
+    if (CD_control(com, param, result, 0)) {
+        return 0;
+    }
+
+    return CD_sync(0, result) == 2;
+}
 
 int CdMix(CdlATV* vol) {
     CD_vol(vol);
@@ -180,7 +164,7 @@ int CdGetSector2(void* madr, int size) {
     return CD_getsector2(madr, size) == 0;
 }
 
-void CdDataSyncCallback(VoidCallback_t fn) {
+void CdDataCallback(VoidCallback_t fn) {
     DMACallback(3, fn);
 }
 
