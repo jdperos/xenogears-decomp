@@ -288,15 +288,6 @@ typedef struct {
 #define SPU_MALLOC_ADDR_MASK       (~SPU_MALLOC_FLAGS)
 
 
-// rodata
-extern const char D_8001946C[]; // "SPU:T/O [%s]\n"
-extern const char D_8001947C[]; // "wait (reset)"
-extern const char D_8001948C[]; // "wait (wrdy H -> L)"
-extern const char D_800194A0[]; // "wait (dmaf clear/W)"
-extern const char D_800194B4[]; // "SPU:T/O [%s]\n"
-extern const char D_800194C4[]; // "wait (IRQ/ON)"
-extern const char D_800194D4[]; // "wait (IRQ/OFF)"
-
 extern long _spu_EVdma;
 extern u_long _spu_keystat;
 extern long _spu_trans_mode;

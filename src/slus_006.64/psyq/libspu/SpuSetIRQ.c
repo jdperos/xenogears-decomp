@@ -10,7 +10,7 @@ long SpuSetIRQ(long on_off) {
         dmaTimer = 0;
         while (_spu_RXX->rxx.spucnt & SPU_STAT_MASK_IRQ9_FLAG) {
             if (++dmaTimer > DMA_TIMEOUT) {
-                printf(D_800194B4, D_800194C4);
+                printf("SPU:T/O [%s]\n", "wait (IRQ/ON)");
                 return SPU_ERROR;
             }
         }
@@ -21,7 +21,7 @@ long SpuSetIRQ(long on_off) {
         dmaTimer = 0;
         while ( !(_spu_RXX->rxx.spucnt & SPU_STAT_MASK_IRQ9_FLAG) ) {
             if (++dmaTimer > DMA_TIMEOUT) {
-                printf(D_800194B4, D_800194D4);
+                printf("SPU:T/O [%s]\n", "wait (IRQ/OFF)");
                 return SPU_ERROR;
             }
         }

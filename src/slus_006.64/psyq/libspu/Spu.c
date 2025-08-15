@@ -24,7 +24,7 @@ long _spu_init(long bHot) {
     {
         if (++dmaTimer > DMA_TIMEOUT)
         {
-            printf(D_8001946C, D_8001947C);
+            printf("SPU:T/O [%s]\n", "wait (reset)");
             break;
         }
     }
@@ -135,7 +135,7 @@ static void _spu_FwriteByIO(void* data, u32 size) {
         {
             if (++dmaTimer > DMA_TIMEOUT)
             {
-                printf(D_8001946C, D_8001948C);
+                printf("SPU:T/O [%s]\n", "wait (wrdy H -> L)");
                 break;
             }
         }
@@ -156,7 +156,7 @@ static void _spu_FwriteByIO(void* data, u32 size) {
     {
         if (++dmaTimer > DMA_TIMEOUT)
         {
-            printf(D_8001946C, D_800194A0);
+            printf("SPU:T/O [%s]\n", "wait (dmaf clear/W)");
             break;
         }
     }
