@@ -1,6 +1,7 @@
 #include "common.h"
 #include "system/sound.h"
 #include "psyq/kernel.h"
+#include "psyq/libspu.h"
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundInitialize);
 
