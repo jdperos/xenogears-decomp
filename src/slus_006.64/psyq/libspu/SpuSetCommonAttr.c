@@ -3,14 +3,10 @@
 #include "libspu_internal.h"
 
 void SpuSetCommonAttr(SpuCommonAttr* attr) {
-    s16 mvol_vol_left;
-    s16 mvol_vol_right;
     u16 mvol_mode_left;
     u16 mvol_mode_right;
     u16 vol_total_left;
     u16 vol_total_right;
-    s16 temp_left;
-    s16 temp_right;
     u32 mask;
     s32 bSetAll;
     u16 cnt;
@@ -20,170 +16,170 @@ void SpuSetCommonAttr(SpuCommonAttr* attr) {
     mask = attr->mask;
     bSetAll = attr->mask == 0;
 
-    if (bSetAll != 0 || mask & SPU_COMMON_MVOLL) {
-        if (bSetAll != 0 || mask & SPU_COMMON_MVOLMODEL) {
+    if (bSetAll || mask & SPU_COMMON_MVOLL) {
+        if (bSetAll || mask & SPU_COMMON_MVOLMODEL) {
             switch (attr->mvolmode.left) {
 
-            case 1:
-                mvol_mode_left = 0x8000;
+            case SPU_VOICE_LINEARIncN:
+                mvol_mode_left = SPU_VOL_MODE_LINEARIncN;
                 break;
-            case 2:
-                mvol_mode_left = 0x9000;
+            case SPU_VOICE_LINEARIncR:
+                mvol_mode_left = SPU_VOL_MODE_LINEARIncR;
                 break;
-            case 3:
-                mvol_mode_left = 0xA000;
+            case SPU_VOICE_LINEARDecN:
+                mvol_mode_left = SPU_VOL_MODE_LINEARDecN;
                 break;
-            case 4:
-                mvol_mode_left = 0xB000;
+            case SPU_VOICE_LINEARDecR:
+                mvol_mode_left = SPU_VOL_MODE_LINEARDecR;
                 break;
-            case 5:
-                mvol_mode_left = 0xC000;
+            case SPU_VOICE_EXPIncN:
+                mvol_mode_left = SPU_VOL_MODE_EXPIncN;
                 break;
-            case 6:
-                mvol_mode_left = 0xD000;
+            case SPU_VOICE_EXPIncR:
+                mvol_mode_left = SPU_VOL_MODE_EXPIncR;
                 break;
-            case 7:
-                mvol_mode_left = 0xE000;
+            case SPU_VOICE_EXPDec:
+                mvol_mode_left = SPU_VOL_MODE_EXPDec;
                 break;
-            case 0:
+            case SPU_VOICE_DIRECT:
                 vol_total_left = attr->mvol.left;
-                mvol_mode_left = 0;
+                mvol_mode_left = SPU_VOL_MODE_DIRECT;
                 break;
             default:
                 vol_total_left = attr->mvol.left;
-                mvol_mode_left = 0;
+                mvol_mode_left = SPU_VOL_MODE_DIRECT;
                 break;
             }
         }
         else {
             vol_total_left = attr->mvol.left;
-            mvol_mode_left = 0;
+            mvol_mode_left = SPU_VOL_MODE_DIRECT;
         }
 
-        if (mvol_mode_left != 0) {
-            if (attr->mvol.left >= 0x80) {
-                vol_total_left = 0x7F;
+        if (mvol_mode_left != SPU_VOL_MODE_DIRECT) {
+            if (attr->mvol.left > SPU_VOL_MAX) {
+                vol_total_left = SPU_VOL_MAX;
             } else if (attr->mvol.left < 0) {
                 vol_total_left = 0;
             } else {
                 vol_total_left = attr->mvol.left;
             }
         }
-        vol_total_left &= 0x7FFF;
+        vol_total_left &= ~SPU_VOL_MODE_MASK;
         _spu_RXX->rxx.main_vol.left = (vol_total_left) | mvol_mode_left;
     }
 
-    if (bSetAll != 0 || mask & 2) {
-        if (bSetAll != 0 || mask & 8) {
+    if (bSetAll || mask & SPU_COMMON_MVOLR) {
+        if (bSetAll || mask & SPU_COMMON_MVOLMODER) {
             switch (attr->mvolmode.right) {
-            case 1:
-                mvol_mode_right = 0x8000;
+            case SPU_VOICE_LINEARIncN:
+                mvol_mode_right = SPU_VOL_MODE_LINEARIncN;
                 break;
-            case 2:
-                mvol_mode_right = 0x9000;
+            case SPU_VOICE_LINEARIncR:
+                mvol_mode_right = SPU_VOL_MODE_LINEARIncR;
                 break;
-            case 3:
-                mvol_mode_right = 0xA000;
+            case SPU_VOICE_LINEARDecN:
+                mvol_mode_right = SPU_VOL_MODE_LINEARDecN;
                 break;
-            case 4:
-                mvol_mode_right = 0xB000;
+            case SPU_VOICE_LINEARDecR:
+                mvol_mode_right = SPU_VOL_MODE_LINEARDecR;
                 break;
-            case 5:
-                mvol_mode_right = 0xC000;
+            case SPU_VOICE_EXPIncN:
+                mvol_mode_right = SPU_VOL_MODE_EXPIncN;
                 break;
-            case 6:
-                mvol_mode_right = 0xD000;
+            case SPU_VOICE_EXPIncR:
+                mvol_mode_right = SPU_VOL_MODE_EXPIncR;
                 break;
-            case 7:
-                mvol_mode_right = 0xE000;
+            case SPU_VOICE_EXPDec:
+                mvol_mode_right = SPU_VOL_MODE_EXPDec;
                 break;
-            case 0:
+            case SPU_VOICE_DIRECT:
                 vol_total_right = attr->mvol.right;
-                mvol_mode_right = 0;
+                mvol_mode_right = SPU_VOL_MODE_DIRECT;
                 break;
             default:
                 vol_total_right = attr->mvol.right;
-                mvol_mode_right = 0;
+                mvol_mode_right = SPU_VOL_MODE_DIRECT;
                 break;
             }
         } else {
             vol_total_right = attr->mvol.right;
-            mvol_mode_right = 0;
+            mvol_mode_right = SPU_VOL_MODE_DIRECT;
         }
 
-        if (mvol_mode_right != 0) {
-            if (attr->mvol.right >= 0x80) {
-                vol_total_right = 0x7F;
+        if (mvol_mode_right != SPU_VOL_MODE_DIRECT) {
+            if (attr->mvol.right > SPU_VOL_MAX) {
+                vol_total_right = SPU_VOL_MAX;
             } else if (attr->mvol.right < 0) {
                 vol_total_right = 0;
             } else {
                 vol_total_right = attr->mvol.right;
             }
         }
-        vol_total_right &= 0x7FFF;
+        vol_total_right &= ~SPU_VOL_MODE_MASK;
         _spu_RXX->rxx.main_vol.right = vol_total_right | mvol_mode_right;
     }
 
-    if ((bSetAll != 0) || (mask & 0x40)) {
+    if (bSetAll || (mask & SPU_COMMON_CDVOLL)) {
         _spu_RXX->rxx.cd_vol.left = attr->cd.volume.left;
     }
 
-    if ((bSetAll != 0) || (mask & 0x80)) {
+    if (bSetAll || (mask & SPU_COMMON_CDVOLR)) {
         _spu_RXX->rxx.cd_vol.right = attr->cd.volume.right;
     }
 
-    if ((bSetAll != 0) || (mask & 0x400)) {
+    if (bSetAll || (mask & SPU_COMMON_EXTVOLL)) {
         _spu_RXX->rxx.ex_vol.left = attr->ext.volume.left;
     }
 
-    if ((bSetAll != 0) || (mask & 0x800)) {
+    if (bSetAll || (mask & SPU_COMMON_EXTVOLR)) {
         _spu_RXX->rxx.ex_vol.right = attr->ext.volume.right;
     }
 
-    if ((bSetAll != 0) || (mask & 0x100)) {
+    if (bSetAll || (mask & SPU_COMMON_CDREV)) {
         if (attr->cd.reverb == 0) {
             cnt = _spu_RXX->rxx.spucnt;
-            cnt &= ~4;
+            cnt &= ~SPU_CTRL_MASK_CD_AUDIO_REVERB;
             _spu_RXX->rxx.spucnt = cnt;
         } else {
             cnt = _spu_RXX->rxx.spucnt;
-            cnt |= 4;
+            cnt |= SPU_CTRL_MASK_CD_AUDIO_REVERB;
             _spu_RXX->rxx.spucnt = cnt;
         }
     }
 
-    if ((bSetAll != 0) || (mask & 0x200)) {
+    if (bSetAll || (mask & SPU_COMMON_CDMIX)) {
         if (attr->cd.mix == 0) {
             cnt = _spu_RXX->rxx.spucnt;
-            cnt &= ~1;
+            cnt &= ~SPU_CTRL_MASK_CD_AUDIO_ENABLE;
             _spu_RXX->rxx.spucnt = cnt;
         } else {
             cnt = _spu_RXX->rxx.spucnt;
-            cnt |= 1;
+            cnt |= SPU_CTRL_MASK_CD_AUDIO_ENABLE;
             _spu_RXX->rxx.spucnt = cnt;
         }
     }
 
-    if ((bSetAll != 0) || (mask & 0x1000)) {
+    if (bSetAll || (mask & SPU_COMMON_EXTREV)) {
         if (attr->ext.reverb == 0) {
             cnt = _spu_RXX->rxx.spucnt;
-            cnt &= ~8;
+            cnt &= ~SPU_CTRL_MASK_EXT_AUDIO_REVERB;
             _spu_RXX->rxx.spucnt = cnt;
         } else {
             cnt = _spu_RXX->rxx.spucnt;
-            cnt |= 8;
+            cnt |= SPU_CTRL_MASK_EXT_AUDIO_REVERB;
             _spu_RXX->rxx.spucnt = cnt;
         }
     }
 
-    if ((bSetAll != 0) || (mask & 0x2000)) {
+    if (bSetAll || (mask & SPU_COMMON_EXTMIX)) {
         if (attr->ext.mix == 0) {
             cnt = _spu_RXX->rxx.spucnt;
-            cnt &= ~2;
+            cnt &= ~SPU_CTRL_MASK_EXT_AUDIO_ENABLE;
             _spu_RXX->rxx.spucnt = cnt;
         } else {
             cnt = _spu_RXX->rxx.spucnt;
-            cnt |= 2;
+            cnt |= SPU_CTRL_MASK_EXT_AUDIO_ENABLE;
             _spu_RXX->rxx.spucnt = cnt;
         }
     }

@@ -166,6 +166,19 @@ typedef struct {
 // Reverb Registers start at 0xE0
 #define SPU_RXX_REVERB_BASE             0xE0    // Reverb parameter registers start
 
+// SPU Register volume modes
+#define SPU_VOL_MODE_DIRECT     0x0000
+#define SPU_VOL_MODE_LINEARIncN 0x8000
+#define SPU_VOL_MODE_LINEARIncR 0x9000
+#define SPU_VOL_MODE_LINEARDecN 0xA000
+#define SPU_VOL_MODE_LINEARDecR 0xB000
+#define SPU_VOL_MODE_EXPIncN    0xC000
+#define SPU_VOL_MODE_EXPIncR    0xD000
+#define SPU_VOL_MODE_EXPDec     0xE000
+
+#define SPU_VOL_MODE_MASK (1 << 15)
+#define SPU_VOL_MAX 0x7F
+
 // SPU Control Register (SPUCNT) bit masks
 #define SPU_CTRL_MASK_CD_AUDIO_ENABLE        (1 <<  0)              // 0
 #define SPU_CTRL_MASK_EXT_AUDIO_ENABLE       (1 <<  1)              // 1
