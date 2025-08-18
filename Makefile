@@ -58,7 +58,7 @@ BIOS_FUNCS := EnterCriticalSection:1 ExitCriticalSection:2 FlushCache:A44 _bu_in
 
 # Generate object paths
 BIOS_OBJS := $(foreach f,$(BIOS_FUNCS), \
-						 $(BUILD_DIR)/asm/slus_006.64/psyq/libapi/$(word 1,$(subst :, ,$f)).s.o)
+						 $(BUILD_DIR)/src/slus_006.64/psyq/libapi/$(word 1,$(subst :, ,$f)).hasm.s.o)
 
 # Map function name to BIOS fn number
 bios_num = $(word 2,$(subst :, ,$(filter $(notdir $1):%,$(BIOS_FUNCS))))
@@ -153,7 +153,7 @@ ifeq ($(SKIP_ASM),1)
 
 define make_elf_target
 $2: $2.elf
-$2.elf: $(call gen_o_files, $1)
+$2.elf: $(call gen_o_files, $1) $(BIOS_OBJS)
 endef
 
 else
@@ -162,7 +162,7 @@ define make_elf_target
 $2: $2.elf
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $$< $$@
 
-$2.elf: $(call gen_o_files, $1)
+$2.elf: $(call gen_o_files, $1) $(BIOS_OBJS)
 	@mkdir -p $(dir $2)
 	$(LD) $(LD_FLAGS) \
 		-Map $2.map \
@@ -265,11 +265,11 @@ $(BUILD_DIR)/%.c.o: $(BUILD_DIR)/%.c.s
 	-$(OBJDUMP) $(OBJDUMP_FLAGS) $@ > $(@:.o=.dump.s)
 
 # Pattern rule to build BIOS_FN OBJs from shared source
-$(BIOS_OBJS): $(BUILD_DIR)/asm/slus_006.64/psyq/libapi/%.s.o: src/slus_006.64/psyq/libapi/bios.s
+$(BIOS_OBJS): $(BUILD_DIR)/src/slus_006.64/psyq/libapi/%.hasm.s.o: src/slus_006.64/psyq/libapi/bios.s
 	@mkdir -p $(dir $@)
 	$(CPP) -x assembler-with-cpp -P -MMD -MP -MT $@ \
-	-Iinclude -Ibuild -DFUNC_$(call bios_num,$*) -o $(dir $@)$*.s $<
-	$(AS) $(AS_FLAGS) -o $@ $(dir $@)$*.s
+	-Iinclude -Ibuild -DFUNC_$(call bios_num,$*) -o $(dir $@)$*.hasm.s $<
+	$(AS) $(AS_FLAGS) -o $@ $(dir $@)$*.hasm.s
 
 $(BUILD_DIR)/%.s.o: %.s
 	@mkdir -p $(dir $@)
