@@ -49,6 +49,6 @@ void def_cbready(void) {
     DeliverEvent(0xF0000003, 0x40);
 }
 
-void def_cbread() {
+void def_cbread(void) {
     DeliverEvent(0xF0000003, 0x40);
 }

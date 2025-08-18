@@ -280,11 +280,9 @@ int     StSetChannel(u_long channel);
 #endif*/
 #endif	/* ifndef _LIBDS_H_ */
 
-
 /*
  *	Prototypes
  */
- /*
 #if defined(_LANGUAGE_C_PLUS_PLUS)||defined(__cplusplus)||defined(c_plusplus)
 extern "C" {
 #endif
@@ -328,6 +326,6 @@ void CdReadBreak( void );
 
 #if defined(_LANGUAGE_C_PLUS_PLUS)||defined(__cplusplus)||defined(c_plusplus)
 }
-#endif*/
+#endif
 
 #endif /* _LIBCD_H_ */
