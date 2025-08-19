@@ -237,6 +237,7 @@ Sprintf = 0x8003FBF8;
 
 // PSY-Q Kernel / libapi
 FlushCache = 0x80040454;
+_bu_init = 0x80040464;
 OpenEvent = 0x80040474;
 CloseEvent = 0x80040484;
 TestEvent = 0x80040494;
@@ -323,6 +324,7 @@ CD_datasync = 0x8004293C;
 CD_getsector = 0x80042AA8;
 CD_getsector2 = 0x80042BA8;
 //...
+CD_set_test_parmnum = 0x80042C98;
 callback = 0x80042CA8;
 toupper = 0x80042E90;
 tolower = 0x80042EC0;

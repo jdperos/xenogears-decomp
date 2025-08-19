@@ -164,11 +164,13 @@ int CdGetSector2(void* madr, int size) {
     return CD_getsector2(madr, size) == 0;
 }
 
-void CdDataCallback(VoidCallback_t fn) {
-    DMACallback(3, fn);
+// NOTE: This seems to not return a value, but `CdRead` expects one.
+void* CdDataCallback(VoidCallback_t func) {
+    DMACallback(3, func);
 }
 
-void CdDataSync(int mode) { 
+// NOTE: This seems to not return a value, but `ArchiveDataSync` expects one.
+int CdDataSync(int mode) {
     CD_datasync(mode);
 }
 
