@@ -182,6 +182,7 @@ SoundTransferWdsPart = 0x8003827C;
 SoundFreeWdsEntry = 0x80038310;
 SoundFindWdsEntry = 0x800383EC;
 SoundAddSedsEntry = 0x80038428;
+SoundSetVolumeWithPhase = 0x80038E6C;
 SoundHeapInitialize = 0x80038EC0;
 SoundHeapAllocate = 0x80038F18;
 SoundHeapFree = 0x80039144;

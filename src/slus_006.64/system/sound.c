@@ -225,21 +225,20 @@ void func_80038DB4(long reverb, long mix) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038DF4);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038E6C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVolumeWithPhase);
 /*
 Matches on GCC 2.7.2-970404 + ASPSX 2.63
 
-void func_80038E6C(s16 volume, SpuVolume* pVolume, u16 arg2) {
-    s16 var_v0;
-    s32 temp_a2;
+void SoundSetVolumeWithPhase(short volume, SpuVolume* pVolume, u8 channelSelect) {
+    int selectedChannel;
 
     pVolume->right = volume;
     pVolume->left = volume;
-    
-    if (g_SoundControlFlags & 0x600) {
-        temp_a2 = arg2 & 0xFF;
-        if (!(g_SoundControlFlags & 0x200)) {
-            if ((temp_a2 ^ 1) != 0) {
+
+    if (g_SoundControlFlags & ((1 << 9) | (1 << 10))) {
+        selectedChannel = channelSelect;
+        if (!(g_SoundControlFlags & (1 << 9))) {
+            if ((selectedChannel ^ 1) != 0) {
                 pVolume->left = -volume;
             } else {
                 pVolume->right = -volume;
@@ -247,7 +246,7 @@ void func_80038E6C(s16 volume, SpuVolume* pVolume, u16 arg2) {
             return;
         }
 
-        if (temp_a2) {
+        if (selectedChannel != CHANNEL_RIGHT) {
             pVolume->left = -volume;
         } else {
             pVolume->right = -volume;
