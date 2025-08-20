@@ -34,7 +34,12 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundEnableAllSpuChanne
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundMuteAllSpuChannels);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037F44);
+void func_80037F44(void) {
+    if (!(g_SoundControlFlags & 1)) {
+        g_SoundControlFlags |= 1;
+        EnableEvent(g_unk_SoundEvent);
+    }
+}
 
 void func_80037F88(void) {
     if (g_SoundControlFlags & 1) {
@@ -150,22 +155,63 @@ void SoundAddSedsEntry(SoundFile* pSoundFile) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003852C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038624);
+//----------------------------------------------------------------------------------------------------------------------
+void func_80038624(void) {
+    func_80039FF8();
+    g_SoundSedsLinkedList = 0;
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003864C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003869C);
+//----------------------------------------------------------------------------------------------------------------------
+void func_8003869C(void) {
+    func_80039CC4();
+    func_80039FF8();
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800386C4);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038824);
+//----------------------------------------------------------------------------------------------------------------------
+s32 func_80038824(void) {
+    s32 out;
 
+    if (g_SoundControlFlags & ((1 << 8) | (1 << 9) | (1 << 10))) {
+        out = 1;
+        if (g_SoundControlFlags & ((1 << 9) | (1 << 10))) {
+            out = 2;
+        }
+    } else {
+        out = 0;
+    }
+
+    return out;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003885C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800388D4);
+//----------------------------------------------------------------------------------------------------------------------
+void func_800388D4(s32 arg0) {
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003890C);
+    if (arg0 != 0) {
+        g_SoundControlFlags |= (1 << 12);
+    } else {
+        g_SoundControlFlags &= ~(1 << 12);
+    }
+}
 
+//----------------------------------------------------------------------------------------------------------------------
+void func_8003890C(AudioManager* manager, s32 bIn) {
+    if (bIn != 0) {
+        manager->unk_Flags &= ~(1 << 0);
+    } else {
+        manager->unk_Flags |= (1 << 0);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038934);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038AD4);
@@ -186,21 +232,20 @@ void func_80038DB4(long reverb, long mix) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038DF4);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038E6C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVolumeWithPhase);
 /*
 Matches on GCC 2.7.2-970404 + ASPSX 2.63
 
-void func_80038E6C(s16 volume, SpuVolume* pVolume, u16 arg2) {
-    s16 var_v0;
-    s32 temp_a2;
+void SoundSetVolumeWithPhase(short volume, SpuVolume* pVolume, u8 channelSelect) {
+    int selectedChannel;
 
     pVolume->right = volume;
     pVolume->left = volume;
-    
-    if (g_SoundControlFlags & 0x600) {
-        temp_a2 = arg2 & 0xFF;
-        if (!(g_SoundControlFlags & 0x200)) {
-            if ((temp_a2 ^ 1) != 0) {
+
+    if (g_SoundControlFlags & ((1 << 9) | (1 << 10))) {
+        selectedChannel = channelSelect;
+        if (!(g_SoundControlFlags & (1 << 9))) {
+            if ((selectedChannel ^ 1) != 0) {
                 pVolume->left = -volume;
             } else {
                 pVolume->right = -volume;
@@ -208,7 +253,7 @@ void func_80038E6C(s16 volume, SpuVolume* pVolume, u16 arg2) {
             return;
         }
 
-        if (temp_a2) {
+        if (selectedChannel != CHANNEL_RIGHT) {
             pVolume->left = -volume;
         } else {
             pVolume->right = -volume;
@@ -452,26 +497,84 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039A80);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039B68);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039C4C);
+//----------------------------------------------------------------------------------------------------------------------
+void func_80039C4C(AudioManager* manager) {
+    if (manager == NULL) {
+        SoundHandleError(5);
+        return;
+    }
+    manager->unk_Flags &= ~(1 << 15);
+    SoundReleaseAllVoices();
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039C8C);
+//----------------------------------------------------------------------------------------------------------------------
+void func_80039C8C(AudioManager* manager, s32 arg1) {
+    if (manager == NULL) {
+        SoundHandleError(5);
+        return;
+    }
+    func_8003A89C(manager, 0, arg1);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039CC4);
+//----------------------------------------------------------------------------------------------------------------------
+void func_80039CC4(void) {
+    AudioManager* pManager;
 
+    pManager = g_SoundAudioManager;
+    if (pManager != NULL) {
+        do {
+            if (pManager->unk_Flags & 1) {
+                pManager->unk_Flags &= ~(1 << 15);
+                SoundReleaseAllVoices(pManager);
+            }
+            pManager = pManager->next;
+        } while (pManager != NULL);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void func_80039D24(void) {}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039D2C);
+//----------------------------------------------------------------------------------------------------------------------
+void func_80039D2C(s32 bIn) {
+    if (bIn != 0) {
+        g_SoundControlFlags |= (1 << 11);
+    } else {
+        func_80039FF8();
+        g_SoundControlFlags &= ~(1 << 11);
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039D78);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039DB8);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039E18);
+//----------------------------------------------------------------------------------------------------------------------
+// Wowoweewa flag central
+void func_80039E18(s32 arg0) {
+    if (g_SoundControlFlags & (1 << 11)) {
+        D_80059404 = 2;
+        func_8003B644((1 << 2) | (1 << 3) | (1 << 13) | (1 << 14), arg0, (1 << 13) | ( 1 << 14), (1 << 14));
+    }
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039E60);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039EC4);
+//----------------------------------------------------------------------------------------------------------------------
+void func_80039EC4(s32 arg0, s32 arg1) {
+    if (g_SoundControlFlags & (1 << 11)) {
+        D_80059404 = 2;
+        func_8003B644(
+            ((arg1 & 0xFE) ^ (1 << 3)) | (1 << 13), // wtf is this... we really need to figure out some of these macros
+            arg0,
+            (1 << 13) | (1 << 14),
+            (1 << 14)
+        );
+    }
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039F18);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039F9C);
