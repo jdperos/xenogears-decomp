@@ -764,6 +764,7 @@ g_SoundWdsRemainingBytes = 0x80059588;
 g_SoundSpuCommonAttr = 0x8005A3C0; // type:SpuCommonAttr size:0x28
 g_unk_SoundEvent = 0x800595BC;
 g_SoundHeapEnd = 0x800595E4;
+g_SoundCdVolume = 0x8005A3EA;
 g_SoundChannels = 0x8006252C;
 g_SoundSpuMemoryBlocks = 0x8006F9FC; // type:SoundSpuMemoryBlock[] size:0xb0
 g_SoundSpuMemoryTableStart = 0x8006FAC8;

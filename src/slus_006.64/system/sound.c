@@ -203,8 +203,15 @@ void func_800388D4(s32 arg0) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003890C);
+void func_8003890C(AudioManager* manager, s32 bIn) {
+    if (bIn != 0) {
+        manager->unk_Flags &= ~(1 << 0);
+    } else {
+        manager->unk_Flags |= (1 << 0);
+    }
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038934);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038AD4);
