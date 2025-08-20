@@ -530,7 +530,15 @@ void func_80039CC4(void) {
 //----------------------------------------------------------------------------------------------------------------------
 void func_80039D24(void) {}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039D2C);
+//----------------------------------------------------------------------------------------------------------------------
+void func_80039D2C(s32 bIn) {
+    if (bIn != 0) {
+        g_SoundControlFlags |= (1 << 11);
+    } else {
+        func_80039FF8();
+        g_SoundControlFlags &= ~(1 << 11);
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039D78);
 
