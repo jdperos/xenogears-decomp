@@ -503,8 +503,15 @@ void func_80039C4C(AudioManager* manager) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039C8C);
+void func_80039C8C(AudioManager* manager, s32 arg1) {
+    if (manager == NULL) {
+        SoundHandleError(5);
+        return;
+    }
+    func_8003A89C(manager, 0, arg1);
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039CC4);
 
 void func_80039D24(void) {}
