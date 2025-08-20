@@ -198,7 +198,7 @@ void func_800388D4(s32 arg0) {
     if (arg0 != 0) {
         var_v0 = g_SoundControlFlags | 0x1000;
     } else {
-        var_v0 = g_SoundControlFlags & ~0x1000;
+        var_v0 = g_SoundControlFlags & 0xEFFF;
     }
     g_SoundControlFlags = var_v0;
 }
@@ -492,8 +492,17 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039A80);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039B68);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039C4C);
+//----------------------------------------------------------------------------------------------------------------------
+void func_80039C4C(AudioManager* manager) {
+    if (manager == NULL) {
+        SoundHandleError(5);
+        return;
+    }
+    manager->unk_Flags &= ~(1 << 15);
+    SoundReleaseAllVoices();
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039C8C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039CC4);
