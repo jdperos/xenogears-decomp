@@ -191,8 +191,19 @@ s32 func_80038824(void) {
 //----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003885C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800388D4);
+//----------------------------------------------------------------------------------------------------------------------
+void func_800388D4(s32 arg0) {
+    u16 var_v0;
 
+    if (arg0 != 0) {
+        var_v0 = g_SoundControlFlags | 0x1000;
+    } else {
+        var_v0 = g_SoundControlFlags & ~0x1000;
+    }
+    g_SoundControlFlags = var_v0;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003890C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038934);
