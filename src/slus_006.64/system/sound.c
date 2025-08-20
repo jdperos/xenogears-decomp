@@ -34,7 +34,12 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundEnableAllSpuChanne
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundMuteAllSpuChannels);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80037F44);
+void func_80037F44(void) {
+    if (!(g_SoundControlFlags & 1)) {
+        g_SoundControlFlags |= 1;
+        EnableEvent(g_unk_SoundEvent);
+    }
+}
 
 void func_80037F88(void) {
     if (g_SoundControlFlags & 1) {
