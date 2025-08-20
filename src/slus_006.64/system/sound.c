@@ -155,22 +155,40 @@ void SoundAddSedsEntry(SoundFile* pSoundFile) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003852C);
 
+//----------------------------------------------------------------------------------------------------------------------
 void func_80038624(void) {
     func_80039FF8();
     g_SoundSedsLinkedList = 0;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003864C);
 
+//----------------------------------------------------------------------------------------------------------------------
 void func_8003869C(void) {
     func_80039CC4();
     func_80039FF8();
 }
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800386C4);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038824);
+//----------------------------------------------------------------------------------------------------------------------
+s32 func_80038824(void) {
+    s32 var_v1;
 
+    if (g_SoundControlFlags & 0x700) {
+        var_v1 = 1;
+        if (g_SoundControlFlags & 0x600) {
+            var_v1 = 2;
+        }
+    } else {
+        var_v1 = 0;
+    }
+    return var_v1;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003885C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800388D4);
