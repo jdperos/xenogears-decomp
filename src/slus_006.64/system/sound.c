@@ -512,8 +512,22 @@ void func_80039C8C(AudioManager* manager, s32 arg1) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039CC4);
+void func_80039CC4(void) {
+    AudioManager* pManager;
 
+    pManager = g_SoundAudioManager;
+    if (pManager != NULL) {
+        do {
+            if (pManager->unk_Flags & 1) {
+                pManager->unk_Flags &= ~(1 << 15);
+                SoundReleaseAllVoices(pManager);
+            }
+            pManager = pManager->next;
+        } while (pManager != NULL);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void func_80039D24(void) {}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039D2C);

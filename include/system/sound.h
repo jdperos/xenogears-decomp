@@ -129,7 +129,8 @@ typedef struct {
 
 typedef struct {
     // Manager header (0x00 - 0x93)
-    s8 header_data[0x10];
+    struct AudioManager* next;    // 0x00
+    s8 header_data[0xB];
     s16 unk_Flags;                // 0x10
     s8 unk2[0x2];
     u8 element_count;             // 0x14
@@ -163,6 +164,7 @@ extern void* g_pSoundSpuRegisters;
 
 extern short g_SoundSpuErrorId;
 extern long g_unk_VoicesNeedingProcessing;
+extern AudioManager* g_SoundAudioManager;
 extern short g_SoundControlFlags;
 extern SpuIRQCallbackProc g_SoundSpuIrqCallbackFn;
 extern int g_SoundSpuIRQCount;
