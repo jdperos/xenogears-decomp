@@ -155,7 +155,10 @@ void SoundAddSedsEntry(SoundFile* pSoundFile) {
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003852C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038624);
+void func_80038624(void) {
+    func_80039FF8();
+    g_SoundSedsLinkedList = 0;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003864C);
 
