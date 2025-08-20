@@ -138,6 +138,8 @@ typedef struct {
     AudioElement elements[24];    // Array of audio elements starts at 0x94 (no idea that it has to be 24)
 } AudioManager;
 
+extern s32 D_80059404;
+
 // Heap
 extern SoundHeapBlockHeader* g_SoundHeapHead;
 extern u32 g_SoundHeapEnd;

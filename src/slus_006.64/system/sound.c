@@ -544,8 +544,16 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039D78);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039DB8);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039E18);
+//----------------------------------------------------------------------------------------------------------------------
+// Wowoweewa flag central
+void func_80039E18(s32 arg0) {
+    if (g_SoundControlFlags & (1 << 11)) {
+        D_80059404 = 2;
+        func_8003B644((1 << 2) | (1 << 3) | (1 << 13) | (1 << 14), arg0, (1 << 13) | ( 1 << 14), (1 << 14));
+    }
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039E60);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039EC4);
