@@ -175,17 +175,18 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_800386C4);
 
 //----------------------------------------------------------------------------------------------------------------------
 s32 func_80038824(void) {
-    s32 var_v1;
+    s32 out;
 
-    if (g_SoundControlFlags & 0x700) {
-        var_v1 = 1;
-        if (g_SoundControlFlags & 0x600) {
-            var_v1 = 2;
+    if (g_SoundControlFlags & ((1 << 8) | (1 << 9) | (1 << 10))) {
+        out = 1;
+        if (g_SoundControlFlags & ((1 << 9) | (1 << 10))) {
+            out = 2;
         }
     } else {
-        var_v1 = 0;
+        out = 0;
     }
-    return var_v1;
+
+    return out;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -193,14 +194,12 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003885C);
 
 //----------------------------------------------------------------------------------------------------------------------
 void func_800388D4(s32 arg0) {
-    u16 var_v0;
 
     if (arg0 != 0) {
-        var_v0 = g_SoundControlFlags | 0x1000;
+        g_SoundControlFlags |= (1 << 12);
     } else {
-        var_v0 = g_SoundControlFlags & 0xEFFF;
+        g_SoundControlFlags &= ~(1 << 12);
     }
-    g_SoundControlFlags = var_v0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
