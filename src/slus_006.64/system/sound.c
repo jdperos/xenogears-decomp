@@ -555,8 +555,20 @@ void func_80039E18(s32 arg0) {
 //----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039E60);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039EC4);
+//----------------------------------------------------------------------------------------------------------------------
+void func_80039EC4(s32 arg0, s32 arg1) {
+    if (g_SoundControlFlags & (1 << 11)) {
+        D_80059404 = 2;
+        func_8003B644(
+            ((arg1 & 0xFE) ^ (1 << 3)) | (1 << 13), // wtf is this... we really need to figure out some of these macros
+            arg0,
+            (1 << 13) | (1 << 14),
+            (1 << 14)
+        );
+    }
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039F18);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80039F9C);
