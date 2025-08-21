@@ -1068,10 +1068,31 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E54C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E5BC);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E680);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetFlagsOnAllVoices(u16 flags, AudioManager* manager) {
+    AudioElement* pElement;
+    u16* pStatusFlags;
+    u32 elementCount;
 
+    pElement = &manager->elements[0];
+    elementCount = manager->element_count;
+    pStatusFlags = &manager->elements[0].status_flags;
+
+    do {
+        if (pElement->active_flag) {
+            *pStatusFlags |= flags;
+        }
+
+        pElement++;
+        pStatusFlags = (u16*)((u8*)pStatusFlags + sizeof(AudioElement)); // This is really dumb, Square, why you do this
+        elementCount--;
+    } while (elementCount);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E6C0);
 
+//----------------------------------------------------------------------------------------------------------------------
 void SoundClearVoiceDataPointers(void) {
     s32 offset = sizeof(SoundVoiceData*) * (NUM_VOICES - 1);
     while( offset >= 0 ) {
