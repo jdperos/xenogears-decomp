@@ -802,6 +802,7 @@ void func_8003BDF4(void) {}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BDFC);
 
+//----------------------------------------------------------------------------------------------------------------------
 void SoundProcessTransferCommand(void) {
     SpuTransferCallbackProc pPrevCallback;
     unsigned short nNextIndex;
@@ -843,6 +844,7 @@ void SoundProcessTransferCommand(void) {
     }
 }
 
+//----------------------------------------------------------------------------------------------------------------------
 void SoundSpuIRQHandler(void) {
     g_SoundControlFlags |= SOUND_CTL_FLAG_IRQ_HANDLER;
     g_SoundSpuIRQCount++;
@@ -852,14 +854,26 @@ void SoundSpuIRQHandler(void) {
     g_SoundControlFlags &= ~SOUND_CTL_FLAG_IRQ_HANDLER;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
 void SoundSetSpuIrqCallback(u32 func) {
     g_SoundSpuIrqCallbackFn = func;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C020);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C484);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundTickInterpolator(AudioInterpolator* interpolator) {
+    interpolator->counter--;
 
+    if (interpolator->counter != 0) {
+        interpolator->currentValue += interpolator->stepIncrement;
+    } else {
+        interpolator->currentValue = (s32)(interpolator->targetValue << 16);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C4C4);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C6E8);
@@ -1068,10 +1082,46 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E54C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E5BC);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E680);
+//----------------------------------------------------------------------------------------------------------------------
+void unk_SoundSetFlagsOnActiveVoices(u16 flags, AudioManager* manager) {
+    AudioElement* pElement;
+    u32 cnt;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003E6C0);
+    pElement = &manager->elements[0];
+    cnt = manager->element_count;
 
+    do {
+        if (pElement->active_flag) {
+            pElement->status_flags = flags | pElement->status_flags;
+        }
+        pElement++;
+        cnt--;
+    } while (cnt);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetFlagsOnActiveVoices(AudioManager* manager, s32 flags) {
+    AudioElement* pElement;
+    u32 cnt;
+
+    pElement = &manager->elements[0];
+    cnt = manager->element_count;
+
+    do {
+
+        if (pElement->active_flag) {
+            // this doesn't feel right, considering SoundVoiceData::flags is a 16-bit flag
+            // I know that SoundVoiceData::volume is 16-bits from SoundVoiceData::flags from func_8003E900
+            // but I get a reg swap if flags is 16 bits
+            pElement->voice_data.flags |= (u16)flags;
+        }
+
+        pElement++;
+        cnt--;
+    } while (cnt);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void SoundClearVoiceDataPointers(void) {
     s32 offset = sizeof(SoundVoiceData*) * (NUM_VOICES - 1);
     while( offset >= 0 ) {

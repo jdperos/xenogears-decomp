@@ -116,6 +116,12 @@ struct SoundWDSEntry_t {
 };
 typedef struct SoundWDSEntry_t SoundWDSEntry;
 
+typedef struct {
+    s32 currentValue;     // 0x0 - Current interpolated value
+    s32 stepIncrement;    // 0x4 - Amount to add each step
+    s16 counter;          // 0x8 - Steps remaining
+    s16 targetValue;      // 0xA - Final value when counter reaches 0
+} AudioInterpolator;
 
 typedef struct {
     u16 active_flag;                // 0x00 - checked for != 0
