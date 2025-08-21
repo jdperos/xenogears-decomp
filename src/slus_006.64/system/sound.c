@@ -802,6 +802,7 @@ void func_8003BDF4(void) {}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BDFC);
 
+//----------------------------------------------------------------------------------------------------------------------
 void SoundProcessTransferCommand(void) {
     SpuTransferCallbackProc pPrevCallback;
     unsigned short nNextIndex;
@@ -843,6 +844,7 @@ void SoundProcessTransferCommand(void) {
     }
 }
 
+//----------------------------------------------------------------------------------------------------------------------
 void SoundSpuIRQHandler(void) {
     g_SoundControlFlags |= SOUND_CTL_FLAG_IRQ_HANDLER;
     g_SoundSpuIRQCount++;
@@ -852,14 +854,26 @@ void SoundSpuIRQHandler(void) {
     g_SoundControlFlags &= ~SOUND_CTL_FLAG_IRQ_HANDLER;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
 void SoundSetSpuIrqCallback(u32 func) {
     g_SoundSpuIrqCallbackFn = func;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C020);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C484);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundTickInterpolator(AudioInterpolator* interpolator) {
+    interpolator->counter--;
 
+    if (interpolator->counter != 0) {
+        interpolator->currentValue += interpolator->stepIncrement;
+    } else {
+        interpolator->currentValue = (s32)(interpolator->targetValue << 16);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C4C4);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003C6E8);
