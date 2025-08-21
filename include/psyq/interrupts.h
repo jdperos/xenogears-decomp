@@ -29,7 +29,7 @@ typedef struct {
     void*(*intrResetHandler)(void);
     void*(*intrStopHandler)(void);
     void*(*setVsyncIntrCallback)(unsigned int index, VoidCallback_t callback);
-    void*(*intrUnkHandler2)(void);
+    void*(*intrRestartHandler)(void);
 } InterruptControl_t;
 
 typedef struct {

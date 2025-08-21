@@ -20,7 +20,7 @@ void ArchiveInit(u32 pArchiveTable, u32 pHeaderTable, u32 pDebugTable) {
     if ( (pDebugTable == NULL) || (pDebugTable == -1) ) {
         while (CdInit() == 0);
         CdSetDebug(0);
-        CdDataSyncCallback(0);
+        CdDataCallback(0);
         CdSyncCallback(NULL);
         CdReadyCallback(NULL);
         CdControl(7, 0, &D_80059F1C);
@@ -62,7 +62,7 @@ void ArchiveReset(void) {
         ArchiveCdDataSync(0);
         Vsync(3);
     }
-    CdDataSyncCallback(0);
+    CdDataCallback(0);
     CdSyncCallback(NULL);
     CdReadyCallback(NULL);
     D_8004FDFC = 0;
