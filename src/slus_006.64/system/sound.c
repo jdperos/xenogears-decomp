@@ -744,7 +744,9 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BA38);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BB08);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BB40);
+s32 SoundCalculateAudioElementsSize(s32 elementCount) {
+    return (elementCount * sizeof(AudioElement)) + offsetof(AudioManager, elements);
+}
 
 void SoundOnTransferCallback(void) {
     SoundCommandCallback_t pCallback;
