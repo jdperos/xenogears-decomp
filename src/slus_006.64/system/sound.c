@@ -737,15 +737,15 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B644);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B930);
 
 //----------------------------------------------------------------------------------------------------------------------
-void SoundCopyAudioManagerData(AudioManager* dest, AudioManager* src) {
+void SoundCopyAudioManagerData(AudioManager* pDest, AudioManager* pSrc) {
     AudioManager* savedNext;
     AudioManager* savedUnk;
 
-    savedNext = dest->next;
-    savedUnk = dest->unk_Manager_0x4;
-    SoundHeapSetBlockMemory(dest, src, SoundCalculateAudioManagerSize(dest->elementCount));
-    dest->next = savedNext;
-    dest->unk_Manager_0x4 = savedUnk;
+    savedNext = pDest->next;
+    savedUnk = pDest->unk_Manager_0x4;
+    SoundHeapSetBlockMemory(pDest, pSrc, SoundCalculateAudioManagerSize(pDest->elementCount));
+    pDest->next = savedNext;
+    pDest->unk_Manager_0x4 = savedUnk;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
