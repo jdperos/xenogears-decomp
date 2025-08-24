@@ -185,5 +185,10 @@ extern SpuVolume g_SoundUnkVolume;
 
 extern CdlATV g_SoundCdRomAttenuation;
 
+extern s16 g_SoundCdVolume;
+extern s32 g_SoundCurrentCdVolumeFp;
+extern s32 g_SoundCdVolumeStepPerFrame;
+extern s16 g_SoundCdFadeFramesRemaining;
+extern s16 g_SoundTargetCdVolume;
 
 #endif

@@ -220,9 +220,34 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038B4C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038C68);
 
-// TODO(jperos): CD Volume globals
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038D18);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetCdVolumeWithFade(s32 targetVolume, s32 fadeFrames) {
+    s16 volumeValue;
 
+    g_SoundTargetCdVolume = targetVolume;
+
+    if (fadeFrames == 0) {
+        g_SoundCurrentCdVolumeFp = targetVolume << 16;
+        volumeValue = targetVolume;
+        g_SoundCdFadeFramesRemaining = 0;
+        g_SoundCdVolume = volumeValue;
+        g_SoundSpuCommonAttr.cd.volume.right = volumeValue;
+        g_SoundSpuCommonAttr.cd.volume.left = volumeValue;
+        g_SoundSpuCommonAttr.mask |= SPU_COMMON_CDVOLL | SPU_COMMON_CDVOLR;
+
+    } else {
+        s32 currentVolume = g_SoundCurrentCdVolumeFp >> 8;
+        s32 volumeDifference = (targetVolume << 8) - currentVolume;
+
+        if (volumeDifference != 0) {
+            s32 stepPerFrame = volumeDifference / fadeFrames;
+            g_SoundCdFadeFramesRemaining = fadeFrames;
+            g_SoundCdVolumeStepPerFrame = stepPerFrame << 8;
+        }
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void func_80038DB4(long reverb, long mix) {
     g_SoundSpuCommonAttr.cd.reverb = reverb;
     g_SoundSpuCommonAttr.cd.mix = mix;
