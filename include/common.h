@@ -20,4 +20,6 @@
 
 #define ARRAY_COUNT(x) (sizeof(x) / sizeof(x[0]))
 
+#define offsetof(s,m) ((size_t)&(((s*)0)->m))
+
 #endif
