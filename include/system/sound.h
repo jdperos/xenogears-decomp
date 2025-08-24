@@ -133,15 +133,28 @@ typedef struct {
     u8 unk[252];                    // Size of this struct during iteration seems to be 0x158
 } AudioElement;
 
-typedef struct {
-    // Manager header (0x00 - 0x93)
-    struct AudioManager* next;    // 0x00
-    s8 header_data[0xB];
-    s16 unk_Flags;                // 0x10
-    s8 unk2[0x2];
-    u8 element_count;             // 0x14
-    s8 more_header[0x7F];         // 0x15 - 0x93
-    AudioElement elements[24];    // Array of audio elements starts at 0x94 (no idea that it has to be 24)
+typedef struct AudioManager {
+    struct AudioManager* next;                // 0x0
+    struct AudioManager* unk_Manager_0x4;     // 0x4
+    u8 unk_0x8[4];                            // 0x8-0xb
+    s32 unk_0xc;                              // 0xc
+    s16 unk_Flags;                            // 0x10
+    s8 unk2[2];                               // 0x12
+    u8 elementCount;                          // 0x14
+    u8 unk_0x15[15];                          // 0x15-0x23
+    s32 unk_0x24;                             // 0x24
+    u8 unk_0x28[4];                           // 0x28-0x2b
+    s32 unk_0x2c;                             // 0x2c
+    u8 unk_0x30[36];                          // 0x30-0x53
+    s32 unk_0x54;                             // 0x54
+    s16 unk_0x58;                             // 0x58
+    s16 unk_0x5a;                             // 0x5a
+    u8 unk_0x5c[8];                           // 0x5c
+    AudioInterpolator unk_Interpolator_0x64;  // 0x64
+    AudioInterpolator unk_Interpolator_0x70;  // 0x70
+    AudioInterpolator unk_Interpolator_0x7c;  // 0x7c
+    AudioInterpolator unk_Interpolator_0x88;  // 0x88
+    AudioElement elements[24];                // 0x94
 } AudioManager;
 
 extern s32 D_80059404;
@@ -190,5 +203,8 @@ extern s32 g_SoundCurrentCdVolumeFp;
 extern s32 g_SoundCdVolumeStepPerFrame;
 extern s16 g_SoundCdFadeFramesRemaining;
 extern s16 g_SoundTargetCdVolume;
+
+
+extern s32 SoundCalculateAudioManagerSize(s32 elementCount);
 
 #endif

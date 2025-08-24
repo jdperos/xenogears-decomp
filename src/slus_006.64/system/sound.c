@@ -669,7 +669,7 @@ void func_8003AFA0(AudioManager* manager) {
     AudioElement* pElement;
     u32 cnt;
 
-    cnt = manager->element_count;
+    cnt = manager->elementCount;
     pElement = &manager->elements[0];
 
     do {
@@ -690,7 +690,7 @@ void SoundAbortAllVoices(AudioManager* manager) {
     AudioElement* pElement;
     u32 cnt;
 
-    cnt = manager->element_count;
+    cnt = manager->elementCount;
     pElement = &manager->elements[0];
 
     do {
@@ -708,7 +708,7 @@ void SoundReleaseAllVoices(AudioManager* manager) {
     AudioElement* pElement;
     u32 cnt;
 
-    cnt = manager->element_count;
+    cnt = manager->elementCount;
     pElement = &manager->elements[0];
 
     do {
@@ -736,8 +736,19 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B644);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B930);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B97C);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundCopyAudioManagerData(AudioManager* dest, AudioManager* src) {
+    AudioManager* savedNext;
+    AudioManager* savedUnk;
 
+    savedNext = dest->next;
+    savedUnk = dest->unk_Manager_0x4;
+    SoundHeapSetBlockMemory(dest, src, SoundCalculateAudioManagerSize(dest->elementCount));
+    dest->next = savedNext;
+    dest->unk_Manager_0x4 = savedUnk;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B9E4);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BA38);
@@ -745,7 +756,7 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BA38);
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BB08);
 
 //----------------------------------------------------------------------------------------------------------------------
-s32 SoundCalculateAudioElementsSize(s32 elementCount) {
+s32 SoundCalculateAudioManagerSize(s32 elementCount) {
     return (elementCount * sizeof(AudioElement)) + offsetof(AudioManager, elements);
 }
 
@@ -1117,7 +1128,7 @@ void unk_SoundSetFlagsOnActiveVoices(u16 flags, AudioManager* manager) {
     u32 cnt;
 
     pElement = &manager->elements[0];
-    cnt = manager->element_count;
+    cnt = manager->elementCount;
 
     do {
         if (pElement->active_flag) {
@@ -1134,7 +1145,7 @@ void SoundSetFlagsOnActiveVoices(AudioManager* manager, s32 flags) {
     u32 cnt;
 
     pElement = &manager->elements[0];
-    cnt = manager->element_count;
+    cnt = manager->elementCount;
 
     do {
 
