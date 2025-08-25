@@ -212,8 +212,75 @@ void func_8003890C(AudioManager* manager, s32 bIn) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038934);
+void SetReverbModeWithAllocation(s32 reverbType, s32 reverbDepth, s32 reverbDelay, s32 reverbFeedback) {
+    SpuReverbAttr reverbAttr;
+    s32 currentReverbType;
+    s32 workAreaSize;
+    s32 workAreaStartAddr;
+    s32 allocationSize;
+    s32 memoryHandle;
+    b32 bAllocated;
 
+    bAllocated = false;
+
+    if (reverbType == -2) {
+        return;
+    }
+
+    if (reverbType == SPU_REV_MODE_OFF) {
+        reverbFeedback = 0;
+        reverbDelay = 0;
+        reverbDepth = 0;
+    } else if (reverbType == SPU_REV_MODE_CHECK) {
+        reverbType = g_SoundReverbType;
+    }
+
+    SpuGetReverbModeType(&currentReverbType);
+    if (currentReverbType != reverbType || reverbType == SPU_REV_MODE_OFF) {
+
+        if (g_SoundReverbMemoryHandle != -1) {
+            SoundSpuMemoryFreeBlock(g_SoundReverbMemoryHandle);
+        }
+
+        workAreaSize = g_ReverbWorkAreaSizes[reverbType];
+        workAreaStartAddr = workAreaSize;
+        allocationSize = 0x80000 - workAreaSize;
+
+        memoryHandle = SoundSpuMemoryAllocateBlockAtAddress(workAreaStartAddr, allocationSize, 5);
+        g_SoundReverbMemoryHandle = memoryHandle;
+
+        if (memoryHandle == 0) {
+            SoundHandleError(0x20);
+            reverbType = 0;
+            reverbFeedback = 0;
+            reverbDelay = 0;
+            reverbDepth = 0;
+        }
+        bAllocated = true;
+
+    }
+
+    g_SoundReverbType = reverbType;
+    g_SoundVolumeController.currentReverbDepth = reverbDepth;
+    g_SoundReverbDelay = reverbDelay;
+    g_SoundReverbFeedback = reverbFeedback;
+
+    SoundApplyVolumeSettings();
+
+    if (bAllocated) {
+        // New reverb type - initialize with zero depth, set type, clear work area (probably)
+        SpuSetReverbModeDepth(0, 0);
+        SpuSetReverbModeType(reverbType);
+        func_80038AD4(allocationSize, workAreaStartAddr);
+    } else {
+        // Existing reverb type - apply current settings
+        SpuSetReverbModeDepth(g_SoundReverbDepth.left, g_SoundReverbDepth.right);
+        SpuSetReverbModeDelayTime(reverbDelay);
+        SpuSetReverbModeFeedback(reverbFeedback);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038AD4);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038B4C);

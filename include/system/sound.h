@@ -189,6 +189,12 @@ typedef struct {
 
 extern SoundVolumeController g_SoundVolumeController;
 
+extern void* g_pSoundSpuRegisters;
+extern s32 g_ReverbWorkAreaSizes[SPU_REV_MODE_MAX];
+extern u8 g_SoundReverbType;
+extern u8 g_SoundReverbDelay;
+extern u8 g_SoundReverbFeedback;
+extern s32 g_SoundReverbMemoryHandle;
 
 extern s32 D_80059404;
 
@@ -213,8 +219,6 @@ extern SoundWDSEntry* g_SoundWdsLinkedList;
 
 extern int g_SoundWdsCurSpuAddress;
 extern int g_SoundWdsRemainingBytes;
-
-extern void* g_pSoundSpuRegisters;
 
 extern short g_SoundSpuErrorId;
 extern long g_unk_VoicesNeedingProcessing;

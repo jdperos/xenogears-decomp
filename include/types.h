@@ -20,6 +20,7 @@ typedef unsigned long long u64;
 #ifndef __cplusplus
 typedef enum { false, true } bool;
 #endif
+typedef bool b32;
 
 #define NO_VALUE -1
 
