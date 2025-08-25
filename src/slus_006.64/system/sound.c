@@ -1590,8 +1590,16 @@ int SoundValidateFile(SoundFile* pSoundFile, u32 magicBytes, unsigned short targ
     return SOUND_ERR_INVALID_CHECKSUM;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F67C);
+//----------------------------------------------------------------------------------------------------------------------
+s32 SoundUnkDebug0(void* p) {
+#if 0
+    // Secrets of the universe
+#endif
 
+    return 0;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 int SoundFileComputeChecksum(SoundFile* pSoundFile) {
     int nResult;
     int* pCurrent;
