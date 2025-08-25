@@ -231,12 +231,6 @@ extern SpuVolume g_SoundReverbDepth;
 
 extern CdlATV g_SoundCdRomAttenuation;
 
-extern s32 g_SoundCurrentCdVolumeFp;
-extern s32 g_SoundCdVolumeStepPerFrame;
-extern s16 g_SoundCdFadeFramesRemaining;
-extern s16 g_SoundTargetCdVolume;
-
-
 extern s32 SoundCalculateAudioManagerSize(s32 elementCount);
 extern s32 SoundSetVolumeWithPhase(s16, SpuVolume*, s32);
 

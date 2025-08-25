@@ -241,25 +241,25 @@ void SoundSetMasterVolumeWithFade(s32 volume, s32 frames)
 void SoundSetCdVolumeWithFade(s32 targetVolume, s32 fadeFrames) {
     s16 volumeValue;
 
-    g_SoundTargetCdVolume = targetVolume;
+    g_SoundVolumeController.cdInterpolator.targetValue = targetVolume;
 
     if (fadeFrames == 0) {
-        g_SoundCurrentCdVolumeFp = targetVolume << 16;
+        g_SoundVolumeController.cdInterpolator.currentValue = targetVolume << 16;
         volumeValue = targetVolume;
-        g_SoundCdFadeFramesRemaining = 0;
+        g_SoundVolumeController.cdInterpolator.counter = 0;
         g_SoundVolumeController.currentCdVolume = volumeValue;
         g_SoundVolumeController.commonAttr.cd.volume.right = volumeValue;
         g_SoundVolumeController.commonAttr.cd.volume.left = volumeValue;
         g_SoundVolumeController.commonAttr.mask |= SPU_COMMON_CDVOLL | SPU_COMMON_CDVOLR;
 
     } else {
-        s32 currentVolume = g_SoundCurrentCdVolumeFp >> 8;
+        s32 currentVolume = g_SoundVolumeController.cdInterpolator.currentValue >> 8;
         s32 volumeDifference = (targetVolume << 8) - currentVolume;
 
         if (volumeDifference != 0) {
             s32 stepPerFrame = volumeDifference / fadeFrames;
-            g_SoundCdFadeFramesRemaining = fadeFrames;
-            g_SoundCdVolumeStepPerFrame = stepPerFrame << 8;
+            g_SoundVolumeController.cdInterpolator.counter = fadeFrames;
+            g_SoundVolumeController.cdInterpolator.stepIncrement = stepPerFrame << 8;
         }
     }
 }
