@@ -6,8 +6,6 @@
 
 #define NUM_VOICES 24
 
-extern SpuCommonAttr g_SoundSpuCommonAttr;
-
 typedef struct {
     s16 assignedVoice;
     u16 modeFlags;
