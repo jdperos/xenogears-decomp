@@ -761,8 +761,49 @@ void SoundAddAudioManagerToList(AudioManager* manager)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BA38);
+s32 SoundRemoveAudioManagerFromList(AudioManager* manager) {
+    AudioManager* current = g_SoundAudioManagerListHead;
+    AudioManager* previous = NULL;
 
+    // Search for target AudioManager in linked list
+    while (current != NULL) {
+        if (current == manager) {
+            break;
+        }
+        previous = current;
+        current = current->next;
+    }
+
+    // If not found, return error
+    if (current == NULL) {
+        SoundHandleError(SOUND_ERR_MANAGER_NOT_IN_LIST);
+        return -1;
+    }
+
+    // Handle cleanup if needed (0x8000 flag set)
+    if (manager->unk_Flags & 0x8000) {
+        if (manager == NULL) {
+            SoundHandleError(5);  // Invalid cleanup state
+        } else {
+            // Clear cleanup flag and release resources
+            manager->unk_Flags &= ~(1 << 15);  // Clear bit 15
+            SoundReleaseAllVoices(manager);
+        }
+    }
+
+    // Remove from linked list
+    if (previous != NULL) {
+        // Removing head node
+        previous->next = manager->next;
+    } else {
+        // Removing middle/end node
+        g_SoundAudioManagerListHead = manager->next;
+    }
+
+    return 0;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BB08);
 
 //----------------------------------------------------------------------------------------------------------------------
