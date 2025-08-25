@@ -749,8 +749,18 @@ void SoundCopyAudioManagerData(AudioManager* pDest, AudioManager* pSrc) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B9E4);
+void SoundAddAudioManagerToList(AudioManager* manager)
+{
+    AudioManager* temp;
 
+    DisableEvent(g_unk_SoundEvent);
+    temp = manager;
+    manager->next = g_SoundAudioManager;
+    g_SoundAudioManager = temp;
+    EnableEvent(g_unk_SoundEvent);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BA38);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BB08);
