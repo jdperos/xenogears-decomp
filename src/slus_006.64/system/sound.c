@@ -230,10 +230,10 @@ void SoundSetCdVolumeWithFade(s32 targetVolume, s32 fadeFrames) {
         g_SoundCurrentCdVolumeFp = targetVolume << 16;
         volumeValue = targetVolume;
         g_SoundCdFadeFramesRemaining = 0;
-        g_SoundCdVolume = volumeValue;
-        g_SoundSpuCommonAttr.cd.volume.right = volumeValue;
-        g_SoundSpuCommonAttr.cd.volume.left = volumeValue;
-        g_SoundSpuCommonAttr.mask |= SPU_COMMON_CDVOLL | SPU_COMMON_CDVOLR;
+        g_SoundVolumeController.currentCdVolume = volumeValue;
+        g_SoundVolumeController.commonAttr.cd.volume.right = volumeValue;
+        g_SoundVolumeController.commonAttr.cd.volume.left = volumeValue;
+        g_SoundVolumeController.commonAttr.mask |= SPU_COMMON_CDVOLL | SPU_COMMON_CDVOLR;
 
     } else {
         s32 currentVolume = g_SoundCurrentCdVolumeFp >> 8;
@@ -249,14 +249,22 @@ void SoundSetCdVolumeWithFade(s32 targetVolume, s32 fadeFrames) {
 
 //----------------------------------------------------------------------------------------------------------------------
 void SoundSetCdAttr(long reverb, long mix) {
-    g_SoundSpuCommonAttr.cd.reverb = reverb;
-    g_SoundSpuCommonAttr.cd.mix = mix;
-    g_SoundSpuCommonAttr.mask = g_SoundSpuCommonAttr.mask | SPU_COMMON_CDREV | SPU_COMMON_CDMIX;
-    SpuSetCommonAttr(&g_SoundSpuCommonAttr);
+    g_SoundVolumeController.commonAttr.cd.reverb = reverb;
+    g_SoundVolumeController.commonAttr.cd.mix = mix;
+    g_SoundVolumeController.commonAttr.mask = g_SoundVolumeController.commonAttr.mask | SPU_COMMON_CDREV | SPU_COMMON_CDMIX;
+    SpuSetCommonAttr(&g_SoundVolumeController.commonAttr);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038DF4);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundApplyVolumeSettings(void) {
+    SoundSetVolumeWithPhase(g_SoundVolumeController.currentMasterVolume, &g_SoundVolumeController.commonAttr.mvol, 0);
+    g_SoundVolumeController.commonAttr.cd.volume.right = g_SoundVolumeController.currentCdVolume;
+    g_SoundVolumeController.commonAttr.cd.volume.left = g_SoundVolumeController.currentCdVolume;;
+    SoundSetVolumeWithPhase(g_SoundVolumeController.currentReverbDepth, &g_SoundReverbDepth, 1);
+    g_SoundVolumeController.commonAttr.mask |= SPU_COMMON_MVOLL | SPU_COMMON_MVOLR | SPU_COMMON_CDVOLL | SPU_COMMON_CDVOLR;
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVolumeWithPhase);
 /*
 Matches on GCC 2.7.2-970404 + ASPSX 2.63

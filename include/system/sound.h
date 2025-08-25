@@ -176,6 +176,22 @@ typedef struct AudioManager {
     AudioElement elements[24];                // 0x94
 } AudioManager;
 
+typedef struct {
+    /* 0x00 */ SpuCommonAttr commonAttr;
+
+    // Volume state management
+    /* 0x28 */ s16 currentMasterVolume;
+    /* 0x2A */ s16 currentCdVolume;
+    /* 0x2C */ s16 currentReverbDepth;
+    /* 0x2E */ s16 unk_field2;
+
+    /* 0x30 */ AudioInterpolator masterInterpolator;
+    /* 0x3C */ AudioInterpolator cdInterpolator;
+} SoundVolumeController;
+
+extern SoundVolumeController g_SoundVolumeController;
+
+
 extern s32 D_80059404;
 
 // Heap
@@ -213,11 +229,10 @@ extern u32 g_SoundKeyOnFlags;
 extern u32 g_SoundKeyOffFlags;
 extern SoundVoiceData* g_SoundChannels[24];
 
-extern SpuVolume g_SoundUnkVolume;
+extern SpuVolume g_SoundReverbDepth;
 
 extern CdlATV g_SoundCdRomAttenuation;
 
-extern s16 g_SoundCdVolume;
 extern s32 g_SoundCurrentCdVolumeFp;
 extern s32 g_SoundCdVolumeStepPerFrame;
 extern s16 g_SoundCdFadeFramesRemaining;
@@ -225,5 +240,6 @@ extern s16 g_SoundTargetCdVolume;
 
 
 extern s32 SoundCalculateAudioManagerSize(s32 elementCount);
+extern s32 SoundSetVolumeWithPhase(s16, SpuVolume*, s32);
 
 #endif
