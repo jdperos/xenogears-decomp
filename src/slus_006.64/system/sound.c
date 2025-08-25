@@ -190,7 +190,7 @@ s32 func_80038824(void) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003885C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetupCdMix);
 
 //----------------------------------------------------------------------------------------------------------------------
 void func_800388D4(s32 arg0) {
@@ -218,45 +218,70 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038AD4);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038B4C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038C68);
-
 //----------------------------------------------------------------------------------------------------------------------
-void SoundSetCdVolumeWithFade(s32 targetVolume, s32 fadeFrames) {
-    s16 volumeValue;
-
-    g_SoundTargetCdVolume = targetVolume;
-
-    if (fadeFrames == 0) {
-        g_SoundCurrentCdVolumeFp = targetVolume << 16;
-        volumeValue = targetVolume;
-        g_SoundCdFadeFramesRemaining = 0;
-        g_SoundCdVolume = volumeValue;
-        g_SoundSpuCommonAttr.cd.volume.right = volumeValue;
-        g_SoundSpuCommonAttr.cd.volume.left = volumeValue;
-        g_SoundSpuCommonAttr.mask |= SPU_COMMON_CDVOLL | SPU_COMMON_CDVOLR;
-
+void SoundSetMasterVolumeWithFade(s32 volume, s32 frames)
+{
+    g_SoundVolumeController.masterInterpolator.targetValue = (s16)volume;
+    if (frames == 0) {
+        g_SoundVolumeController.masterInterpolator.currentValue = volume << 0x10;
+        g_SoundVolumeController.masterInterpolator.counter = 0;
+        g_SoundVolumeController.currentMasterVolume = g_SoundVolumeController.masterInterpolator.targetValue;
+        SoundSetVolumeWithPhase(g_SoundVolumeController.masterInterpolator.targetValue, &g_SoundVolumeController.commonAttr.mvol, 0);
+        g_SoundVolumeController.commonAttr.mask |= SPU_COMMON_MVOLL | SPU_COMMON_MVOLR;
     } else {
-        s32 currentVolume = g_SoundCurrentCdVolumeFp >> 8;
-        s32 volumeDifference = (targetVolume << 8) - currentVolume;
-
+        s32 volumeDifference = (volume << 8) - (g_SoundVolumeController.masterInterpolator.currentValue >> 8);
         if (volumeDifference != 0) {
-            s32 stepPerFrame = volumeDifference / fadeFrames;
-            g_SoundCdFadeFramesRemaining = fadeFrames;
-            g_SoundCdVolumeStepPerFrame = stepPerFrame << 8;
+            g_SoundVolumeController.masterInterpolator.stepIncrement = volumeDifference / frames << 8;
+            g_SoundVolumeController.masterInterpolator.counter = (s16)frames;
         }
     }
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void func_80038DB4(long reverb, long mix) {
-    g_SoundSpuCommonAttr.cd.reverb = reverb;
-    g_SoundSpuCommonAttr.cd.mix = mix;
-    g_SoundSpuCommonAttr.mask = g_SoundSpuCommonAttr.mask | SPU_COMMON_CDREV | SPU_COMMON_CDMIX;
-    SpuSetCommonAttr(&g_SoundSpuCommonAttr);
+void SoundSetCdVolumeWithFade(s32 targetVolume, s32 fadeFrames) {
+    s16 volumeValue;
+
+    g_SoundVolumeController.cdInterpolator.targetValue = targetVolume;
+
+    if (fadeFrames == 0) {
+        g_SoundVolumeController.cdInterpolator.currentValue = targetVolume << 16;
+        volumeValue = targetVolume;
+        g_SoundVolumeController.cdInterpolator.counter = 0;
+        g_SoundVolumeController.currentCdVolume = volumeValue;
+        g_SoundVolumeController.commonAttr.cd.volume.right = volumeValue;
+        g_SoundVolumeController.commonAttr.cd.volume.left = volumeValue;
+        g_SoundVolumeController.commonAttr.mask |= SPU_COMMON_CDVOLL | SPU_COMMON_CDVOLR;
+
+    } else {
+        s32 currentVolume = g_SoundVolumeController.cdInterpolator.currentValue >> 8;
+        s32 volumeDifference = (targetVolume << 8) - currentVolume;
+
+        if (volumeDifference != 0) {
+            s32 stepPerFrame = volumeDifference / fadeFrames;
+            g_SoundVolumeController.cdInterpolator.counter = fadeFrames;
+            g_SoundVolumeController.cdInterpolator.stepIncrement = stepPerFrame << 8;
+        }
+    }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038DF4);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetCdAttr(long reverb, long mix) {
+    g_SoundVolumeController.commonAttr.cd.reverb = reverb;
+    g_SoundVolumeController.commonAttr.cd.mix = mix;
+    g_SoundVolumeController.commonAttr.mask = g_SoundVolumeController.commonAttr.mask | SPU_COMMON_CDREV | SPU_COMMON_CDMIX;
+    SpuSetCommonAttr(&g_SoundVolumeController.commonAttr);
+}
 
+//----------------------------------------------------------------------------------------------------------------------
+void SoundApplyVolumeSettings(void) {
+    SoundSetVolumeWithPhase(g_SoundVolumeController.currentMasterVolume, &g_SoundVolumeController.commonAttr.mvol, 0);
+    g_SoundVolumeController.commonAttr.cd.volume.right = g_SoundVolumeController.currentCdVolume;
+    g_SoundVolumeController.commonAttr.cd.volume.left = g_SoundVolumeController.currentCdVolume;;
+    SoundSetVolumeWithPhase(g_SoundVolumeController.currentReverbDepth, &g_SoundReverbDepth, 1);
+    g_SoundVolumeController.commonAttr.mask |= SPU_COMMON_MVOLL | SPU_COMMON_MVOLR | SPU_COMMON_CDVOLL | SPU_COMMON_CDVOLR;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVolumeWithPhase);
 /*
 Matches on GCC 2.7.2-970404 + ASPSX 2.63
@@ -545,7 +570,7 @@ void func_80039C8C(AudioManager* manager, s32 arg1) {
 void func_80039CC4(void) {
     AudioManager* pManager;
 
-    pManager = g_SoundAudioManager;
+    pManager = g_SoundAudioManagerListHead;
     if (pManager != NULL) {
         do {
             if (pManager->unk_Flags & 1) {
@@ -728,8 +753,43 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B22C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B32C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B370);
+//----------------------------------------------------------------------------------------------------------------------
+// TODO(jperos): Boy, we really need some names of this stuff
+void SoundInitializeAudioManager(AudioManager* manager) {
+    func_8003B930(manager);
 
+    manager->unk_0x32 = 1;
+    manager->unk_0x1a = 0;
+    manager->unk_0x1b = 0;
+    manager->unk_0x30 = 0;
+    manager->unk_0x34 = 0;
+    manager->unk_0x38 = 4;
+    manager->unk_0x36 = 1;
+    manager->unk_0x3a = 0x30;
+    manager->unk_0x3c = 4;
+    manager->unk_0x3e = 4;
+
+    manager->unk_Interpolator_0x64.currentValue = 0x01000000;
+    manager->unk_Interpolator_0x70.currentValue = 0x7F000000;
+
+    manager->unk_0x58 = 0x00660000;
+    manager->unk_0x54 = 0x6600;
+    manager->unk_0x28 = 0;
+    manager->unk_0x24 = 0;
+    manager->unk_0x20 = 0;
+    manager->unk_0x48 = 0;
+    manager->unk_Interpolator_0x7c.currentValue = 0;
+    manager->unk_Interpolator_0x88.currentValue = 0;
+    manager->unk_Interpolator_0x64.counter = 0;
+    manager->unk_Interpolator_0x70.counter = 0;
+    manager->unk_Interpolator_0x7c.counter = 0;
+    manager->unk_Interpolator_0x88.counter = 0;
+    manager->unk_0x5c = 0;
+    manager->unk_0x60 = 0;
+    manager->unk_0x50 = 0x00010000;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B424);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B644);
@@ -749,10 +809,61 @@ void SoundCopyAudioManagerData(AudioManager* pDest, AudioManager* pSrc) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B9E4);
+void SoundAddAudioManagerToList(AudioManager* manager)
+{
+    AudioManager* temp;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BA38);
+    DisableEvent(g_unk_SoundEvent);
+    temp = manager;
+    manager->next = g_SoundAudioManagerListHead;
+    g_SoundAudioManagerListHead = temp;
+    EnableEvent(g_unk_SoundEvent);
+}
 
+//----------------------------------------------------------------------------------------------------------------------
+s32 SoundRemoveAudioManagerFromList(AudioManager* manager) {
+    AudioManager* current = g_SoundAudioManagerListHead;
+    AudioManager* previous = NULL;
+
+    // Search for target AudioManager in linked list
+    while (current != NULL) {
+        if (current == manager) {
+            break;
+        }
+        previous = current;
+        current = current->next;
+    }
+
+    // If not found, return error
+    if (current == NULL) {
+        SoundHandleError(SOUND_ERR_MANAGER_NOT_IN_LIST);
+        return -1;
+    }
+
+    // Handle cleanup if needed (0x8000 flag set)
+    if (manager->unk_Flags & 0x8000) {
+        if (manager == NULL) {
+            SoundHandleError(5);  // Invalid cleanup state
+        } else {
+            // Clear cleanup flag and release resources
+            manager->unk_Flags &= ~(1 << 15);  // Clear bit 15
+            SoundReleaseAllVoices(manager);
+        }
+    }
+
+    // Remove from linked list
+    if (previous != NULL) {
+        // Removing head node
+        previous->next = manager->next;
+    } else {
+        // Removing middle/end node
+        g_SoundAudioManagerListHead = manager->next;
+    }
+
+    return 0;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003BB08);
 
 //----------------------------------------------------------------------------------------------------------------------
