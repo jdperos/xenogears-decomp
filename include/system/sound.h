@@ -6,6 +6,9 @@
 
 #define NUM_VOICES 24
 
+#define CHANNEL_RIGHT 0
+#define CHANNEL_LEFT  1
+
 typedef struct {
     s16 assignedVoice;
     u16 modeFlags;
@@ -239,6 +242,6 @@ extern SpuVolume g_SoundReverbDepth;
 extern CdlATV g_SoundCdRomAttenuation;
 
 extern s32 SoundCalculateAudioManagerSize(s32 elementCount);
-extern s32 SoundSetVolumeWithPhase(s16, SpuVolume*, s32);
+extern void SoundSetVolumeWithPhase(s32, SpuVolume*, s32);
 
 #endif

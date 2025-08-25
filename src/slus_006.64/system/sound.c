@@ -395,37 +395,30 @@ void SoundApplyVolumeSettings(void) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVolumeWithPhase);
-/*
-Matches on GCC 2.7.2-970404 + ASPSX 2.63
-
-void SoundSetVolumeWithPhase(short volume, SpuVolume* pVolume, u8 channelSelect) {
-    int selectedChannel;
-
+void SoundSetVolumeWithPhase(s32 volume, SpuVolume* pVolume, s32 channelSelect)
+{
     pVolume->right = volume;
     pVolume->left = volume;
 
-    if (g_SoundControlFlags & ((1 << 9) | (1 << 10))) {
-        selectedChannel = channelSelect;
+    if ((g_SoundControlFlags & ((1 << 9) | (1 << 10))) != 0) {
+        channelSelect &= 0xFF;
         if (!(g_SoundControlFlags & (1 << 9))) {
-            if ((selectedChannel ^ 1) != 0) {
+            if ((channelSelect ^ 1) != 0) {
                 pVolume->left = -volume;
             } else {
                 pVolume->right = -volume;
             }
-            return;
-        }
-
-        if (selectedChannel != CHANNEL_RIGHT) {
-            pVolume->left = -volume;
         } else {
-            pVolume->right = -volume;
+            if (channelSelect != CHANNEL_RIGHT) {
+                pVolume->left = -volume;
+            } else {
+                pVolume->right = -volume;
+            }
         }
-    }  
+    }
 }
-*/
 
-// Does not match on GCC 2.7.2-970404 + ASPSX 2.63, so likely start of a new TU here
+//----------------------------------------------------------------------------------------------------------------------
 void SoundHeapInitialize(void* startAddress, unsigned int size) {
     SoundHeapBlockHeader* pHeapBlock;
     unsigned int nAlignedSize;
