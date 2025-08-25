@@ -190,7 +190,7 @@ s32 func_80038824(void) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003885C);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetupCdMix);
 
 //----------------------------------------------------------------------------------------------------------------------
 void func_800388D4(s32 arg0) {
@@ -248,7 +248,7 @@ void SoundSetCdVolumeWithFade(s32 targetVolume, s32 fadeFrames) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void func_80038DB4(long reverb, long mix) {
+void SoundSetCdAttr(long reverb, long mix) {
     g_SoundSpuCommonAttr.cd.reverb = reverb;
     g_SoundSpuCommonAttr.cd.mix = mix;
     g_SoundSpuCommonAttr.mask = g_SoundSpuCommonAttr.mask | SPU_COMMON_CDREV | SPU_COMMON_CDMIX;
