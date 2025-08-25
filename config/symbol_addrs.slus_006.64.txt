@@ -183,6 +183,7 @@ SoundFreeWdsEntry = 0x80038310;
 SoundFindWdsEntry = 0x800383EC;
 SoundAddSedsEntry = 0x80038428;
 SoundSetupCdMix = 0x8003885C;
+SoundSetMasterVolumeWithFade = 0x80038C68;
 SoundSetCdVolumeWithFade = 0x80038D18;
 SoundSetCdAttr = 0x80038DB4;
 SoundApplyVolumeSettings = 0x80038DF4;

@@ -218,7 +218,24 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038AD4);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038B4C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038C68);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetMasterVolumeWithFade(s32 volume, s32 frames)
+{
+    g_SoundVolumeController.masterInterpolator.targetValue = (s16)volume;
+    if (frames == 0) {
+        g_SoundVolumeController.masterInterpolator.currentValue = volume << 0x10;
+        g_SoundVolumeController.masterInterpolator.counter = 0;
+        g_SoundVolumeController.currentMasterVolume = g_SoundVolumeController.masterInterpolator.targetValue;
+        SoundSetVolumeWithPhase(g_SoundVolumeController.masterInterpolator.targetValue, &g_SoundVolumeController.commonAttr.mvol, 0);
+        g_SoundVolumeController.commonAttr.mask |= SPU_COMMON_MVOLL | SPU_COMMON_MVOLR;
+    } else {
+        s32 volumeDifference = (volume << 8) - (g_SoundVolumeController.masterInterpolator.currentValue >> 8);
+        if (volumeDifference != 0) {
+            g_SoundVolumeController.masterInterpolator.stepIncrement = volumeDifference / frames << 8;
+            g_SoundVolumeController.masterInterpolator.counter = (s16)frames;
+        }
+    }
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void SoundSetCdVolumeWithFade(s32 targetVolume, s32 fadeFrames) {
