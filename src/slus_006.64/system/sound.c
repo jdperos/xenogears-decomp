@@ -281,7 +281,21 @@ void SoundSetReverbModeWithAllocation(s32 reverbType, s32 reverbDepth, s32 rever
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038AD4);
+void func_80038AD4(s32 arg0, s32 arg1) {
+    s32 temp_v0;
+
+    g_SoundUploadSourceAddr = arg0;
+    g_SoundUploadBytesRemaining = arg1;
+    if (g_SoundUploadDestBuffer == 0) {
+        temp_v0 = SoundHeapAllocate(0x840);
+        g_SoundUploadDestBuffer = temp_v0;
+        if (temp_v0 == 0) {
+            SoundHandleError(0x1E);
+        }
+    }
+    g_SoundControlFlags |= (1 << 5);
+    SoundUploadDataToSpuChunked();
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void SoundUploadDataToSpuChunked(void) {
@@ -299,10 +313,10 @@ void SoundUploadDataToSpuChunked(void) {
         SpuSetReverbModeDelayTime(g_SoundReverbDelay);
         SpuSetReverbModeFeedback(g_SoundReverbFeedback);
 
-        g_SoundControlFlags &= ~0x20;
+        g_SoundControlFlags &= ~(1 << 5);
 
     } else {
-        chunkSize = (bytesRemaining < 0x841) ? bytesRemaining : 0x800;
+        chunkSize = (bytesRemaining <= 0x840) ? bytesRemaining : 0x800;
 
         currentSourceAddr = g_SoundUploadSourceAddr;
 
@@ -311,7 +325,7 @@ void SoundUploadDataToSpuChunked(void) {
 
         SoundQueueSpuWriteCommand(currentSourceAddr, g_SoundUploadDestBuffer, chunkSize, SoundUploadDataToSpuChunked);
 
-        if ((g_SoundControlFlags & 0x10) == 0) {
+        if ((g_SoundControlFlags & (1 << 4)) == 0) {
             SoundQueueSpuWriteCommand(currentSourceAddr, g_SoundUploadDestBuffer, chunkSize, NULL);
         }
     }
