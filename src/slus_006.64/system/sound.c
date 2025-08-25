@@ -271,7 +271,7 @@ void SoundSetReverbModeWithAllocation(s32 reverbType, s32 reverbDepth, s32 rever
         // New reverb type - initialize with zero depth, set type, clear work area (probably)
         SpuSetReverbModeDepth(0, 0);
         SpuSetReverbModeType(reverbType);
-        func_80038AD4(allocationSize, workAreaStartAddr);
+        SoundInitiateReverbWorkAreaTransfer(allocationSize, workAreaStartAddr);
     } else {
         // Existing reverb type - apply current settings
         SpuSetReverbModeDepth(g_SoundReverbDepth.left, g_SoundReverbDepth.right);
@@ -281,11 +281,11 @@ void SoundSetReverbModeWithAllocation(s32 reverbType, s32 reverbDepth, s32 rever
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void func_80038AD4(s32 arg0, s32 arg1) {
+void SoundInitiateReverbWorkAreaTransfer(s32 addr, s32 size) {
     s32 temp_v0;
 
-    g_SoundUploadSourceAddr = arg0;
-    g_SoundUploadBytesRemaining = arg1;
+    g_SoundUploadSourceAddr = addr;
+    g_SoundUploadBytesRemaining = size;
     if (g_SoundUploadDestBuffer == 0) {
         temp_v0 = SoundHeapAllocate(0x840);
         g_SoundUploadDestBuffer = temp_v0;
@@ -294,11 +294,11 @@ void func_80038AD4(s32 arg0, s32 arg1) {
         }
     }
     g_SoundControlFlags |= (1 << 5);
-    SoundUploadDataToSpuChunked();
+    SoundExecuteReverbWorkAreaTransfer();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void SoundUploadDataToSpuChunked(void) {
+void SoundExecuteReverbWorkAreaTransfer(void) {
     s32 bytesRemaining;
     s32 chunkSize;
     s32 currentSourceAddr;
@@ -323,7 +323,7 @@ void SoundUploadDataToSpuChunked(void) {
         g_SoundUploadBytesRemaining = bytesRemaining - chunkSize;
         g_SoundUploadSourceAddr = currentSourceAddr + chunkSize;
 
-        SoundQueueSpuWriteCommand(currentSourceAddr, g_SoundUploadDestBuffer, chunkSize, SoundUploadDataToSpuChunked);
+        SoundQueueSpuWriteCommand(currentSourceAddr, g_SoundUploadDestBuffer, chunkSize, SoundExecuteReverbWorkAreaTransfer);
 
         if ((g_SoundControlFlags & (1 << 4)) == 0) {
             SoundQueueSpuWriteCommand(currentSourceAddr, g_SoundUploadDestBuffer, chunkSize, NULL);
