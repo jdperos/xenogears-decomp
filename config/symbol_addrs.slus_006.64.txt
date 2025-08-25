@@ -197,6 +197,7 @@ SoundSpuMemoryGetFreeBlock = 0x80039784;
 SoundSpuMemoryFindBlock = 0x800397C0;
 SoundAbortAllVoices = 0x8003AFFC;
 SoundReleaseAllVoices = 0x8003B060;
+SoundInitializeAudioManager = 0x8003B370;
 SoundCopyAudioManagerData = 0x8003B97C;
 SoundAddAudioManagerToList = 0x8003B9E4;
 SoundRemoveAudioManagerFromList = 0x8003BA38;

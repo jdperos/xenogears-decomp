@@ -728,8 +728,43 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B22C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B32C);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B370);
+//----------------------------------------------------------------------------------------------------------------------
+// TODO(jperos): Boy, we really need some names of this stuff
+void SoundInitializeAudioManager(AudioManager* manager) {
+    func_8003B930(manager);
 
+    manager->unk_0x32 = 1;
+    manager->unk_0x1a = 0;
+    manager->unk_0x1b = 0;
+    manager->unk_0x30 = 0;
+    manager->unk_0x34 = 0;
+    manager->unk_0x38 = 4;
+    manager->unk_0x36 = 1;
+    manager->unk_0x3a = 0x30;
+    manager->unk_0x3c = 4;
+    manager->unk_0x3e = 4;
+
+    manager->unk_Interpolator_0x64.currentValue = 0x01000000;
+    manager->unk_Interpolator_0x70.currentValue = 0x7F000000;
+
+    manager->unk_0x58 = 0x00660000;
+    manager->unk_0x54 = 0x6600;
+    manager->unk_0x28 = 0;
+    manager->unk_0x24 = 0;
+    manager->unk_0x20 = 0;
+    manager->unk_0x48 = 0;
+    manager->unk_Interpolator_0x7c.currentValue = 0;
+    manager->unk_Interpolator_0x88.currentValue = 0;
+    manager->unk_Interpolator_0x64.counter = 0;
+    manager->unk_Interpolator_0x70.counter = 0;
+    manager->unk_Interpolator_0x7c.counter = 0;
+    manager->unk_Interpolator_0x88.counter = 0;
+    manager->unk_0x5c = 0;
+    manager->unk_0x60 = 0;
+    manager->unk_0x50 = 0x00010000;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B424);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003B644);
