@@ -185,7 +185,7 @@ extern void* g_pSoundSpuRegisters;
 
 extern short g_SoundSpuErrorId;
 extern long g_unk_VoicesNeedingProcessing;
-extern AudioManager* g_SoundAudioManager;
+extern AudioManager* g_SoundAudioManagerListHead;
 extern short g_SoundControlFlags;
 extern SpuIRQCallbackProc g_SoundSpuIrqCallbackFn;
 extern int g_SoundSpuIRQCount;

@@ -545,7 +545,7 @@ void func_80039C8C(AudioManager* manager, s32 arg1) {
 void func_80039CC4(void) {
     AudioManager* pManager;
 
-    pManager = g_SoundAudioManager;
+    pManager = g_SoundAudioManagerListHead;
     if (pManager != NULL) {
         do {
             if (pManager->unk_Flags & 1) {
@@ -755,8 +755,8 @@ void SoundAddAudioManagerToList(AudioManager* manager)
 
     DisableEvent(g_unk_SoundEvent);
     temp = manager;
-    manager->next = g_SoundAudioManager;
-    g_SoundAudioManager = temp;
+    manager->next = g_SoundAudioManagerListHead;
+    g_SoundAudioManagerListHead = temp;
     EnableEvent(g_unk_SoundEvent);
 }
 
