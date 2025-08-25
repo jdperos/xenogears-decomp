@@ -6,8 +6,6 @@
 
 #define NUM_VOICES 24
 
-extern SpuCommonAttr g_SoundSpuCommonAttr;
-
 typedef struct {
     s16 assignedVoice;
     u16 modeFlags;
@@ -35,6 +33,7 @@ typedef struct {
 #define SOUND_ERR_INVALID_SIGNATURE 0x1
 #define SOUND_ERR_INVALID_CHECKSUM 0x2 // Maybe
 #define SOUND_ERR_UNK_0X4 0x4
+#define SOUND_ERR_MANAGER_NOT_IN_LIST 0xF
 #define SOUND_ERR_ENTRY_ALREADY_EXISTS 0x15
 #define SOUND_ERR_UNEXPECTED_CALLBACK 0x26
 
@@ -136,26 +135,60 @@ typedef struct {
 typedef struct AudioManager {
     struct AudioManager* next;                // 0x0
     struct AudioManager* unk_Manager_0x4;     // 0x4
-    u8 unk_0x8[4];                            // 0x8-0xb
+    s32 unk_0x8;                              // 0x8
     s32 unk_0xc;                              // 0xc
     s16 unk_Flags;                            // 0x10
     s8 unk2[2];                               // 0x12
     u8 elementCount;                          // 0x14
-    u8 unk_0x15[15];                          // 0x15-0x23
+    u8 unk_0x15[3];                           // 0x15-0x17
+    u8 unk_0x18;                              // 0x18
+    u8 unk_0x19;                              // 0x19
+    u8 unk_0x1a;                              // 0x1a
+    u8 unk_0x1b;                              // 0x1b
+    u8 unk_0x1c[4];                           // 0x1c-0x1f
+    s32 unk_0x20;                             // 0x20
     s32 unk_0x24;                             // 0x24
-    u8 unk_0x28[4];                           // 0x28-0x2b
+    s32 unk_0x28;                             // 0x28
     s32 unk_0x2c;                             // 0x2c
-    u8 unk_0x30[36];                          // 0x30-0x53
+    s16 unk_0x30;                             // 0x30
+    s16 unk_0x32;                             // 0x32
+    s16 unk_0x34;                             // 0x34
+    s16 unk_0x36;                             // 0x36
+    s16 unk_0x38;                             // 0x38
+    s16 unk_0x3a;                             // 0x3a
+    s16 unk_0x3c;                             // 0x3c
+    s16 unk_0x3e;                             // 0x3e
+    u8 unk_0x40[8];                           // 0x40-0x47
+    s32 unk_0x48;                             // 0x48
+    u8 unk_0x4c[4];                           // 0x4c-0x4f
+    s32 unk_0x50;                             // 0x50
     s32 unk_0x54;                             // 0x54
-    s16 unk_0x58;                             // 0x58
-    s16 unk_0x5a;                             // 0x5a
-    u8 unk_0x5c[8];                           // 0x5c
+    s32 unk_0x58;                             // 0x58
+    s32 unk_0x5c;                             // 0x5c
+    s16 unk_0x60;                             // 0x60
+    u8 unk_0x62[2];                           // 0x62-0x63
     AudioInterpolator unk_Interpolator_0x64;  // 0x64
     AudioInterpolator unk_Interpolator_0x70;  // 0x70
     AudioInterpolator unk_Interpolator_0x7c;  // 0x7c
     AudioInterpolator unk_Interpolator_0x88;  // 0x88
     AudioElement elements[24];                // 0x94
 } AudioManager;
+
+typedef struct {
+    /* 0x00 */ SpuCommonAttr commonAttr;
+
+    // Volume state management
+    /* 0x28 */ s16 currentMasterVolume;
+    /* 0x2A */ s16 currentCdVolume;
+    /* 0x2C */ s16 currentReverbDepth;
+    /* 0x2E */ s16 unk_field2;
+
+    /* 0x30 */ AudioInterpolator masterInterpolator;
+    /* 0x3C */ AudioInterpolator cdInterpolator;
+} SoundVolumeController;
+
+extern SoundVolumeController g_SoundVolumeController;
+
 
 extern s32 D_80059404;
 
@@ -185,7 +218,7 @@ extern void* g_pSoundSpuRegisters;
 
 extern short g_SoundSpuErrorId;
 extern long g_unk_VoicesNeedingProcessing;
-extern AudioManager* g_SoundAudioManager;
+extern AudioManager* g_SoundAudioManagerListHead;
 extern short g_SoundControlFlags;
 extern SpuIRQCallbackProc g_SoundSpuIrqCallbackFn;
 extern int g_SoundSpuIRQCount;
@@ -194,17 +227,11 @@ extern u32 g_SoundKeyOnFlags;
 extern u32 g_SoundKeyOffFlags;
 extern SoundVoiceData* g_SoundChannels[24];
 
-extern SpuVolume g_SoundUnkVolume;
+extern SpuVolume g_SoundReverbDepth;
 
 extern CdlATV g_SoundCdRomAttenuation;
 
-extern s16 g_SoundCdVolume;
-extern s32 g_SoundCurrentCdVolumeFp;
-extern s32 g_SoundCdVolumeStepPerFrame;
-extern s16 g_SoundCdFadeFramesRemaining;
-extern s16 g_SoundTargetCdVolume;
-
-
 extern s32 SoundCalculateAudioManagerSize(s32 elementCount);
+extern s32 SoundSetVolumeWithPhase(s16, SpuVolume*, s32);
 
 #endif
