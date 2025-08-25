@@ -212,7 +212,7 @@ void func_8003890C(AudioManager* manager, s32 bIn) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void SetReverbModeWithAllocation(s32 reverbType, s32 reverbDepth, s32 reverbDelay, s32 reverbFeedback) {
+void SoundSetReverbModeWithAllocation(s32 reverbType, s32 reverbDepth, s32 reverbDelay, s32 reverbFeedback) {
     SpuReverbAttr reverbAttr;
     s32 currentReverbType;
     s32 workAreaSize;
@@ -283,7 +283,39 @@ void SetReverbModeWithAllocation(s32 reverbType, s32 reverbDepth, s32 reverbDela
 //----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038AD4);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038B4C);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundUploadDataToSpuChunked(void) {
+    s32 bytesRemaining;
+    s32 chunkSize;
+    s32 currentSourceAddr;
+
+    bytesRemaining = g_SoundUploadBytesRemaining;
+
+    if (bytesRemaining == 0) {
+        SoundHeapFree(g_SoundUploadDestBuffer);
+        g_SoundUploadDestBuffer = 0;
+
+        SpuSetReverbModeDepth(g_SoundReverbDepth.left, g_SoundReverbDepth.right);
+        SpuSetReverbModeDelayTime(g_SoundReverbDelay);
+        SpuSetReverbModeFeedback(g_SoundReverbFeedback);
+
+        g_SoundControlFlags &= ~0x20;
+
+    } else {
+        chunkSize = (bytesRemaining < 0x841) ? bytesRemaining : 0x800;
+
+        currentSourceAddr = g_SoundUploadSourceAddr;
+
+        g_SoundUploadBytesRemaining = bytesRemaining - chunkSize;
+        g_SoundUploadSourceAddr = currentSourceAddr + chunkSize;
+
+        SoundQueueSpuWriteCommand(currentSourceAddr, g_SoundUploadDestBuffer, chunkSize, SoundUploadDataToSpuChunked);
+
+        if ((g_SoundControlFlags & 0x10) == 0) {
+            SoundQueueSpuWriteCommand(currentSourceAddr, g_SoundUploadDestBuffer, chunkSize, NULL);
+        }
+    }
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void SoundSetMasterVolumeWithFade(s32 volume, s32 frames)

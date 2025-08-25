@@ -212,6 +212,9 @@ extern u16 g_SoundTransferQueueWriteIndex;
 // SPU Memory Management
 extern SoundSpuMemoryBlock g_SoundSpuMemoryBlocks[MAX_SPU_MEMORY_BLOCKS];
 
+extern s32 g_SoundUploadDestBuffer;
+extern s32 g_SoundUploadSourceAddr;
+extern s32 g_SoundUploadBytesRemaining;
 extern u_long g_unk_SoundEvent; // Event Descriptor
 
 extern SoundFile* g_SoundSedsLinkedList;
