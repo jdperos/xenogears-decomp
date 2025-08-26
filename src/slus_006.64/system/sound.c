@@ -1796,10 +1796,19 @@ void SoundSetVoiceLoopAddress(s32 voiceIndex, s32 addr) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoiceVolume);
+void SoundSetVoiceVolume(s32 voiceIndex, s32 volL, s32 volR) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->volume.left = volL;
+    voice->volume.right = volR;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoicePitch);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetVoicePitch(s32 voiceIndex, s32 pitch) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->pitch = pitch;
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 // ADSR Functions
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F530);
 
