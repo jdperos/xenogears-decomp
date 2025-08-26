@@ -1775,7 +1775,10 @@ void SoundSetVoiceKeyOff(u32 voiceFlags) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetReverbVoices);
+void SoundSetReverbVoices(u32 voiceFlags) {
+    g_pSoundSpuRegisters->_rxx.rev_mode[0] = voiceFlags;
+    g_pSoundSpuRegisters->_rxx.rev_mode[1] = (u16)(voiceFlags >> 0x10);
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void func_8003F4BC(void) {}
