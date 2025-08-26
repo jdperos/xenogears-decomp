@@ -1790,8 +1790,12 @@ void SoundSetVoiceStartAddress(s32 voiceIndex, s32 addr) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoiceLoopAddress);
+void SoundSetVoiceLoopAddress(s32 voiceIndex, s32 addr) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->loop_addr = addr >> 3;
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoiceVolume);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoicePitch);
