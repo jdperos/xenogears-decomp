@@ -1810,10 +1810,20 @@ void SoundSetVoicePitch(s32 voiceIndex, s32 pitch) {
 
 //----------------------------------------------------------------------------------------------------------------------
 // ADSR Functions
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F530);
+void SoundSetVoiceAdsrAttackModeAndSustainLevel(s32 voiceIndex, s32 sustainLevel, s32 attackMode) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->adsr[0] = (voice->adsr[0] & 0x00FF) +
+        (sustainLevel << 8) +
+        ((attackMode >> 2) << 15);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F560);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetVoiceAdsrDecayRate(s32 voiceIndex, s32 decayRate) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->adsr[0] = (voice->adsr[0] & 0xFF0F) + (decayRate << 4);
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F588);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F5BC);
