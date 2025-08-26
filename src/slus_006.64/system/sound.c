@@ -3,6 +3,233 @@
 #include "psyq/kernel.h"
 #include "psyq/libspu.h"
 
+//----------------------------------------------------------------------------------------------------------------------
+// SPU DECLARATIONS
+//----------------------------------------------------------------------------------------------------------------------
+typedef struct {
+    SpuVolume volume;
+    u16 pitch;
+    u16 addr;
+    u16 adsr[2];
+    u16 volumex;
+    u16 loop_addr;
+} SPU_VOICE_REG;
+
+#define SPU_VOICE_REG_VOLUME_L    0
+#define SPU_VOICE_REG_VOLUME_R    1
+#define SPU_VOICE_REG_PITCH       2
+#define SPU_VOICE_REG_ADDR        3
+#define SPU_VOICE_REG_ADSR1       4
+#define SPU_VOICE_REG_ADSR2       5
+#define SPU_VOICE_REG_VOLUMEX     6
+#define SPU_VOICE_REG_LOOP_ADDR   7
+#define SPU_VOICE_REG_SIZE        8
+#define NUM_VOICES               24
+
+typedef struct {
+    // APF Displacement registers (1F801DC0h - 1F801DC2h)
+    u16 m_dAPF1;
+    u16 m_dAPF2;
+
+    // Volume registers (1F801DC4h - 1F801DD2h)
+    s16 m_vIIR;
+    s16 m_vCOMB1;
+    s16 m_vCOMB2;
+    s16 m_vCOMB3;
+    s16 m_vCOMB4;
+    s16 m_vWALL;
+    s16 m_vAPF1;
+    s16 m_vAPF2;
+
+    // Same Side Reflection Address registers (1F801DD4h - 1F801DD6h)
+    u16 m_mLSAME;
+    u16 m_mRSAME;
+
+    // Comb Address registers (1F801DD8h - 1F801DDEh)
+    u16 m_mLCOMB1;
+    u16 m_mRCOMB1;
+    u16 m_mLCOMB2;
+    u16 m_mRCOMB2;
+
+    // Same Side Reflection Address 2 registers (1F801DE0h - 1F801DE2h)
+    u16 m_dLSAME;
+    u16 m_dRSAME;
+
+    // Different Side Reflection Address registers (1F801DE4h - 1F801DE6h)
+    u16 m_mLDIFF;
+    u16 m_mRDIFF;
+
+    // Comb Address registers 3-4 (1F801DE8h - 1F801DEEh)
+    u16 m_mLCOMB3;
+    u16 m_mRCOMB3;
+    u16 m_mLCOMB4;
+    u16 m_mRCOMB4;
+
+    // Different Side Reflection Address 2 registers (1F801DF0h - 1F801DF2h)
+    u16 m_dLDIFF;
+    u16 m_dRDIFF;
+
+    // APF Address registers (1F801DF4h - 1F801DFAh)
+    u16 m_mLAPF1;
+    u16 m_mRAPF1;
+    u16 m_mLAPF2;
+    u16 m_mRAPF2;
+
+    // Input Volume registers (1F801DFCh - 1F801DFEh)
+    s16 m_vLIN;
+    s16 m_vRIN;
+} ReverbRegisters;
+
+typedef struct {
+    SPU_VOICE_REG voice[NUM_VOICES];
+    // Volumes
+    SpuVolume main_vol; // 1-bit for Volume Mode, 15-bits for Volume
+    SpuVolume rev_vol; // Full 16 bits for volume
+
+    // Voice Flags
+    u16 key_on[2];
+    u16 key_off[2];
+    u16 chan_fm[2];
+    u16 noise_mode[2];
+    u16 rev_mode[2];
+    u32 m_EndxFlags;
+
+    u16 unk;
+
+    // Memory
+    u16 rev_work_addr;
+    u16 irq_addr;
+    u16 trans_addr;
+    u16 trans_fifo;
+
+    // Control
+    u16 spucnt;
+    u16 data_trans;
+    u16 spustat;
+
+    // Aux volumes
+    SpuVolume cd_vol;
+    SpuVolume ex_vol;
+
+    SpuVolume main_volx;
+
+    u32 unk2;
+
+    ReverbRegisters m_Reverb;
+} SPU_RXX;
+
+// Voice Registers (0x00 - 0xBF)
+#define SPU_RXX_VOICE_BASE              0x00    // Voice registers start (24 voices × 8 regs each)
+#define SPU_RXX_VOICE_SIZE              8       // Registers per voice
+#define SPU_RXX_VOICE_END               0xBF    // Last voice register
+// Global Volume Registers (0xC0 - 0xC3)
+#define SPU_RXX_MAIN_VOL_L              0xC0    // Main volume left
+#define SPU_RXX_MAIN_VOL_R              0xC1    // Main volume right
+#define SPU_RXX_REV_VOL_L               0xC2    // Reverb volume left
+#define SPU_RXX_REV_VOL_R               0xC3    // Reverb volume right
+// Voice Flag Registers (0xC4 - 0xCF) - 32-bit values stored as pairs
+#define SPU_RXX_KEY_ON_LOW              0xC4    // Key on flags (bits 0-15)
+#define SPU_RXX_KEY_ON_HIGH             0xC5    // Key on flags (bits 16-31)
+#define SPU_RXX_KEY_OFF_LOW             0xC6    // Key off flags (bits 0-15)
+#define SPU_RXX_KEY_OFF_HIGH            0xC7    // Key off flags (bits 16-31)
+#define SPU_RXX_PITCH_MOD_LOW           0xC8    // Pitch modulation flags (bits 0-15)
+#define SPU_RXX_PITCH_MOD_HIGH          0xC9    // Pitch modulation flags (bits 16-31)
+#define SPU_RXX_NOISE_LOW               0xCA    // Noise flags (bits 0-15)
+#define SPU_RXX_NOISE_HIGH              0xCB    // Noise flags (bits 16-31)
+#define SPU_RXX_REVERB_LOW              0xCC    // Reverb flags (bits 0-15)
+#define SPU_RXX_REVERB_HIGH             0xCD    // Reverb flags (bits 16-31)
+#define SPU_RXX_ENDX_LOW                0xCE    // End flags (bits 0-15)
+#define SPU_RXX_ENDX_HIGH               0xCF    // End flags (bits 16-31)
+// Memory Address Registers (0xD0 - 0xD4)
+#define SPU_RXX_UNKNOWN_D0              0xD0    // Unknown register
+#define SPU_RXX_REV_WA_START_ADDR       0xD1    // Reverb work area start address
+#define SPU_RXX_IRQ_ADDR                0xD2    // IRQ address
+#define SPU_RXX_TRANS_ADDR              0xD3    // Transfer address
+#define SPU_RXX_TRANS_FIFO              0xD4    // Transfer FIFO
+// Control Registers (0xD5 - 0xD7)
+#define SPU_RXX_SPUCNT                  0xD5    // SPU control register
+#define SPU_RXX_TRANS_CTRL              0xD6    // Transfer control
+#define SPU_RXX_SPUSTAT                 0xD7    // SPU status register
+// Audio Input Volume Registers (0xD8 - 0xDB)
+#define SPU_RXX_CD_VOL_L                0xD8    // CD input volume left
+#define SPU_RXX_CD_VOL_R                0xD9    // CD input volume right
+#define SPU_RXX_EXT_VOL_L               0xDA    // External input volume left
+#define SPU_RXX_EXT_VOL_R               0xDB    // External input volume right
+// Current Volume Registers (0xDC - 0xDD)
+#define SPU_RXX_CURR_MAIN_VOL_L         0xDC    // Current main volume left
+#define SPU_RXX_CURR_MAIN_VOL_R         0xDD    // Current main volume right
+// Unknown Register (0xDE - 0xDF)
+#define SPU_RXX_UNKNOWN2_LOW            0xDE    // Unknown register (bits 0-15)
+#define SPU_RXX_UNKNOWN2_HIGH           0xDF    // Unknown register (bits 16-31)
+// Reverb Registers start at 0xE0
+#define SPU_RXX_REVERB_BASE             0xE0    // Reverb parameter registers start
+
+// SPU Register volume modes
+#define SPU_VOL_MODE_DIRECT     0x0000
+#define SPU_VOL_MODE_LINEARIncN 0x8000
+#define SPU_VOL_MODE_LINEARIncR 0x9000
+#define SPU_VOL_MODE_LINEARDecN 0xA000
+#define SPU_VOL_MODE_LINEARDecR 0xB000
+#define SPU_VOL_MODE_EXPIncN    0xC000
+#define SPU_VOL_MODE_EXPIncR    0xD000
+#define SPU_VOL_MODE_EXPDec     0xE000
+
+#define SPU_VOL_MODE_MASK (1 << 15)
+#define SPU_VOL_MAX 0x7F
+
+// SPU Control Register (SPUCNT) bit masks
+#define SPU_CTRL_MASK_CD_AUDIO_ENABLE        (1 <<  0)              // 0
+#define SPU_CTRL_MASK_EXT_AUDIO_ENABLE       (1 <<  1)              // 1
+#define SPU_CTRL_MASK_CD_AUDIO_REVERB        (1 <<  2)              // 2
+#define SPU_CTRL_MASK_EXT_AUDIO_REVERB       (1 <<  3)              // 3
+#define SPU_CTRL_MASK_SRAM_TRANSFER_MODE    ((1 <<  4) | (1 << 5))  // 4-5
+#define SPU_CTRL_MASK_IRQ9_ENABLE            (1 <<  6)              // 6
+#define SPU_CTRL_MASK_REVERB_MASTER_ENABLE   (1 <<  7)              // 7
+#define SPU_CTRL_MASK_NOISE_FREQ_STEP       ((1 <<  8) | (1 << 9))  // 8-9
+#define SPU_CTRL_MASK_NOISE_FREQ_SHIFT      ((1 << 10) | (1 << 11) | (1 << 12) | (1 << 13))  // 10-13
+#define SPU_CTRL_MASK_MUTE_SPU               (1 << 14)              // 14
+#define SPU_CTRL_MASK_SPU_ENABLE             (1 << 15)              // 15
+
+// SPU Control Register shift amounts for multi-bit fields
+#define SPU_CTRL_SRAM_TRANSFER_SHIFT     4
+#define SPU_CTRL_NOISE_FREQ_STEP_SHIFT   8
+#define SPU_CTRL_NOISE_FREQ_SHIFT_SHIFT 10
+
+#define SPU_CTRL_TRANSFER_MODE_STOP         ( 0 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x00
+#define SPU_CTRL_TRANSFER_MODE_MANUAL_WRITE ( 1 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x10
+#define SPU_CTRL_TRANSFER_MODE_DMA_WRITE    ( 2 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x20
+#define SPU_CTRL_TRANSFER_MODE_DMA_READ     ( 3 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x30
+
+// SPU Status Register (SPUSTAT) bit masks
+#define SPU_STAT_MASK_CURRENT_SPU_MODE      ((1 <<  0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 <<  4) | (1 <<  5))  // 0-5
+#define SPU_STAT_MASK_IRQ9_FLAG              (1 <<  6)              // 6
+#define SPU_STAT_MASK_DMA_READ_WRITE_REQUEST (1 <<  7)              // 7
+#define SPU_STAT_MASK_DMA_WRITE_REQUEST      (1 <<  8)              // 8
+#define SPU_STAT_MASK_DMA_READ_REQUEST       (1 <<  9)              // 9
+#define SPU_STAT_MASK_DATA_TRANSFER_BUSY     (1 << 10)              // 10
+#define SPU_STAT_MASK_CAPTURE_BUFFER_HALF    (1 << 11)              // 11
+#define SPU_STAT_MASK_UNKNOWN_UNUSED        ((1 << 12) | (1 << 13) | (1 << 14) | (1 << 15))  // 12-15
+
+// SPU Status Register shift amounts for multi-bit fields
+#define SPU_STAT_CURRENT_SPU_MODE_SHIFT      0
+#define SPU_STAT_UNKNOWN_UNUSED_SHIFT        12
+
+// SPU Status Register values
+#define SPU_STAT_CAPTURE_FIRSTHALF           (0 << 11)  // Writing to first half
+#define SPU_STAT_CAPTURE_SECONDHALF          (1 << 11)  // Writing to second half
+#define SPU_STAT_TRANSFER_READY              (0 << 10)  // Transfer ready
+#define SPU_STAT_TRANSFER_BUSY               (1 << 10)  // Transfer busy
+
+typedef union {
+    SPU_RXX _rxx;
+    volatile SPU_RXX rxx;
+    u16 _raw[0x100];
+    volatile u16 raw[0x100];
+} SpuUnion;
+
+extern SpuUnion* g_pSoundSpuRegisters;
+//----------------------------------------------------------------------------------------------------------------------
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundInitialize);
 
 void SoundReset(void) {
@@ -1535,25 +1762,25 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F42C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F43C);
 
+//----------------------------------------------------------------------------------------------------------------------
 void SoundSetVoiceKeyOn(u32 voiceFlags) {
-    u16* pSoundRegisters = g_pSoundSpuRegisters;
-    // TODO: Clean up this
-    *(pSoundRegisters + 0xC4) = voiceFlags;
-    *(pSoundRegisters + 0xC5) = (voiceFlags >> 0x10);
+    g_pSoundSpuRegisters->_rxx.key_on[0] = voiceFlags;
+    g_pSoundSpuRegisters->_rxx.key_on[1] = (u16)(voiceFlags >> 0x10);
 }
 
-// Set the SPU_VOICE_KEY_OFF register, which will release / fade out voices according to the flags
+//----------------------------------------------------------------------------------------------------------------------
 void SoundSetVoiceKeyOff(u32 voiceFlags) {
-    u16* pSoundRegisters = g_pSoundSpuRegisters;
-    // TODO: Clean up this
-    *(pSoundRegisters + 0xC6) = voiceFlags;
-    *(pSoundRegisters + 0xC7) = (voiceFlags >> 0x10);
+    g_pSoundSpuRegisters->_rxx.key_off[0] = voiceFlags;
+    g_pSoundSpuRegisters->_rxx.key_off[1] = (u16)(voiceFlags >> 0x10);
 }
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetReverbVoices);
 
+//----------------------------------------------------------------------------------------------------------------------
 void func_8003F4BC(void) {}
 
+//----------------------------------------------------------------------------------------------------------------------
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoiceStartAddress);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoiceLoopAddress);

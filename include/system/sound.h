@@ -192,7 +192,6 @@ typedef struct {
 
 extern SoundVolumeController g_SoundVolumeController;
 
-extern void* g_pSoundSpuRegisters;
 extern s32 g_ReverbWorkAreaSizes[SPU_REV_MODE_MAX];
 extern u8 g_SoundReverbType;
 extern u8 g_SoundReverbDelay;
