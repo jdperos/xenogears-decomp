@@ -230,6 +230,7 @@ SoundStopVoiceOnChannel = 0x8003EFA0;
 SoundSetVoiceKeyOn = 0x8003F468;
 SoundSetVoiceKeyOff = 0x8003F484;
 SoundSetReverbVoices = 0x8003F4A0;
+SoundUnkDebugNoReturn_8003F4BC = 0x8003F4BC;
 SoundSetVoiceStartAddress = 0x8003F4C4;
 SoundSetVoiceLoopAddress = 0x8003F4E0;
 SoundSetVoiceVolume = 0x8003F4FC;

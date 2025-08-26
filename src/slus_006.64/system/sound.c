@@ -1781,7 +1781,7 @@ void SoundSetReverbVoices(u32 voiceFlags) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void func_8003F4BC(void) {}
+void SoundUnkDebugNoReturn_8003F4BC(void) {}
 
 //----------------------------------------------------------------------------------------------------------------------
 void SoundSetVoiceStartAddress(s32 voiceIndex, s32 addr) {
