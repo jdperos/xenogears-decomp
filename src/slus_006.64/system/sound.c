@@ -249,7 +249,7 @@ void SoundReset(void) {
     CloseEvent(g_unk_SoundEvent);
     ExitCriticalSection();
     for (i = 0; i < NUM_VOICES; i++) {
-        func_8003F5BC(i, 6, 3);
+        SoundSetVoiceAdsrReleaseShiftAndMode(i, 6, 3);
     }
     SoundSetVoiceKeyOff(0xFFFFFF); // Release all voices
     SpuSetReverbModeDepth(0, 0);
@@ -1810,27 +1810,40 @@ void SoundSetVoicePitch(s32 voiceIndex, s32 pitch) {
 
 //----------------------------------------------------------------------------------------------------------------------
 // ADSR Functions
-void SoundSetVoiceAdsrAttackModeAndSustainLevel(s32 voiceIndex, s32 sustainLevel, s32 attackMode) {
+void SoundSetVoiceAdsrAttackModeAndRate(s32 voiceIndex, s32 attackRate, s32 attackModeBit2) {
     SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
     voice->adsr[0] = (voice->adsr[0] & 0x00FF) +
-        (sustainLevel << 8) +
-        ((attackMode >> 2) << 15);
+        (attackRate << 8) +
+        ((attackModeBit2 >> 2) << 15);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void SoundSetVoiceAdsrDecayRate(s32 voiceIndex, s32 decayRate) {
+void SoundSetVoiceAdsrDecayShift(s32 voiceIndex, s32 decayShift) {
     SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
-    voice->adsr[0] = (voice->adsr[0] & 0xFF0F) + (decayRate << 4);
+    voice->adsr[0] = (voice->adsr[0] & 0xFF0F) + (decayShift << 4);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F588);
+void SoundSetVoiceAdsrSustainRateAndDirection(s32 voiceIndex, s32 sustainRate, s32 sustainDirBit1) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->adsr[1] = (voice->adsr[1] & 0x003F) + (sustainRate << 6) + ((sustainDirBit1 >> 1) << 14);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F5BC);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetVoiceAdsrReleaseShiftAndMode(s32 voiceIndex, s32 releaseRate, s32 releaseModeBit2) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    s32 combinedValue = releaseRate + ((releaseModeBit2 >> 2) << 5);
+    voice->adsr[1] = (voice->adsr[1] & 0xFFC0) + combinedValue;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F5EC);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetVoiceAdsrSustainLevel(s32 voiceIndex, s32 sustainLevel) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->adsr[0] = (voice->adsr[0] & 0xFFF0) + sustainLevel;
+}
 // End ADSR functions
 
+//----------------------------------------------------------------------------------------------------------------------
 int SoundValidateFile(SoundFile* pSoundFile, u32 magicBytes, unsigned short targetValue) {
     unsigned char bIsError;
     
