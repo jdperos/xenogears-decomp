@@ -3,6 +3,233 @@
 #include "psyq/kernel.h"
 #include "psyq/libspu.h"
 
+//----------------------------------------------------------------------------------------------------------------------
+// SPU DECLARATIONS
+//----------------------------------------------------------------------------------------------------------------------
+typedef struct {
+    SpuVolume volume;
+    u16 pitch;
+    u16 addr;
+    u16 adsr[2];
+    u16 volumex;
+    u16 loop_addr;
+} SPU_VOICE_REG;
+
+#define SPU_VOICE_REG_VOLUME_L    0
+#define SPU_VOICE_REG_VOLUME_R    1
+#define SPU_VOICE_REG_PITCH       2
+#define SPU_VOICE_REG_ADDR        3
+#define SPU_VOICE_REG_ADSR1       4
+#define SPU_VOICE_REG_ADSR2       5
+#define SPU_VOICE_REG_VOLUMEX     6
+#define SPU_VOICE_REG_LOOP_ADDR   7
+#define SPU_VOICE_REG_SIZE        8
+#define NUM_VOICES               24
+
+typedef struct {
+    // APF Displacement registers (1F801DC0h - 1F801DC2h)
+    u16 m_dAPF1;
+    u16 m_dAPF2;
+
+    // Volume registers (1F801DC4h - 1F801DD2h)
+    s16 m_vIIR;
+    s16 m_vCOMB1;
+    s16 m_vCOMB2;
+    s16 m_vCOMB3;
+    s16 m_vCOMB4;
+    s16 m_vWALL;
+    s16 m_vAPF1;
+    s16 m_vAPF2;
+
+    // Same Side Reflection Address registers (1F801DD4h - 1F801DD6h)
+    u16 m_mLSAME;
+    u16 m_mRSAME;
+
+    // Comb Address registers (1F801DD8h - 1F801DDEh)
+    u16 m_mLCOMB1;
+    u16 m_mRCOMB1;
+    u16 m_mLCOMB2;
+    u16 m_mRCOMB2;
+
+    // Same Side Reflection Address 2 registers (1F801DE0h - 1F801DE2h)
+    u16 m_dLSAME;
+    u16 m_dRSAME;
+
+    // Different Side Reflection Address registers (1F801DE4h - 1F801DE6h)
+    u16 m_mLDIFF;
+    u16 m_mRDIFF;
+
+    // Comb Address registers 3-4 (1F801DE8h - 1F801DEEh)
+    u16 m_mLCOMB3;
+    u16 m_mRCOMB3;
+    u16 m_mLCOMB4;
+    u16 m_mRCOMB4;
+
+    // Different Side Reflection Address 2 registers (1F801DF0h - 1F801DF2h)
+    u16 m_dLDIFF;
+    u16 m_dRDIFF;
+
+    // APF Address registers (1F801DF4h - 1F801DFAh)
+    u16 m_mLAPF1;
+    u16 m_mRAPF1;
+    u16 m_mLAPF2;
+    u16 m_mRAPF2;
+
+    // Input Volume registers (1F801DFCh - 1F801DFEh)
+    s16 m_vLIN;
+    s16 m_vRIN;
+} ReverbRegisters;
+
+typedef struct {
+    SPU_VOICE_REG voice[NUM_VOICES];
+    // Volumes
+    SpuVolume main_vol; // 1-bit for Volume Mode, 15-bits for Volume
+    SpuVolume rev_vol; // Full 16 bits for volume
+
+    // Voice Flags
+    u16 key_on[2];
+    u16 key_off[2];
+    u16 chan_fm[2];
+    u16 noise_mode[2];
+    u16 rev_mode[2];
+    u32 m_EndxFlags;
+
+    u16 unk;
+
+    // Memory
+    u16 rev_work_addr;
+    u16 irq_addr;
+    u16 trans_addr;
+    u16 trans_fifo;
+
+    // Control
+    u16 spucnt;
+    u16 data_trans;
+    u16 spustat;
+
+    // Aux volumes
+    SpuVolume cd_vol;
+    SpuVolume ex_vol;
+
+    SpuVolume main_volx;
+
+    u32 unk2;
+
+    ReverbRegisters m_Reverb;
+} SPU_RXX;
+
+// Voice Registers (0x00 - 0xBF)
+#define SPU_RXX_VOICE_BASE              0x00    // Voice registers start (24 voices × 8 regs each)
+#define SPU_RXX_VOICE_SIZE              8       // Registers per voice
+#define SPU_RXX_VOICE_END               0xBF    // Last voice register
+// Global Volume Registers (0xC0 - 0xC3)
+#define SPU_RXX_MAIN_VOL_L              0xC0    // Main volume left
+#define SPU_RXX_MAIN_VOL_R              0xC1    // Main volume right
+#define SPU_RXX_REV_VOL_L               0xC2    // Reverb volume left
+#define SPU_RXX_REV_VOL_R               0xC3    // Reverb volume right
+// Voice Flag Registers (0xC4 - 0xCF) - 32-bit values stored as pairs
+#define SPU_RXX_KEY_ON_LOW              0xC4    // Key on flags (bits 0-15)
+#define SPU_RXX_KEY_ON_HIGH             0xC5    // Key on flags (bits 16-31)
+#define SPU_RXX_KEY_OFF_LOW             0xC6    // Key off flags (bits 0-15)
+#define SPU_RXX_KEY_OFF_HIGH            0xC7    // Key off flags (bits 16-31)
+#define SPU_RXX_PITCH_MOD_LOW           0xC8    // Pitch modulation flags (bits 0-15)
+#define SPU_RXX_PITCH_MOD_HIGH          0xC9    // Pitch modulation flags (bits 16-31)
+#define SPU_RXX_NOISE_LOW               0xCA    // Noise flags (bits 0-15)
+#define SPU_RXX_NOISE_HIGH              0xCB    // Noise flags (bits 16-31)
+#define SPU_RXX_REVERB_LOW              0xCC    // Reverb flags (bits 0-15)
+#define SPU_RXX_REVERB_HIGH             0xCD    // Reverb flags (bits 16-31)
+#define SPU_RXX_ENDX_LOW                0xCE    // End flags (bits 0-15)
+#define SPU_RXX_ENDX_HIGH               0xCF    // End flags (bits 16-31)
+// Memory Address Registers (0xD0 - 0xD4)
+#define SPU_RXX_UNKNOWN_D0              0xD0    // Unknown register
+#define SPU_RXX_REV_WA_START_ADDR       0xD1    // Reverb work area start address
+#define SPU_RXX_IRQ_ADDR                0xD2    // IRQ address
+#define SPU_RXX_TRANS_ADDR              0xD3    // Transfer address
+#define SPU_RXX_TRANS_FIFO              0xD4    // Transfer FIFO
+// Control Registers (0xD5 - 0xD7)
+#define SPU_RXX_SPUCNT                  0xD5    // SPU control register
+#define SPU_RXX_TRANS_CTRL              0xD6    // Transfer control
+#define SPU_RXX_SPUSTAT                 0xD7    // SPU status register
+// Audio Input Volume Registers (0xD8 - 0xDB)
+#define SPU_RXX_CD_VOL_L                0xD8    // CD input volume left
+#define SPU_RXX_CD_VOL_R                0xD9    // CD input volume right
+#define SPU_RXX_EXT_VOL_L               0xDA    // External input volume left
+#define SPU_RXX_EXT_VOL_R               0xDB    // External input volume right
+// Current Volume Registers (0xDC - 0xDD)
+#define SPU_RXX_CURR_MAIN_VOL_L         0xDC    // Current main volume left
+#define SPU_RXX_CURR_MAIN_VOL_R         0xDD    // Current main volume right
+// Unknown Register (0xDE - 0xDF)
+#define SPU_RXX_UNKNOWN2_LOW            0xDE    // Unknown register (bits 0-15)
+#define SPU_RXX_UNKNOWN2_HIGH           0xDF    // Unknown register (bits 16-31)
+// Reverb Registers start at 0xE0
+#define SPU_RXX_REVERB_BASE             0xE0    // Reverb parameter registers start
+
+// SPU Register volume modes
+#define SPU_VOL_MODE_DIRECT     0x0000
+#define SPU_VOL_MODE_LINEARIncN 0x8000
+#define SPU_VOL_MODE_LINEARIncR 0x9000
+#define SPU_VOL_MODE_LINEARDecN 0xA000
+#define SPU_VOL_MODE_LINEARDecR 0xB000
+#define SPU_VOL_MODE_EXPIncN    0xC000
+#define SPU_VOL_MODE_EXPIncR    0xD000
+#define SPU_VOL_MODE_EXPDec     0xE000
+
+#define SPU_VOL_MODE_MASK (1 << 15)
+#define SPU_VOL_MAX 0x7F
+
+// SPU Control Register (SPUCNT) bit masks
+#define SPU_CTRL_MASK_CD_AUDIO_ENABLE        (1 <<  0)              // 0
+#define SPU_CTRL_MASK_EXT_AUDIO_ENABLE       (1 <<  1)              // 1
+#define SPU_CTRL_MASK_CD_AUDIO_REVERB        (1 <<  2)              // 2
+#define SPU_CTRL_MASK_EXT_AUDIO_REVERB       (1 <<  3)              // 3
+#define SPU_CTRL_MASK_SRAM_TRANSFER_MODE    ((1 <<  4) | (1 << 5))  // 4-5
+#define SPU_CTRL_MASK_IRQ9_ENABLE            (1 <<  6)              // 6
+#define SPU_CTRL_MASK_REVERB_MASTER_ENABLE   (1 <<  7)              // 7
+#define SPU_CTRL_MASK_NOISE_FREQ_STEP       ((1 <<  8) | (1 << 9))  // 8-9
+#define SPU_CTRL_MASK_NOISE_FREQ_SHIFT      ((1 << 10) | (1 << 11) | (1 << 12) | (1 << 13))  // 10-13
+#define SPU_CTRL_MASK_MUTE_SPU               (1 << 14)              // 14
+#define SPU_CTRL_MASK_SPU_ENABLE             (1 << 15)              // 15
+
+// SPU Control Register shift amounts for multi-bit fields
+#define SPU_CTRL_SRAM_TRANSFER_SHIFT     4
+#define SPU_CTRL_NOISE_FREQ_STEP_SHIFT   8
+#define SPU_CTRL_NOISE_FREQ_SHIFT_SHIFT 10
+
+#define SPU_CTRL_TRANSFER_MODE_STOP         ( 0 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x00
+#define SPU_CTRL_TRANSFER_MODE_MANUAL_WRITE ( 1 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x10
+#define SPU_CTRL_TRANSFER_MODE_DMA_WRITE    ( 2 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x20
+#define SPU_CTRL_TRANSFER_MODE_DMA_READ     ( 3 << SPU_CTRL_SRAM_TRANSFER_SHIFT ) // 0x30
+
+// SPU Status Register (SPUSTAT) bit masks
+#define SPU_STAT_MASK_CURRENT_SPU_MODE      ((1 <<  0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 <<  4) | (1 <<  5))  // 0-5
+#define SPU_STAT_MASK_IRQ9_FLAG              (1 <<  6)              // 6
+#define SPU_STAT_MASK_DMA_READ_WRITE_REQUEST (1 <<  7)              // 7
+#define SPU_STAT_MASK_DMA_WRITE_REQUEST      (1 <<  8)              // 8
+#define SPU_STAT_MASK_DMA_READ_REQUEST       (1 <<  9)              // 9
+#define SPU_STAT_MASK_DATA_TRANSFER_BUSY     (1 << 10)              // 10
+#define SPU_STAT_MASK_CAPTURE_BUFFER_HALF    (1 << 11)              // 11
+#define SPU_STAT_MASK_UNKNOWN_UNUSED        ((1 << 12) | (1 << 13) | (1 << 14) | (1 << 15))  // 12-15
+
+// SPU Status Register shift amounts for multi-bit fields
+#define SPU_STAT_CURRENT_SPU_MODE_SHIFT      0
+#define SPU_STAT_UNKNOWN_UNUSED_SHIFT        12
+
+// SPU Status Register values
+#define SPU_STAT_CAPTURE_FIRSTHALF           (0 << 11)  // Writing to first half
+#define SPU_STAT_CAPTURE_SECONDHALF          (1 << 11)  // Writing to second half
+#define SPU_STAT_TRANSFER_READY              (0 << 10)  // Transfer ready
+#define SPU_STAT_TRANSFER_BUSY               (1 << 10)  // Transfer busy
+
+typedef union {
+    SPU_RXX _rxx;
+    volatile SPU_RXX rxx;
+    u16 _raw[0x100];
+    volatile u16 raw[0x100];
+} SpuUnion;
+
+extern SpuUnion* g_pSoundSpuRegisters;
+//----------------------------------------------------------------------------------------------------------------------
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundInitialize);
 
 void SoundReset(void) {
@@ -22,7 +249,7 @@ void SoundReset(void) {
     CloseEvent(g_unk_SoundEvent);
     ExitCriticalSection();
     for (i = 0; i < NUM_VOICES; i++) {
-        func_8003F5BC(i, 6, 3);
+        SoundSetVoiceAdsrReleaseShiftAndMode(i, 6, 3);
     }
     SoundSetVoiceKeyOff(0xFFFFFF); // Release all voices
     SpuSetReverbModeDepth(0, 0);
@@ -212,11 +439,124 @@ void func_8003890C(AudioManager* manager, s32 bIn) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038934);
+void SoundSetReverbModeWithAllocation(s32 reverbType, s32 reverbDepth, s32 reverbDelay, s32 reverbFeedback) {
+    SpuReverbAttr reverbAttr;
+    s32 currentReverbType;
+    s32 workAreaSize;
+    s32 workAreaStartAddr;
+    s32 allocationSize;
+    s32 memoryHandle;
+    b32 bAllocated;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038AD4);
+    bAllocated = false;
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_80038B4C);
+    if (reverbType == -2) {
+        return;
+    }
+
+    if (reverbType == SPU_REV_MODE_OFF) {
+        reverbFeedback = 0;
+        reverbDelay = 0;
+        reverbDepth = 0;
+    } else if (reverbType == SPU_REV_MODE_CHECK) {
+        reverbType = g_SoundReverbType;
+    }
+
+    SpuGetReverbModeType(&currentReverbType);
+    if (currentReverbType != reverbType || reverbType == SPU_REV_MODE_OFF) {
+
+        if (g_SoundReverbMemoryHandle != -1) {
+            SoundSpuMemoryFreeBlock(g_SoundReverbMemoryHandle);
+        }
+
+        workAreaSize = g_ReverbWorkAreaSizes[reverbType];
+        workAreaStartAddr = workAreaSize;
+        allocationSize = 0x80000 - workAreaSize;
+
+        memoryHandle = SoundSpuMemoryAllocateBlockAtAddress(workAreaStartAddr, allocationSize, 5);
+        g_SoundReverbMemoryHandle = memoryHandle;
+
+        if (memoryHandle == 0) {
+            SoundHandleError(0x20);
+            reverbType = 0;
+            reverbFeedback = 0;
+            reverbDelay = 0;
+            reverbDepth = 0;
+        }
+        bAllocated = true;
+
+    }
+
+    g_SoundReverbType = reverbType;
+    g_SoundVolumeController.currentReverbDepth = reverbDepth;
+    g_SoundReverbDelay = reverbDelay;
+    g_SoundReverbFeedback = reverbFeedback;
+
+    SoundApplyVolumeSettings();
+
+    if (bAllocated) {
+        // New reverb type - initialize with zero depth, set type, clear work area (probably)
+        SpuSetReverbModeDepth(0, 0);
+        SpuSetReverbModeType(reverbType);
+        SoundInitiateReverbWorkAreaTransfer(allocationSize, workAreaStartAddr);
+    } else {
+        // Existing reverb type - apply current settings
+        SpuSetReverbModeDepth(g_SoundReverbDepth.left, g_SoundReverbDepth.right);
+        SpuSetReverbModeDelayTime(reverbDelay);
+        SpuSetReverbModeFeedback(reverbFeedback);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void SoundInitiateReverbWorkAreaTransfer(s32 addr, s32 size) {
+    s32 temp_v0;
+
+    g_SoundUploadSourceAddr = addr;
+    g_SoundUploadBytesRemaining = size;
+    if (g_SoundUploadDestBuffer == 0) {
+        temp_v0 = SoundHeapAllocate(0x840);
+        g_SoundUploadDestBuffer = temp_v0;
+        if (temp_v0 == 0) {
+            SoundHandleError(0x1E);
+        }
+    }
+    g_SoundControlFlags |= (1 << 5);
+    SoundExecuteReverbWorkAreaTransfer();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void SoundExecuteReverbWorkAreaTransfer(void) {
+    s32 bytesRemaining;
+    s32 chunkSize;
+    s32 currentSourceAddr;
+
+    bytesRemaining = g_SoundUploadBytesRemaining;
+
+    if (bytesRemaining == 0) {
+        SoundHeapFree(g_SoundUploadDestBuffer);
+        g_SoundUploadDestBuffer = 0;
+
+        SpuSetReverbModeDepth(g_SoundReverbDepth.left, g_SoundReverbDepth.right);
+        SpuSetReverbModeDelayTime(g_SoundReverbDelay);
+        SpuSetReverbModeFeedback(g_SoundReverbFeedback);
+
+        g_SoundControlFlags &= ~(1 << 5);
+
+    } else {
+        chunkSize = (bytesRemaining <= 0x840) ? bytesRemaining : 0x800;
+
+        currentSourceAddr = g_SoundUploadSourceAddr;
+
+        g_SoundUploadBytesRemaining = bytesRemaining - chunkSize;
+        g_SoundUploadSourceAddr = currentSourceAddr + chunkSize;
+
+        SoundQueueSpuWriteCommand(currentSourceAddr, g_SoundUploadDestBuffer, chunkSize, SoundExecuteReverbWorkAreaTransfer);
+
+        if ((g_SoundControlFlags & (1 << 4)) == 0) {
+            SoundQueueSpuWriteCommand(currentSourceAddr, g_SoundUploadDestBuffer, chunkSize, NULL);
+        }
+    }
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void SoundSetMasterVolumeWithFade(s32 volume, s32 frames)
@@ -282,37 +622,30 @@ void SoundApplyVolumeSettings(void) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVolumeWithPhase);
-/*
-Matches on GCC 2.7.2-970404 + ASPSX 2.63
-
-void SoundSetVolumeWithPhase(short volume, SpuVolume* pVolume, u8 channelSelect) {
-    int selectedChannel;
-
+void SoundSetVolumeWithPhase(s32 volume, SpuVolume* pVolume, s32 channelSelect)
+{
     pVolume->right = volume;
     pVolume->left = volume;
 
-    if (g_SoundControlFlags & ((1 << 9) | (1 << 10))) {
-        selectedChannel = channelSelect;
+    if ((g_SoundControlFlags & ((1 << 9) | (1 << 10))) != 0) {
+        channelSelect &= 0xFF;
         if (!(g_SoundControlFlags & (1 << 9))) {
-            if ((selectedChannel ^ 1) != 0) {
+            if ((channelSelect ^ 1) != 0) {
                 pVolume->left = -volume;
             } else {
                 pVolume->right = -volume;
             }
-            return;
-        }
-
-        if (selectedChannel != CHANNEL_RIGHT) {
-            pVolume->left = -volume;
         } else {
-            pVolume->right = -volume;
+            if (channelSelect != CHANNEL_RIGHT) {
+                pVolume->left = -volume;
+            } else {
+                pVolume->right = -volume;
+            }
         }
-    }  
+    }
 }
-*/
 
-// Does not match on GCC 2.7.2-970404 + ASPSX 2.63, so likely start of a new TU here
+//----------------------------------------------------------------------------------------------------------------------
 void SoundHeapInitialize(void* startAddress, unsigned int size) {
     SoundHeapBlockHeader* pHeapBlock;
     unsigned int nAlignedSize;
@@ -1429,45 +1762,88 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F42C);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F43C);
 
+//----------------------------------------------------------------------------------------------------------------------
 void SoundSetVoiceKeyOn(u32 voiceFlags) {
-    u16* pSoundRegisters = g_pSoundSpuRegisters;
-    // TODO: Clean up this
-    *(pSoundRegisters + 0xC4) = voiceFlags;
-    *(pSoundRegisters + 0xC5) = (voiceFlags >> 0x10);
+    g_pSoundSpuRegisters->_rxx.key_on[0] = voiceFlags;
+    g_pSoundSpuRegisters->_rxx.key_on[1] = (u16)(voiceFlags >> 0x10);
 }
 
-// Set the SPU_VOICE_KEY_OFF register, which will release / fade out voices according to the flags
+//----------------------------------------------------------------------------------------------------------------------
 void SoundSetVoiceKeyOff(u32 voiceFlags) {
-    u16* pSoundRegisters = g_pSoundSpuRegisters;
-    // TODO: Clean up this
-    *(pSoundRegisters + 0xC6) = voiceFlags;
-    *(pSoundRegisters + 0xC7) = (voiceFlags >> 0x10);
+    g_pSoundSpuRegisters->_rxx.key_off[0] = voiceFlags;
+    g_pSoundSpuRegisters->_rxx.key_off[1] = (u16)(voiceFlags >> 0x10);
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetReverbVoices);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetReverbVoices(u32 voiceFlags) {
+    g_pSoundSpuRegisters->_rxx.rev_mode[0] = voiceFlags;
+    g_pSoundSpuRegisters->_rxx.rev_mode[1] = (u16)(voiceFlags >> 0x10);
+}
 
-void func_8003F4BC(void) {}
+//----------------------------------------------------------------------------------------------------------------------
+void SoundUnkDebugNoReturn_8003F4BC(void) {}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoiceStartAddress);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetVoiceStartAddress(s32 voiceIndex, s32 addr) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->addr = addr >> 3;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoiceLoopAddress);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetVoiceLoopAddress(s32 voiceIndex, s32 addr) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->loop_addr = addr >> 3;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoiceVolume);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetVoiceVolume(s32 voiceIndex, s32 volL, s32 volR) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->volume.left = volL;
+    voice->volume.right = volR;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", SoundSetVoicePitch);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetVoicePitch(s32 voiceIndex, s32 pitch) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->pitch = pitch;
+}
 
+//----------------------------------------------------------------------------------------------------------------------
 // ADSR Functions
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F530);
+void SoundSetVoiceAdsrAttackModeAndRate(s32 voiceIndex, s32 attackRate, s32 attackModeBit2) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->adsr[0] = (voice->adsr[0] & 0x00FF) +
+        (attackRate << 8) +
+        ((attackModeBit2 >> 2) << 15);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F560);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetVoiceAdsrDecayShift(s32 voiceIndex, s32 decayShift) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->adsr[0] = (voice->adsr[0] & 0xFF0F) + (decayShift << 4);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F588);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetVoiceAdsrSustainRateAndDirection(s32 voiceIndex, s32 sustainRate, s32 sustainDirBit1) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->adsr[1] = (voice->adsr[1] & 0x003F) + (sustainRate << 6) + ((sustainDirBit1 >> 1) << 14);
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F5BC);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetVoiceAdsrReleaseShiftAndMode(s32 voiceIndex, s32 releaseRate, s32 releaseModeBit2) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    s32 combinedValue = releaseRate + ((releaseModeBit2 >> 2) << 5);
+    voice->adsr[1] = (voice->adsr[1] & 0xFFC0) + combinedValue;
+}
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F5EC);
+//----------------------------------------------------------------------------------------------------------------------
+void SoundSetVoiceAdsrSustainLevel(s32 voiceIndex, s32 sustainLevel) {
+    SPU_VOICE_REG* voice = &g_pSoundSpuRegisters->_rxx.voice[voiceIndex];
+    voice->adsr[0] = (voice->adsr[0] & 0xFFF0) + sustainLevel;
+}
 // End ADSR functions
 
+//----------------------------------------------------------------------------------------------------------------------
 int SoundValidateFile(SoundFile* pSoundFile, u32 magicBytes, unsigned short targetValue) {
     unsigned char bIsError;
     
@@ -1484,8 +1860,16 @@ int SoundValidateFile(SoundFile* pSoundFile, u32 magicBytes, unsigned short targ
     return SOUND_ERR_INVALID_CHECKSUM;
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/sound", func_8003F67C);
+//----------------------------------------------------------------------------------------------------------------------
+s32 SoundUnkDebug0(void* p) {
+#if 0
+    // Secrets of the universe
+#endif
 
+    return 0;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 int SoundFileComputeChecksum(SoundFile* pSoundFile) {
     int nResult;
     int* pCurrent;

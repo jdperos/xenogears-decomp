@@ -6,6 +6,9 @@
 
 #define NUM_VOICES 24
 
+#define CHANNEL_RIGHT 0
+#define CHANNEL_LEFT  1
+
 typedef struct {
     s16 assignedVoice;
     u16 modeFlags;
@@ -189,6 +192,11 @@ typedef struct {
 
 extern SoundVolumeController g_SoundVolumeController;
 
+extern s32 g_ReverbWorkAreaSizes[SPU_REV_MODE_MAX];
+extern u8 g_SoundReverbType;
+extern u8 g_SoundReverbDelay;
+extern u8 g_SoundReverbFeedback;
+extern s32 g_SoundReverbMemoryHandle;
 
 extern s32 D_80059404;
 
@@ -206,6 +214,9 @@ extern u16 g_SoundTransferQueueWriteIndex;
 // SPU Memory Management
 extern SoundSpuMemoryBlock g_SoundSpuMemoryBlocks[MAX_SPU_MEMORY_BLOCKS];
 
+extern s32 g_SoundUploadDestBuffer;
+extern s32 g_SoundUploadSourceAddr;
+extern s32 g_SoundUploadBytesRemaining;
 extern u_long g_unk_SoundEvent; // Event Descriptor
 
 extern SoundFile* g_SoundSedsLinkedList;
@@ -213,8 +224,6 @@ extern SoundWDSEntry* g_SoundWdsLinkedList;
 
 extern int g_SoundWdsCurSpuAddress;
 extern int g_SoundWdsRemainingBytes;
-
-extern void* g_pSoundSpuRegisters;
 
 extern short g_SoundSpuErrorId;
 extern long g_unk_VoicesNeedingProcessing;
@@ -232,6 +241,6 @@ extern SpuVolume g_SoundReverbDepth;
 extern CdlATV g_SoundCdRomAttenuation;
 
 extern s32 SoundCalculateAudioManagerSize(s32 elementCount);
-extern s32 SoundSetVolumeWithPhase(s16, SpuVolume*, s32);
+extern void SoundSetVolumeWithPhase(s32, SpuVolume*, s32);
 
 #endif
