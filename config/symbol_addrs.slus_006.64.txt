@@ -248,6 +248,10 @@ SoundHandleError = 0x8003F6B0;
 
 RotMatrix = 0x8003F738;
 
+rcos = 0x8003F8B0;
+rsin = 0x8003F8CC;
+
+
 // PSY-Q Standard Library
 bzero = 0x8003F8E8;
 memchr = 0x8003F918;

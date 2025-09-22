@@ -3,6 +3,8 @@
 #include "field/actor.h"
 #include "field/script_vm.h"
 
+extern int rcos(int);
+extern int rsin(int);
 
 void FieldSetScreenDimensions(void) {
     g_FieldRenderContexts[0].dispEnv.screen.x = 0;
@@ -417,9 +419,24 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008FD40);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008FDD0);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008FE2C);
+extern VECTOR D_800AF8F0; // Override target position for camera?
+void func_8008FE2C(void) {
+    D_800AF8F0.vx = func_8009CF78(1, SCRIPT_READ_U8_REL(7)) << 0x10;
+    D_800AF8F0.vz = func_8009CFBC(3, SCRIPT_READ_U8_REL(7)) << 0x10; 
+    D_800AF8F0.vy = func_8009D000(5, SCRIPT_READ_U8_REL(7)) << 0x10;
+    g_FieldScriptMaxInstructionCount += 1;
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 8;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008FF04);
+extern VECTOR g_FieldCameraTargetPosition;
+void FieldScriptVMHandlerSetCameraTargetToActor(void) {
+    ActorData* pActor = g_FieldActors[func_8009CD7C(1)].pActorData;
+    g_FieldCameraTargetPosition.vx = pActor->position.vx;
+    g_FieldCameraTargetPosition.vy = pActor->position.vy;
+    g_FieldCameraTargetPosition.vz = pActor->position.vz;  
+    g_FieldScriptMaxInstructionCount += 1;    
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008FF90);
 
@@ -855,13 +872,43 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80099EF8);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80099F48);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80099FC4);
+void FieldScriptVMHandlerGetActorFacingAngle(void) {
+    FieldScriptMemoryWriteU16(
+        FieldScriptVMGetInstructionArgument(1) & 0xFFFF,
+        ((g_FieldScriptVMCurActor->rotationY + 0x100 >> 9) + 2) & 7 // What
+    );
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A024);
+void FieldScriptVMHandlerGetActorPosition(void) {
+    int nActorIndex = FieldScriptVMGetActorIndex(1);
+    if (nActorIndex != 0xFF) {
+        FieldScriptMemoryWriteU16(
+            FieldScriptVMGetInstructionArgument(2) & 0xFFFF, 
+            g_FieldActors[nActorIndex].childMatrix.t[0]
+        );
+        FieldScriptMemoryWriteU16(
+            FieldScriptVMGetInstructionArgument(4) & 0xFFFF, 
+            g_FieldActors[nActorIndex].childMatrix.t[2]
+        );
+        FieldScriptMemoryWriteU16(
+            FieldScriptVMGetInstructionArgument(6) & 0xFFFF, 
+            g_FieldActors[nActorIndex].childMatrix.t[1]
+        );
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 8;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A0FC);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A130);
+void FieldScriptVMHandlerPlayAnimation(void) {
+    unsigned char animationID;
+    
+    g_FieldScriptVMCurActor->flags &= 0xFEFFFFFF;
+    animationID = *(u8*)&g_FieldScriptVMCurScriptData[g_FieldScriptVMCurActor->scriptInstructionPointer + 1];
+    g_FieldScriptVMCurActor->unkAnimationId = animationID;
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A174);
 
@@ -889,33 +936,107 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A634);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A670);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A6AC);
+// Write cosine of angle to script memory?
+void func_8009A6AC(void) {
+    int nValue;
+    int angle;
+    int nFactor;
+    int nVariableAddress;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A768);
+    nVariableAddress = FieldScriptVMGetInstructionArgument(1) & 0xFFFF;
+    angle = func_8009CFBC(3, SCRIPT_READ_U8_REL(7));
+    nFactor = func_8009D000(5,  SCRIPT_READ_U8_REL(7)); // ?
+    nValue = rcos(angle) * nFactor;
+    FieldScriptMemoryWriteU16(nVariableAddress, nValue >> 0xC);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 8;
+}
+
+// Write sine of angle to script memory?
+void func_8009A768(void) {
+    int nValue;
+    int angle;
+    int nFactor;
+    int nVariableAddress;
+
+    nVariableAddress = FieldScriptVMGetInstructionArgument(1) & 0xFFFF;
+    angle = func_8009CFBC(3, SCRIPT_READ_U8_REL(7));
+    nFactor = func_8009D000(5,  SCRIPT_READ_U8_REL(7));
+    nValue = rsin(angle) * nFactor;
+    FieldScriptMemoryWriteU16(nVariableAddress, nValue >> 0xC);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 8;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A824);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A8DC);
+// Get 8-directional movement direction based on Y Rotation of current actor?
+s32 func_8009A8DC(void) {
+    return (((g_FieldScriptVMCurActor->rotationY + 0x100) >> 9) + 2) & MASK_8DIR_MOVEMENT_NUM_DIRECTIONS;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A904);
+extern s32 D_800ADB1C; // Is current actor a 2D actor (0) maybe?
+void FieldSetCurrentActorRotation(int rotation) {
+    short rotationValue2D;
+    short rotationValue3D;
+
+    if (D_800ADB1C == 0) {
+        rotationValue3D = rotation | 0x8000;
+        g_FieldScriptVMCurActor->rotationX = rotationValue3D;
+        g_FieldScriptVMCurActor->rotationY = rotationValue3D;
+        g_FieldScriptVMCurActor->rotationZ = rotationValue3D;
+    }
+    rotationValue2D = rotation | 0x8000;
+    g_FieldScriptVMCurActor->rotationX = rotationValue2D;
+    g_FieldScriptVMCurActor->rotationY = rotationValue2D;
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A958);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009AA00);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009AB08);
+extern u16 D_800AF98C;
+void func_8009AB08(int rotation) {
+    short rotationValue;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009AB5C);
+    rotationValue = ((rotation - D_800AF98C) & 0xFFF) | 0x8000;
+    g_FieldScriptVMCurActor->rotationX = rotationValue;
+    g_FieldScriptVMCurActor->rotationY = rotationValue;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009ABAC);
+    // 3D Actor?
+    if (D_800ADB1C == 0) {
+        g_FieldScriptVMCurActor->rotationZ = rotationValue;
+    }
+    
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
+
+extern u16 D_800AEA34[]; // 8-directional movement rotation value table?
+
+// Set Current Actor Rotation (Clockwise)
+void func_8009AB5C(void) {
+    int nRotationLUTIndex = FieldScriptVMGetArgument(1);
+    FieldSetCurrentActorRotation(D_800AEA34[nRotationLUTIndex + func_8009A8DC() & MASK_8DIR_MOVEMENT_NUM_DIRECTIONS]);
+}
+
+// Set Current Actor Rotation (Counter-clockwise)
+void func_8009ABAC(void) {
+    int nRotationLUTIndex = FieldScriptVMGetArgument(1);
+    FieldSetCurrentActorRotation(D_800AEA34[func_8009A8DC() - nRotationLUTIndex & MASK_8DIR_MOVEMENT_NUM_DIRECTIONS]);
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009ABFC);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009AC34);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009AC7C);
+void FieldScriptVMHandlerSetCurActorRotation(void) {
+    int nRotationLUTIndex = FieldScriptVMGetArgument(1);
+    FieldSetCurrentActorRotation(D_800AEA34[nRotationLUTIndex]);
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009ACB4);
+void func_8009ACB4(void) {
+    int nRotationLUTIndex = FieldScriptVMGetArgument(1);
+    func_8009AB08(D_800AEA34[nRotationLUTIndex]);
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009ACEC);
 
@@ -989,9 +1110,32 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CCF8);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CD18);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CD7C);
+extern s32 D_8005A444;
+extern s32 D_8005A448;
+extern s32 D_8005A44C;
+extern s32 D_800AFD1C;
+u32 func_8009CD7C(int bytecodeOffset) {
+    u32 nActorIndex = FieldScriptVMGetActorIndex(bytecodeOffset);
+    if (nActorIndex == 0xFF) {
+        return D_8005A444;
+    }
+    return nActorIndex;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CDB4);
+u32 FieldScriptVMGetActorIndex(int bytecodeOffset) {
+    u32 actorID = *(u8*)&g_FieldScriptVMCurScriptData[g_FieldScriptVMCurActor->scriptInstructionPointer + bytecodeOffset];
+    if (actorID == 0xFF) {
+        actorID = D_8005A444;  
+    } else if (actorID == 0xFE) {
+        actorID = D_8005A448;
+    } else if (actorID == 0xFD) {
+        actorID = D_8005A44C;
+    } else if (actorID == 0xFB) {
+        actorID = D_800AFD1C;
+    }
+    return actorID;
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CE48);
 
