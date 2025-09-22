@@ -3,6 +3,8 @@
 #include "field/actor.h"
 #include "field/script_vm.h"
 
+extern int rcos(int);
+extern int rsin(int);
 
 void FieldSetScreenDimensions(void) {
     g_FieldRenderContexts[0].dispEnv.screen.x = 0;
@@ -934,9 +936,35 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A634);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A670);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A6AC);
+// Write cosine of angle to script memory?
+void func_8009A6AC(void) {
+    int nValue;
+    int angle;
+    int nFactor;
+    int nVariableAddress;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A768);
+    nVariableAddress = FieldScriptVMGetInstructionArgument(1) & 0xFFFF;
+    angle = func_8009CFBC(3, SCRIPT_READ_U8_REL(7));
+    nFactor = func_8009D000(5,  SCRIPT_READ_U8_REL(7)); // ?
+    nValue = rcos(angle) * nFactor;
+    FieldScriptMemoryWriteU16(nVariableAddress, nValue >> 0xC);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 8;
+}
+
+// Write sine of angle to script memory?
+void func_8009A768(void) {
+    int nValue;
+    int angle;
+    int nFactor;
+    int nVariableAddress;
+
+    nVariableAddress = FieldScriptVMGetInstructionArgument(1) & 0xFFFF;
+    angle = func_8009CFBC(3, SCRIPT_READ_U8_REL(7));
+    nFactor = func_8009D000(5,  SCRIPT_READ_U8_REL(7));
+    nValue = rsin(angle) * nFactor;
+    FieldScriptMemoryWriteU16(nVariableAddress, nValue >> 0xC);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 8;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A824);
 
