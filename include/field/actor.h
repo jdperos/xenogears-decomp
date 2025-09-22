@@ -8,6 +8,8 @@
 #define SCRIPT_VM_DISABLED 0x1
 #define SCRIPT_DIALOG_ACTIVATION_DISABLED 0x20000
 
+#define MASK_8DIR_MOVEMENT_NUM_DIRECTIONS 0x7
+
 typedef struct {
     u_short reqEvent;
     u_char waitTimer;
@@ -199,5 +201,8 @@ extern ScriptsFile* g_FieldCurScriptFile;
 extern int D_800B00C0; // Stop script VM exection?
 
 extern void* g_FieldSpriteData;
+
+#define SCRIPT_READ_U8(idx) *(u8*)&g_FieldScriptVMCurScriptData[idx]
+#define SCRIPT_READ_U8_REL(idx) *(u8*)&g_FieldScriptVMCurScriptData[g_FieldScriptVMCurActor->scriptInstructionPointer + idx]
 
 #endif
