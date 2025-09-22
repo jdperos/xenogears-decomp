@@ -3,6 +3,11 @@
 
 #include "psyq/libgte.h"
 
+#define ACTOR_STATUS_INVISIBLE 0x20
+
+#define SCRIPT_VM_DISABLED 0x1
+#define SCRIPT_DIALOG_ACTIVATION_DISABLED 0x20000
+
 typedef struct {
     u_short reqEvent;
     u_char waitTimer;
@@ -15,12 +20,12 @@ typedef struct {
 } SVEC;
 
 typedef struct {
-    u_int scriptFlags;
-    u_int flags; // ?
-    u_short walkmesh0TriId;
-    u_short walkmesh1TriId;
-    u_short walkmesh2TriId;
-    u_short walkmesh3TriId;
+    /* 0x0  */ u_int scriptFlags;
+    /* 0x4  */ u_int flags; // ?
+    /* 0x6  */ u_short walkmesh0TriId;
+    /* 0x8  */ u_short walkmesh1TriId;
+    /* 0xA  */ u_short walkmesh2TriId;
+    /* 0xC  */ u_short walkmesh3TriId;
     u_int walkmeshId;
     u_int curWalkmeshTriMaterial;
     u_short width; //xWidth
@@ -33,13 +38,13 @@ typedef struct {
     VECTOR curTriNormal;
     SVECTOR unk60;
     SVEC prevPosition;
-    u_short unk6E;
-    u_short unk70;
-    u_short curYPos;
-    u_char canInteract;
-    u_char parentActorId;
-    u_short moveSpeed;
-    short scriptPointersStack[4];
+    /* 0x6E  */ u_short unk6E;
+    /* 0x70  */ u_short unk70;
+    /* 0x72  */ u_short curYPos;
+    /* 0x74  */ u_char canInteract;
+    /* 0x75  */ u_char parentActorId;
+    /* 0x76  */ u_short moveSpeed;
+    /* 0x78  */ short scriptPointersStack[4];
     u_char faceId;
     u_char unk81;
     u_char dialogWidth;
@@ -48,46 +53,46 @@ typedef struct {
     u_short dialogPixelWidth;
     u_short dialogPixelHeight;
     ActorEventSlot eventSlots[8];
-    u_short scriptInstructionPointer;
-    u_char curEventSlotId;
-    u_char unkCF;
-    VECTOR unkD0;
-    u_short unkE0;
-    u_char curDoorStep;
-    u_char unkE3; // timer?
-    u_short characterId;
-    u_short defaultAnimationId;
-    u_short curAnimationId;
-    u_short unkAnimationId;
-    int unkEC;
-    int unkF0;
-    u_short scaleX;
-    u_short scaleY;
-    u_short scaleZ;
-    short unkFA;
-    u_char unkFC;
-    u_char unkFD;
-    u_char unkFE;
-    u_char unkFF;
-    u_char unk100;
-    u_char unk101;
-    short unk102;
-    short rotationX; // 0xFFF mask: rotation
-    short rotationY;
-    short rotationZ; // 0x108
-    short unk10A;
-    u_char unk10C;
-    u_char unk10D;
-    void* unk110;
-    void* unk114;
-    void* unk118;
-    short unk11C;
-    short unk11E;
-    void* unk120;
-    short unk124;
-    u_char unk126;
-    u_char spriteId;
-    u_int modelAnimation;
+    /* 0xCC */ u_short scriptInstructionPointer;
+    /* 0xCE  */ u_char curEventSlotId;
+    /* 0xCF  */ u_char unkCF;
+    /* 0xD0  */ VECTOR unkD0;
+    /* 0xE0  */ u_short unkE0;
+    /* 0xE2  */ u_char curDoorStep;
+    /* 0xE3  */ u_char unkE3; // timer?
+    /* 0xE4  */ u_short characterId;
+    /* 0xE6  */ u_short defaultAnimationId;
+    /* 0xE8  */ u_short curAnimationId;
+    /* 0xEA  */ u_short unkAnimationId;
+    /* 0xEC  */ int unkEC;
+    /* 0xF0  */ int unkF0;
+    /* 0xF4  */ u_short scaleX;
+    /* 0xF6  */ u_short scaleY;
+    /* 0xF8  */ u_short scaleZ;
+    /* 0xFA  */ short unkFA;
+    /* 0xFC  */ u_char unkFC;
+    /* 0xFD  */ u_char unkFD;
+    /* 0xFE  */ u_char unkFE;
+    /* 0xFF  */ u_char unkFF;
+    /* 0x100 */ u_char unk100;
+    /* 0x101 */ u_char unk101;
+    /* 0x102 */ short unk102;
+    /* 0x104 */ short rotationX; // 0xFFF mask: rotation
+    /* 0x106 */ short rotationY;
+    /* 0x108 */ short rotationZ;
+    /* 0x10A */ short unk10A;
+    /* 0x10C */ u_char unk10C;
+    /* 0x10D */ u_char unk10D;
+    /* 0x110 */ void* unk110;
+    /* 0x114 */ void* unk114;
+    /* 0x118 */ void* unk118;
+    /* 0x11C */ short unk11C;
+    /* 0x11E */ short unk11E;
+    /* 0x120 */ void* unk120;
+    /* 0x124 */ short unk124;
+    /* 0x126 */ u_char unk126;
+    /* 0x127 */ u_char spriteId;
+    /* 0x128 */ u_int modelAnimation;
 
 
     // 0x1C0 => Stack index, bit 0x100 is not used since there's only four elements in the stack

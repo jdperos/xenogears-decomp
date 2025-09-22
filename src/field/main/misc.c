@@ -855,13 +855,43 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80099EF8);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80099F48);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80099FC4);
+void FieldScriptVMHandlerGetActorFacingAngle(void) {
+    FieldScriptMemoryWriteU16(
+        FieldScriptVMGetInstructionArgument(1) & 0xFFFF,
+        ((g_FieldScriptVMCurActor->rotationY + 0x100 >> 9) + 2) & 7 // What
+    );
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A024);
+void FieldScriptVMHandlerGetActorPosition(void) {
+    int nActorIndex = FieldScriptVMGetActorIndex(1);
+    if (nActorIndex != 0xFF) {
+        FieldScriptMemoryWriteU16(
+            FieldScriptVMGetInstructionArgument(2) & 0xFFFF, 
+            g_FieldActors[nActorIndex].childMatrix.t[0]
+        );
+        FieldScriptMemoryWriteU16(
+            FieldScriptVMGetInstructionArgument(4) & 0xFFFF, 
+            g_FieldActors[nActorIndex].childMatrix.t[2]
+        );
+        FieldScriptMemoryWriteU16(
+            FieldScriptVMGetInstructionArgument(6) & 0xFFFF, 
+            g_FieldActors[nActorIndex].childMatrix.t[1]
+        );
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 8;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A0FC);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A130);
+void FieldScriptVMHandlerPlayAnimation(void) {
+    unsigned char animationID;
+    
+    g_FieldScriptVMCurActor->flags &= 0xFEFFFFFF;
+    animationID = *(u8*)&g_FieldScriptVMCurScriptData[g_FieldScriptVMCurActor->scriptInstructionPointer + 1];
+    g_FieldScriptVMCurActor->unkAnimationId = animationID;
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009A174);
 
@@ -991,7 +1021,24 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CD18);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CD7C);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CDB4);
+extern s32 D_8005A444;
+extern s32 D_8005A448;
+extern s32 D_8005A44C;
+extern s32 D_800AFD1C;
+u32 FieldScriptVMGetActorIndex(int bytecodeOffset) {
+    u32 actorID = *(u8*)&g_FieldScriptVMCurScriptData[g_FieldScriptVMCurActor->scriptInstructionPointer + bytecodeOffset];
+    if (actorID == 0xFF) {
+        actorID = D_8005A444;  
+    } else if (actorID == 0xFE) {
+        actorID = D_8005A448;
+    } else if (actorID == 0xFD) {
+        actorID = D_8005A44C;
+    } else if (actorID == 0xFB) {
+        actorID = D_800AFD1C;
+    }
+    return actorID;
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CE48);
 

@@ -6,7 +6,11 @@ extern void func_80076AC0(s32, s32, void*, s32, s32, s32, s32);
 extern void func_800A0C94();
 extern s32 D_800AFD1C;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009DA1C);
+void FieldScriptVMHandlerDisableDialogActivation(void) {
+    g_FieldScriptVMCurActor->scriptFlags |= SCRIPT_DIALOG_ACTIVATION_DISABLED;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009DA44);
 
@@ -16,7 +20,16 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009DA98);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009DAC4);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009DBC8);
+void FieldScriptVMHandlerEnableActorVM(void) {
+    ActorData* pActor;
+
+    if (FieldScriptVMGetActorIndex(1) != 0xFF) {
+        pActor = g_FieldActors[FieldScriptVMGetActorIndex(1)].pActorData;
+        pActor->scriptFlags &= ~SCRIPT_VM_DISABLED;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009DC4C);
 
@@ -45,13 +58,25 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009DDEC);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009DE94);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009DF10);
+extern s32 D_800AFD1C; // Current actor index
+void FieldScriptVMHandlerShowActor(void) {
+    FieldActor* pActor = &g_FieldActors[D_800AFD1C];
+    pActor->status &= ~ACTOR_STATUS_INVISIBLE;
+    g_FieldScriptVMCurActor->curAnimationId = 0xFF;
+    g_FieldScriptVMCurActor->flags &= 0xFDFFFFFF;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009DF78);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009E014);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009E040);
+void FieldScriptVMHandlerHideActor(void) {
+    FieldActor* pActor = &g_FieldActors[D_800AFD1C];
+    pActor->status |=  ACTOR_STATUS_INVISIBLE;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009E094);
 

@@ -54,6 +54,13 @@ FieldTextBoxInitializePrimitives = 0x8007EE0C;
 
 FieldScriptVMCheckControllerInput = 0x80096078;
 
+FieldScriptVMHandlerGetActorFacingAngle = 0x80099FC4;
+FieldScriptVMHandlerGetActorPosition = 0x8009A024;
+
+FieldScriptVMHandlerPlayAnimation = 0x8009A130;
+
+FieldScriptVMGetActorIndex = 0x8009CDB4;
+
 FieldScriptVMHandlerRandVariable = 0x8009D198;
 FieldScriptVMHandlerMulVariableWithRand = 0x8009D1F0;
 FieldScriptVMHandlerRShiftVariable = 0x8009D260;
@@ -73,7 +80,15 @@ FieldScriptVMHandlerVariableSetFalse = 0x8009D91C;
 FieldScriptVMHandlerVariableSetTrue = 0x8009D960;
 FieldScriptVMHandlerVariableAssign = 0x8009D9A4;
 
+FieldScriptVMHandlerDisableDialogActivation = 0x8009DA1C;
+
+FieldScriptVMHandlerEnableActorVM = 0x8009DBC8;
+
 FieldScriptVMHandlerSleep = 0x8009DD34;
+
+FieldScriptVMHandlerShowActor = 0x8009DF10;
+
+FieldScriptVMHandlerHideActor = 0x8009E040;
 
 FieldScriptVMHandlerConditionalJmp = 0x800A1BD0;
 FieldScriptVMHandlerJmp = 0x800A1E74;
