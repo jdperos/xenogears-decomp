@@ -75,12 +75,12 @@ int ArchiveReadFile(u32 dbgEntryIndex, u8* pDestBuffer, s32 arg2, s32 arg3) {
                     else
                         break;
                 }
-                
+
                 return -(~D_8004FE4C == 0) & -3;
             }
-            
+
             g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_READ_SECTOR;
-            CdDataSyncCallback(&func_8002BA58);
+            CdDataCallback(&func_8002BA58);
             CdSyncCallback(&ArchiveCdDriveCommandHandler);
             pReadyCallback = &func_8002B2F0;
             CdReadyCallback(pReadyCallback);
@@ -167,7 +167,7 @@ int ArchiveReadFile(u32 dbgEntryIndex, u8* pDestBuffer, s32 arg2, s32 arg3) {
     }
     
     g_ArchiveCdDriveState = ARCHIVE_CD_DRIVE_READ_SECTOR;
-    CdDataSyncCallback(NULL);
+    CdDataCallback(NULL);
     CdSyncCallback(&ArchiveCdDriveCommandHandler);
     pReadyCallback = &func_8002B084;
     CdReadyCallback(pReadyCallback);

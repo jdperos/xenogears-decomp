@@ -63,10 +63,10 @@ void cb_read(u_char status, u_char res[2]) {
                 if (ReadAttr.block_mode & NONBLOCKING) {
                     // Temporarily disable data callback so the header read
                     // doesn’t trigger the normal data processing.
-                    CdDataSyncCallback(NULL);
+                    CdDataCallback(NULL);
                     CdGetSector2(&tmp_buf, /*size=*/3);
                     CdDataSync(BLOCKING);
-                    CdDataSyncCallback(&cb_data); // Restore data callback.
+                    CdDataCallback(&cb_data); // Restore data callback.
                 } else {
                     CdGetSector(&tmp_buf, /*size=*/3);
                 }
@@ -108,7 +108,7 @@ void cb_read(u_char status, u_char res[2]) {
     CdReadyCallback(ReadAttr.cbready);
 
     if (ReadAttr.block_mode & NONBLOCKING) {
-        CdDataSyncCallback(ReadAttr.cbdata);
+        CdDataCallback(ReadAttr.cbdata);
     }
 
     CdControlF(CdlPause, 0);
@@ -133,7 +133,7 @@ void cb_data(void) {
     CdReadyCallback(ReadAttr.cbready);
 
     if (ReadAttr.block_mode & NONBLOCKING) {
-        CdDataSyncCallback(ReadAttr.cbdata);
+        CdDataCallback(ReadAttr.cbdata);
     }
 
     CdControlF(CdlPause, 0);
@@ -149,7 +149,7 @@ int cd_read_retry(bool is_retry) {
     CdSyncCallback(NULL);
     CdReadyCallback(NULL);
     if (ReadAttr.block_mode & NONBLOCKING) {
-        CdDataSyncCallback(NULL);
+        CdDataCallback(NULL);
     }
 
     // Handle case where the drive tray is open.
@@ -191,7 +191,7 @@ int cd_read_retry(bool is_retry) {
 
     // Install data sync callback if Non-blocking mode.
     if (ReadAttr.block_mode & NONBLOCKING) {
-        CdDataSyncCallback(&cb_data);
+        CdDataCallback(&cb_data);
     }
 
     ReadAttr.dest_cur = ReadAttr.dest_base;
@@ -215,7 +215,7 @@ void CdReadBreak(void) {
     CdReadyCallback(ReadAttr.cbready);
 
     if (ReadAttr.block_mode & NONBLOCKING) {
-        CdDataSyncCallback(ReadAttr.cbdata);
+        CdDataCallback(ReadAttr.cbdata);
     }
 
     CdControlF(CdlPause, 0);
@@ -239,7 +239,7 @@ int CdRead(int sectors, u_long* buf, int mode) {
     ReadAttr.cbsync = CdSyncCallback(NULL);
     ReadAttr.cbready = CdReadyCallback(NULL);
     if (ReadAttr.block_mode & NONBLOCKING) {
-        ReadAttr.cbdata = CdDataSyncCallback(NULL);
+        ReadAttr.cbdata = CdDataCallback(NULL);
     }
     ReadAttr.vb_read = Vsync(-1);
     if (CdStatus() & (CdlStatPlay | CdlStatSeek | CdlStatRead)) {

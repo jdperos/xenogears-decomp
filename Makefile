@@ -48,12 +48,37 @@ SPLAT_FLAGS         := --disassemble-all --make-full-disasm-for-code
 DL_FLAGS := -G8
 AS_FLAGS := $(ENDIAN) $(INCLUDE_FLAGS) $(OPT_FLAGS) $(DL_FLAGS) -march=r3000 -mtune=r3000 -no-pad-sections
 CC_FLAGS := $(OPT_FLAGS) $(DL_FLAGS) -mips1 -mcpu=3000 -w -funsigned-char -fpeephole -ffunction-cse -fpcc-struct-return -fcommon -fverbose-asm -msoft-float -mgas -fgnu-linker -quiet
+
+# Bios functions name:number
+BIOS_FUNCS := EnterCriticalSection:1 ExitCriticalSection:2 FlushCache:A44 _bu_init:A70 \
+							DeliverEvent:B07 OpenEvent:B08 CloseEvent:B09 \
+							TestEvent:B0B EnableEvent:B0C DisableEvent:B0D UnDeliverEvent:B20 \
+							open:B32 read:B34 write:B35 close:B36 format:B41 firstfile:B42 nextfile:B43 \
+							rename:B44 erase:B45 Krom2RawAdd:B51
+
+# Generate object paths
+BIOS_OBJS := $(foreach f,$(BIOS_FUNCS), \
+						 $(BUILD_DIR)/src/slus_006.64/psyq/libapi/$(word 1,$(subst :, ,$f)).hasm.s.o)
+
+# Map function name to BIOS fn number
+bios_num = $(word 2,$(subst :, ,$(filter $(notdir $1):%,$(BIOS_FUNCS))))
+
 #MASPSX_FLAGS := --use-comm-section --run-assembler $(AS_FLAGS)
 
 # PSY-Q libraries uses ASPSX 2.56 (PSQ 4.0)
 # Archive library code uses GCC 2.6.0.
 # Main-related and psyq code seem to use -G0 instead of -G8
+# PSY-Q seems to use -O3 while rest of code uses -O2
 define DL_FlagsSwitch
+$(if \
+   $(or \
+       $(filter MAIN,$(patsubst build/src/slus_006.64/psyq/%,MAIN,$(1))), \
+       $(filter MAIN,$(patsubst build/asm/slus_006.64/psyq/%,MAIN,$(1))) \
+   ), \
+   $(eval OPT_FLAGS := -O3), \
+   $(eval OPT_FLAGS := -O2) \
+)
+
 	$(if
 		$(or 
 			$(filter MAIN,$(patsubst build/src/slus_006.64/psyq/%,MAIN,$(1))), 
@@ -100,7 +125,8 @@ endif
 # Utils
 
 # Function to find matching .s files for a target name.
-find_s_files = $(shell find $(ASM_DIR)/$(strip $1) -type f -path "*.s" -not -path "asm/*matchings*" 2> /dev/null)
+find_s_files = $(shell find $(ASM_DIR)/$(strip $1) -type f -path "*.s" \
+							 -not -path "asm/*matchings*" 2> /dev/null)
 
 # Function to find matching .c files for a target name.
 find_c_files = $(shell find $(C_DIR)/$(strip $1) -type f -path "*.c" 2> /dev/null)
@@ -127,7 +153,7 @@ ifeq ($(SKIP_ASM),1)
 
 define make_elf_target
 $2: $2.elf
-$2.elf: $(call gen_o_files, $1)
+$2.elf: $(call gen_o_files, $1) $(BIOS_OBJS)
 endef
 
 else
@@ -136,7 +162,7 @@ define make_elf_target
 $2: $2.elf
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $$< $$@
 
-$2.elf: $(call gen_o_files, $1)
+$2.elf: $(call gen_o_files, $1) $(BIOS_OBJS)
 	@mkdir -p $(dir $2)
 	$(LD) $(LD_FLAGS) \
 		-Map $2.map \
@@ -237,6 +263,13 @@ $(BUILD_DIR)/%.c.o: $(BUILD_DIR)/%.c.s
 	$(call DL_FlagsSwitch, $@)
 	-$(MASPSX) $(MASPSX_FLAGS) -o $@ $<
 	-$(OBJDUMP) $(OBJDUMP_FLAGS) $@ > $(@:.o=.dump.s)
+
+# Pattern rule to build BIOS_FN OBJs from shared source
+$(BIOS_OBJS): $(BUILD_DIR)/src/slus_006.64/psyq/libapi/%.hasm.s.o: src/slus_006.64/psyq/libapi/bios.s
+	@mkdir -p $(dir $@)
+	$(CPP) -x assembler-with-cpp -P -MMD -MP -MT $@ \
+	-Iinclude -Ibuild -DFUNC_$(call bios_num,$*) -o $(dir $@)$*.hasm.s $<
+	$(AS) $(AS_FLAGS) -o $@ $(dir $@)$*.hasm.s
 
 $(BUILD_DIR)/%.s.o: %.s
 	@mkdir -p $(dir $@)
