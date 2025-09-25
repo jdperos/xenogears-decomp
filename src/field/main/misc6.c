@@ -154,6 +154,7 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_800A08B8);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_800A0C4C);
 
+// FieldResetActorPosition, set translation and sprite position of actor based on current actor data position
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_800A0C94);
 
 void func_800A0D3C(void) {

@@ -54,6 +54,10 @@ FieldTextBoxInitializePrimitives = 0x8007EE0C;
 
 FieldScriptVMHandlerSetCameraTargetToActor = 0x8008FF04;
 
+FieldScriptVMHandlerSetControllerBtnMask = 0x80092628;
+
+FieldScriptVMHandlerDisableRandomEncounters = 0x80093C48;
+
 FieldScriptVMCheckControllerInput = 0x80096078;
 
 FieldScriptVMHandlerGetActorFacingAngle = 0x80099FC4;
@@ -168,6 +172,8 @@ g_FieldZoomFadeEffect = 0x800B11AC; // size:0x2F8
 g_FieldPixelIndex = 0x800B14A8;
 
 g_FieldEffects = 0x800B2078; // size:0xFC
+
+g_FieldControl = 0x800B2176; // type:FieldControl size:0x6
 
 g_FieldRenderContexts = 0x800B249C; // size:0x101E8
 

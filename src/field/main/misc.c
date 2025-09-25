@@ -6,6 +6,11 @@
 extern int rcos(int);
 extern int rsin(int);
 
+extern s32 D_8005A444;
+extern s32 D_8005A448;
+extern s32 D_8005A44C;
+extern s32 D_800AFD1C;
+
 void FieldSetScreenDimensions(void) {
     g_FieldRenderContexts[0].dispEnv.screen.x = 0;
     g_FieldRenderContexts[0].dispEnv.screen.y = 10;
@@ -517,7 +522,10 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800924D4);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800925A0);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80092628);
+void FieldScriptVMHandlerSetControllerBtnMask(void) {
+    g_FieldControl.controllerBtnMask = FieldScriptVMGetInstructionArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80092664);
 
@@ -588,17 +596,84 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093BFC);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093C20);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093C48);
+void FieldScriptVMHandlerDisableRandomEncounters(void) {
+    g_FieldControl.isRandomEncountersEnabled = 0;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093C6C);
+//INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093C6C);
+extern s32 D_800ADBDC;
+extern s32 D_800ADBE4;
+extern s32 D_800B00C0;
+
+void func_80093C6C(void) {
+    if (D_800ADBDC == 0 || D_800ADBE4 == 0) {
+        D_800B00C0 = 1;
+        return;
+    }
+    g_FieldControl.isRandomEncountersEnabled = -1;
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 1;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093CD0);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093D48);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093E30);
+// The two functions seems to be related to handling room transitions
+void func_80093E30(void) {
+    if (!(g_FieldScriptVMCurActor->scriptFlags & 0x100000)) {
+        if (!(g_FieldScriptVMCurActor->flags12C & 0x20)) {
+            g_FieldScriptVMCurActor->flags12C |= 0x20;
+            g_FieldScriptVMCurActor->curDoorStep = 0;
+            func_80085634(8, 3);
+        } else {
+            g_FieldScriptVMCurActor->curDoorStep++;
+            if (g_FieldScriptVMCurActor->curDoorStep < 0x1F) {
+                if (SCRIPT_READ_U8_REL(1) == 0) {
+                    g_FieldActors[D_800AFD1C].rotation.y += 0x20;
+                } else {
+                    g_FieldActors[D_800AFD1C].rotation.y -= 0x20;
+                }
+            } else {
+                g_FieldScriptVMCurActor->scriptFlags |= 0x100000;
+                g_FieldScriptVMCurActor->flags12C &= ~0x20;
+                g_FieldScriptVMCurActor->curDoorStep = 0;
+                g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+            }
+        }
+    } else {
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+    }
+    
+    func_80072254(D_800AFD1C);
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093FC0);
+void func_80093FC0(void) {
+    if (g_FieldScriptVMCurActor->scriptFlags & 0x100000) {
+        if (!(g_FieldScriptVMCurActor->flags12C & 0x20)) {
+            g_FieldScriptVMCurActor->flags12C |= 0x20;
+            g_FieldScriptVMCurActor->curDoorStep = 0;
+            func_80085634(8, 3);
+        } else {
+            g_FieldScriptVMCurActor->curDoorStep++;
+            if (g_FieldScriptVMCurActor->curDoorStep < 0x1F) {
+                if (SCRIPT_READ_U8_REL(1) == 0) {
+                    g_FieldActors[D_800AFD1C].rotation.y -= 0x20;
+                } else {
+                    g_FieldActors[D_800AFD1C].rotation.y += 0x20;
+                }
+            } else {
+                g_FieldScriptVMCurActor->scriptFlags &= ~0x100000;
+                g_FieldScriptVMCurActor->flags12C &= ~0x20;
+                g_FieldScriptVMCurActor->curDoorStep = 0;
+                g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+            }
+        }
+    } else {
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+    }
+    func_80072254(D_800AFD1C);
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094158);
 
@@ -664,7 +739,10 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009524C);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80095284);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80095300);
+void func_80095300(void) {
+    g_FieldControl.unkAngle = FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009533C);
 
@@ -1110,10 +1188,7 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CCF8);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CD18);
 
-extern s32 D_8005A444;
-extern s32 D_8005A448;
-extern s32 D_8005A44C;
-extern s32 D_800AFD1C;
+
 u32 func_8009CD7C(int bytecodeOffset) {
     u32 nActorIndex = FieldScriptVMGetActorIndex(bytecodeOffset);
     if (nActorIndex == 0xFF) {

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "field/actor.h"
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_8001FBA4);
 
@@ -72,7 +73,35 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_800220
 // Set animation package
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80022224);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_800222BC);
+extern s32 func_8001EE68(void*);
+extern void func_80022224(SpriteAnimPackage*, void*, SVEC2, SVEC2, u32);
+extern u8 D_800591AD;
+
+// >= ASPSX 2.56, likely GCC 2.7.2-970404, ASPSX 2.67
+void func_800222BC(SpriteData* pSprite, SpriteAnimPackageFileHeader* pAnimPackageFile) {
+    SpriteAnimPackage* pAnimPackage;
+    SVEC2 unused[2];
+
+    pAnimPackage = pSprite->pVramData;
+    if (pAnimPackageFile) {
+        if (pAnimPackageFile != pSprite->pCurAnimFile) {
+            func_80022224(pAnimPackage, pAnimPackageFile, pAnimPackage->tex, pAnimPackage->clut, pSprite->field_0x3C_1);
+            pSprite->pCurAnimFile = pAnimPackageFile;
+            pSprite->field_0x3C_3 = 1;
+        }
+
+        // Is battle?
+        if (D_800591AD) {
+            // Is not VRAM Pre-backed?
+            if (!func_8001EE68(pAnimPackage->pFrames)) {
+                pAnimPackage->tex.y = 0x100;
+                pAnimPackage->tex.x = 0x300;
+                return;
+            }
+            pAnimPackage->tex = *(SVEC2*)(pSprite->field_0x7C + 0xE);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_800223B0);
 
