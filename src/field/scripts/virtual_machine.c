@@ -67,7 +67,7 @@ void func_800A18B8(void) {
         if (g_FieldSystemMode == 0) {
             func_800379C8(&D_8006FD44, D_800AFD1C);
         }
-        g_FieldScriptVMCurActor->eventSlots[ g_FieldScriptVMCurActor->curEventSlotId].flags |= 0x3C0000;
+        g_FieldScriptVMCurActor->eventSlots[ g_FieldScriptVMCurActor->curEventSlotId].flags_0x12 = 0xFF;
         g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].eventId = 0xFF;
         D_800AFFEC = 1;
         D_800B00C0 = 1;
@@ -86,18 +86,18 @@ void func_800A1A8C(void) {
     int i;
 
     for (i = 0; i < 8; i++) {
-        if ( ((g_FieldScriptVMCurActor->eventSlots[i].flags >> 0x12) & 0xF) == 7) {
+        if (g_FieldScriptVMCurActor->eventSlots[i].flags_0x12 == 7) {
             g_FieldScriptVMCurActor->eventSlots[i].reqEvent = func_800A3090(D_800AFD1C, 1);
         }
     }
 
-    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags |=  0x3C0000;
+    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x12 = 0xFF;
     g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].eventId = 0xFF;
     D_800B00C0 = 1;
 }
 
 void func_800A1B70(void) {
-    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags |= 0x3C0000;
+    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x12 = 0xFF;
     g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].eventId = 0xFF;
     D_800AFFEC = 1;
     D_800B00C0 = 1;

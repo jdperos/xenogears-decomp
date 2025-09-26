@@ -12,8 +12,8 @@ void FieldScriptVMHandlerDisableDialogActivation(void) {
     g_FieldScriptVMCurActor->scriptInstructionPointer++;
 }
 
-void func_8009DA44(void) {
-    g_FieldScriptVMCurActor->scriptFlags &= ~0x20000;
+void FieldScriptVMHandlerEnableDialogActivation(void) {
+    g_FieldScriptVMCurActor->scriptFlags &= ~SCRIPT_DIALOG_ACTIVATION_DISABLED;
     g_FieldScriptVMCurActor->scriptInstructionPointer++;
 }
 
@@ -286,20 +286,240 @@ void func_8009E83C(void) {
 }
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009E91C);
+/*
+Matches, but awaits being compiled in until unk114 struct has been better recovered.
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009EB48);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009EB78);
+typedef struct {
+    u16 f0, f1, f2, f3, f4, f5, f6, f7;
+} Tmp;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009ED68);
+void func_8009E91C(void) {
+    if (!(g_FieldScriptVMCurActor->flags12C & 0x1000)) {
+        g_FieldScriptVMCurActor->unk114 = HeapAlloc(0x10, 0x0);
+    }
+    g_FieldScriptVMCurActor->flags12C |= 0x1000;
+    ((Tmp*)g_FieldScriptVMCurActor->unk114)->f0 = func_8009CF78(0x1, SCRIPT_READ_U8_REL(0x11));
+    ((Tmp*)g_FieldScriptVMCurActor->unk114)->f1 = func_8009CFBC(0x3, SCRIPT_READ_U8_REL(0x11));
+    ((Tmp*)g_FieldScriptVMCurActor->unk114)->f2 = func_8009D000(0x5, SCRIPT_READ_U8_REL(0x11));
+    ((Tmp*)g_FieldScriptVMCurActor->unk114)->f3 = func_8009D044(0x7, SCRIPT_READ_U8_REL(0x11));
+    ((Tmp*)g_FieldScriptVMCurActor->unk114)->f4 = func_8009D088(0x9, SCRIPT_READ_U8_REL(0x11));
+    ((Tmp*)g_FieldScriptVMCurActor->unk114)->f5 = func_8009D0CC(0xB, SCRIPT_READ_U8_REL(0x11));
+    ((Tmp*)g_FieldScriptVMCurActor->unk114)->f6 = func_8009D110(0xD, SCRIPT_READ_U8_REL(0x11));
+    ((Tmp*)g_FieldScriptVMCurActor->unk114)->f7 = func_8009D154(0xF, SCRIPT_READ_U8_REL(0x11));
+    
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 0x12;
+}
+*/
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009F0A0);
+int FieldActorHasEventID(ActorData* pActor, int targetId) {
+    int i;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009F424);
+    for (i = 0; i < 8; i++) {
+        if (targetId == pActor->eventSlots[i].eventId) {
+            return -1;
+        }
+    }
+    return 0;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009F4CC);
+void func_8009EB78(void) {
+    ActorData* pActor;
+    int actorIndex;
+    int i;
+    int curEventSlot;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009F5A8);
+    if (FieldScriptVMGetActorIndex(1) != 0xFF) {
+        actorIndex = FieldScriptVMGetActorIndex(1);
+        pActor = g_FieldActors[actorIndex].pActorData;
+        if (pActor->flags & 0x100000) {
+            curEventSlot = g_FieldScriptVMCurActor->curEventSlotId;
+            g_FieldScriptVMCurActor->eventSlots[curEventSlot].flags_0x10 = 0;
+            pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 0;
+        } else if (FieldActorHasEventID(pActor, SCRIPT_READ_U8_REL(2) & 0x1F) != -1) {
+            for (i = 0; i < 8; i++) {
+                if (pActor->eventSlots[i].flags_0x12 != 0xF || pActor->eventSlots[i].flags_0x16) {
+                    continue;
+                }
+                
+                // Get offset to script bytecode routine
+                pActor->eventSlots[i].reqEvent = func_800A3090(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
+
+                pActor->eventSlots[i].flags_0x12 = SCRIPT_READ_U8_REL(2) >> 0x5;
+                pActor->eventSlots[i].eventId = SCRIPT_READ_U8_REL(2) & 0x1F;
+                g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+                return;
+            }
+            return;
+        }
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
+
+void func_8009ED68(void) {
+    ActorData* pActor;
+    int actorIndex;
+    int i;
+
+    if (FieldScriptVMGetActorIndex(1) == 0xFF) {
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+        return;
+    }
+    
+    actorIndex = FieldScriptVMGetActorIndex(1);
+    pActor = g_FieldActors[actorIndex].pActorData;
+    if (pActor->flags & 0x100000) {
+        g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 0;
+        pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 0;
+    } else {
+        switch (g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10) {
+        case 0:
+            if (FieldActorHasEventID(pActor, SCRIPT_READ_U8_REL(2) & 0x1F) == -1) {
+                break;
+            }
+            
+            for (i = 0; i < 8; i++) {
+                if (pActor->eventSlots[i].flags_0x12 != 0xF || pActor->eventSlots[i].flags_0x16) {
+                    continue;
+                }
+                pActor->eventSlots[i].reqEvent = func_800A3090(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
+                pActor->eventSlots[i].flags_0x12 = SCRIPT_READ_U8_REL(2) >> 5;
+                pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 1;
+                pActor->eventSlots[i].eventId = SCRIPT_READ_U8_REL(2) & 0x1F;
+                g_FieldScriptVMCurActor->unkCF = i;
+                g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 1;
+                break;
+            }
+            return;
+        case 1:
+            if ((pActor->curEventSlotId == g_FieldScriptVMCurActor->unkCF) || pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x12 == 0xF) {
+                g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+                g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 0;
+                pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 0;
+            } else {
+                D_800B00C0 = g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10;
+            }
+            return;
+        default:
+            return;
+        }
+    }
+    
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
+
+void func_8009F0A0(void) {
+    ActorData* pActor;
+    s32 actorIndex;
+    int i;
+
+    if (FieldScriptVMGetActorIndex(1) == 0xFF) {
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+        return;
+    }
+    
+    actorIndex = FieldScriptVMGetActorIndex(1);
+    pActor = g_FieldActors[actorIndex].pActorData;
+    if (pActor->flags & 0x100000) {
+        g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 0;
+        pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 0;
+    } else {
+        switch (g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10) {
+        case 0:
+            if (FieldActorHasEventID(pActor, SCRIPT_READ_U8_REL(2) & 0x1F) == -1) {
+                g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+                break;
+            }
+            
+            for (i = 0; i < 8; i++) {
+                if (pActor->eventSlots[i].flags_0x12 != 0xF || pActor->eventSlots[i].flags_0x16) {
+                    continue;
+                }
+                pActor->eventSlots[i].reqEvent = func_800A3090(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
+                pActor->eventSlots[i].flags_0x12 = SCRIPT_READ_U8_REL(2) >> 5;
+                pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 1;
+                g_FieldScriptVMCurActor->unkCF = i;
+                g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 1;
+                pActor->eventSlots[i].eventId = SCRIPT_READ_U8_REL(2) & 0x1F;
+                return;
+            }
+            break;
+        case 1:
+            if ((pActor->curEventSlotId == g_FieldScriptVMCurActor->unkCF) || pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x12 == 0xF) {
+                g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 2;
+                return;
+            }
+            D_800B00C0 = 1;
+            break;
+        case 2:
+            if (pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x12 == 0xF) {
+                g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 0;
+                pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 0;
+                g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+                return;
+            }
+            D_800B00C0 = 1;
+            break;
+        }
+        return;
+    }
+    
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
+
+// Randomize X rotation
+void func_8009F424(void) {
+    int nRotation;
+    
+    nRotation = g_FieldScriptVMCurActor->rotationY;
+    g_FieldScriptVMCurActor->unk102++;
+    if (!(g_FieldScriptVMCurActor->unk102 & 0xF)) {
+        if (!(rand() & 0x1)) {
+            nRotation = (g_FieldScriptVMCurActor->rotationY + 0x200) & 0xFFF;
+        } else {
+            nRotation = (g_FieldScriptVMCurActor->rotationY - 0x200) & 0xFFF;
+        }
+    }
+    D_800B00C0 = 1;
+    g_FieldScriptVMCurActor->rotationX = nRotation;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
+
+void func_8009F4CC(void) {
+    short nSpecialRotation;
+    int nRotation;
+    int nRand;
+    int nDeltaRotation;
+
+    nRotation = g_FieldScriptVMCurActor->rotationY;
+    g_FieldScriptVMCurActor->unk102++;
+    if (!(g_FieldScriptVMCurActor->unk102 & 0xF)) {
+        nRand = rand();
+        if (nRand & 0x30) {
+            nSpecialRotation = g_FieldScriptVMCurActor->rotationY | ~0x7FFF;
+            nRotation = nSpecialRotation;
+            g_FieldScriptVMCurActor->rotationY = nSpecialRotation;
+        } else {
+            if (!(nRand & 1)) {
+                nDeltaRotation = g_FieldScriptVMCurActor->rotationY + 0x200;
+            } else {
+                nDeltaRotation = g_FieldScriptVMCurActor->rotationY - 0x200;
+            }
+            nRotation = nDeltaRotation & 0xFFF;
+        }
+    }
+    D_800B00C0 = 1;
+    g_FieldScriptVMCurActor->rotationX = nRotation;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
+
+void func_8009F5A8(void) {
+    unsigned short nStoredIP = g_FieldScriptVMCurActor->scriptInstructionPointer;
+    func_8009F5F4(); // Do Encounter
+    D_800B00C0 = 1;
+    g_FieldScriptVMCurActor->scriptInstructionPointer = nStoredIP;
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009F5F4);
 

@@ -91,6 +91,7 @@ FieldScriptVMHandlerVariableSetTrue = 0x8009D960;
 FieldScriptVMHandlerVariableAssign = 0x8009D9A4;
 
 FieldScriptVMHandlerDisableDialogActivation = 0x8009DA1C;
+FieldScriptVMHandlerEnableDialogActivation = 0x8009DA44;
 
 FieldScriptVMHandlerEnableActorVM = 0x8009DBC8;
 
@@ -101,6 +102,8 @@ FieldScriptVMHandlerHideActorById = 0x8009DE94;
 FieldScriptVMHandlerShowActor = 0x8009DF10;
 
 FieldScriptVMHandlerHideActor = 0x8009E040;
+
+FieldActorHasEventID = 0x8009EB48;
 
 FieldScriptVMHandlerConditionalJmp = 0x800A1BD0;
 FieldScriptVMHandlerJmp = 0x800A1E74;

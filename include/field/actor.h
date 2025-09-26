@@ -15,7 +15,12 @@ typedef struct {
     u_short reqEvent;
     u_char waitTimer;
     u_char eventId;
-    u_int flags;
+    u_int flags_0: 16;
+    u_int flags_0x10: 2;
+    u_int flags_0x12: 4;
+    u_int flags_0x16: 1;
+    u_int flags_0x17: 1;
+    u_int flags_0x18: 8;
 } ActorEventSlot;
 
 typedef struct {
@@ -152,17 +157,17 @@ typedef struct {
     /* 0x75  */ u_char parentActorId;
     /* 0x76  */ u_short moveSpeed;
     /* 0x78  */ short scriptPointersStack[4];
-    u_char faceId;
-    u_char unk81;
-    u_char dialogWidth;
-    u_char dialogHeight;
-    u_int dialogFlags;
-    u_short dialogPixelWidth;
-    u_short dialogPixelHeight;
+    /* 0x80  */ u_char faceId;
+    /* 0x81  */ u_char unk81;
+    /* 0x82  */ u_char dialogWidth;
+    /* 0x83  */ u_char dialogHeight;
+    /* 0x84  */ u_int dialogFlags;
+    /* 0x88  */ u_short dialogPixelWidth;
+    /* 0x8A  */ u_short dialogPixelHeight;
     ActorEventSlot eventSlots[8];
     /* 0xCC */ u_short scriptInstructionPointer;
     /* 0xCE  */ u_char curEventSlotId;
-    /* 0xCF  */ u_char unkCF;
+    /* 0xCF  */ u_char unkCF; // Unknown event slot id
     /* 0xD0  */ VECTOR unkD0;
     /* 0xE0  */ u_short unkE0;
     /* 0xE2  */ u_char curDoorStep;
