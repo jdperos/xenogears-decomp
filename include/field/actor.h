@@ -132,7 +132,8 @@ typedef struct {
     /* 0xA  */ u_short walkmesh1TriId;
     /* 0xC  */ u_short walkmesh2TriId;
     /* 0xE  */ u_short walkmesh3TriId;
-    /* 0x10 */ u_int walkmeshId;
+    /* 0x10 */ short walkmeshId;
+    /* 0x12 */ short pad_0x12;
     /* 0x14 */ u_int curWalkmeshTriMaterial;
     /* 0x18 */ u_short width; //xWidth
     /* 0x1A */ u_short height;
@@ -170,7 +171,8 @@ typedef struct {
     /* 0xE6  */ u_short defaultAnimationId;
     /* 0xE8  */ u_short curAnimationId;
     /* 0xEA  */ u_short unkAnimationId;
-    /* 0xEC  */ int unkEC;
+    /* 0xEC  */ short unkEC;
+    /* 0xEE  */ short unkEE;
     /* 0xF0  */ int unkF0;
     /* 0xF4  */ u_short scaleX;
     /* 0xF6  */ u_short scaleY;

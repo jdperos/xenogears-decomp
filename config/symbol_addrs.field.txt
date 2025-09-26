@@ -96,6 +96,8 @@ FieldScriptVMHandlerEnableActorVM = 0x8009DBC8;
 
 FieldScriptVMHandlerSleep = 0x8009DD34;
 
+FieldScriptVMHandlerShowActorById = 0x8009DDEC;
+FieldScriptVMHandlerHideActorById = 0x8009DE94;
 FieldScriptVMHandlerShowActor = 0x8009DF10;
 
 FieldScriptVMHandlerHideActor = 0x8009E040;

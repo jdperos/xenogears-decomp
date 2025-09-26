@@ -2,6 +2,7 @@
 #include "field/main.h"
 #include "field/actor.h"
 #include "field/script_vm.h"
+#include "field/text_box.h"
 
 extern int rcos(int);
 extern int rsin(int);
@@ -1186,8 +1187,17 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009C5A8);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CCF8);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CD18);
+int func_8009CD18(int* pTextBoxIndex) {
+    int i;
+    for (i = 0; i < 4; i++) {
+        if (g_FieldTextBoxes[i].ownerActorID == D_800AFD1C && g_FieldTextBoxes[i].visibility == 0) {
+            *pTextBoxIndex = i;
+            return 0;
+        }
+    }
 
+    return -1;
+}
 
 u32 func_8009CD7C(int bytecodeOffset) {
     u32 nActorIndex = FieldScriptVMGetActorIndex(bytecodeOffset);
