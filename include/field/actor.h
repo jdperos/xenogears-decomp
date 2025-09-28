@@ -12,15 +12,15 @@
 #define MASK_8DIR_MOVEMENT_NUM_DIRECTIONS 0x7
 
 typedef struct {
-    u_short reqEvent;
+    u_short reqEvent; // Offset to bytecode routine?
     u_char waitTimer;
     u_char eventId;
     u_int flags_0: 16;
     u_int flags_0x10: 2;
     u_int flags_0x12: 4;
     u_int flags_0x16: 1;
-    u_int flags_0x17: 1;
-    u_int flags_0x18: 8;
+    u_int flags_0x17: 2;
+    u_int flags_0x19: 7;
 } ActorEventSlot;
 
 typedef struct {
@@ -201,15 +201,20 @@ typedef struct {
     /* 0x118 */ void* unk118;
     /* 0x11C */ short unk11C;
     /* 0x11E */ short unk11E;
-    /* 0x120 */ void* unk120;
-    /* 0x124 */ short unk124;
+    /* 0x120 */ void* unk120; // Special animation file?
+    /* 0x124 */ short unk124; // Archive index of special anim file?
     /* 0x126 */ u_char unk126;
     /* 0x127 */ u_char spriteId;
     /* 0x128 */ u_int modelAnimation;
 
 
     // 0x1C0 => Stack index, bit 0x100 is not used since there's only four elements in the stack
-    u_int flags12C;
+    u_int flags12C_0: 5; // Tentative
+    u_int flags12C_0x5: 1;
+    u_int flags12C_0x6: 3;
+    u_int flags12C_0x9: 3; // Tentative
+    u_int flags12C_0xD: 1;
+    u_int flags12C_3: 19; // Tentative
 
 
     int flags130;
@@ -217,12 +222,12 @@ typedef struct {
 } ActorData;
 
 typedef struct {
-    void* pModelData; // 0x24 size, model related data
-    void* pSpriteData; // 0x164 size
-    void* pShadow; // 0x70 size
-    MATRIX transformMatrix;
-    MATRIX childMatrix;
-    ActorData* pActorData;
+    /* 0x0  */ void* pModelData; // 0x24 size, model related data
+    /* 0x4  */ void* pSpriteData; // 0x164 size
+    /* 0x8  */ void* pShadow; // 0x70 size
+    /* 0xC  */ MATRIX transformMatrix;
+    /* 0x2C */ MATRIX childMatrix;
+    /* 0x4C */ ActorData* pActorData;
     SVEC rotation;
     short flags;
     short status;
@@ -292,7 +297,7 @@ typedef struct {
 } ActorFile;
 
 
-#define SCRIPT_SIZE 0x40
+#define SCRIPT_OFFSET_TABLE_SIZE 0x40
 
 typedef struct {
     u_int signBits[0x20]; // Sign bits for variables

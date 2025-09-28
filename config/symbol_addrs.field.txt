@@ -113,6 +113,7 @@ FieldScriptVMGetVariableSign = 0x800A2FE0;
 
 FieldScriptVMGetVariableValue = 0x800A3018;
 FieldScriptMemoryWriteU16 = 0x800A3074;
+FieldScriptGetBytecodeOffset = 0x800A3090;
 
 FieldDistortionFree = 0x800A47D4;
 FieldDistortionInitialize = 0x800A484C;

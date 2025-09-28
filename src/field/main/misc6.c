@@ -342,9 +342,7 @@ void func_8009EB78(void) {
                     continue;
                 }
                 
-                // Get offset to script bytecode routine
-                pActor->eventSlots[i].reqEvent = func_800A3090(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
-
+                pActor->eventSlots[i].reqEvent = FieldScriptGetBytecodeOffset(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
                 pActor->eventSlots[i].flags_0x12 = SCRIPT_READ_U8_REL(2) >> 0x5;
                 pActor->eventSlots[i].eventId = SCRIPT_READ_U8_REL(2) & 0x1F;
                 g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
@@ -382,7 +380,7 @@ void func_8009ED68(void) {
                 if (pActor->eventSlots[i].flags_0x12 != 0xF || pActor->eventSlots[i].flags_0x16) {
                     continue;
                 }
-                pActor->eventSlots[i].reqEvent = func_800A3090(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
+                pActor->eventSlots[i].reqEvent = FieldScriptGetBytecodeOffset(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
                 pActor->eventSlots[i].flags_0x12 = SCRIPT_READ_U8_REL(2) >> 5;
                 pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 1;
                 pActor->eventSlots[i].eventId = SCRIPT_READ_U8_REL(2) & 0x1F;
@@ -435,7 +433,7 @@ void func_8009F0A0(void) {
                 if (pActor->eventSlots[i].flags_0x12 != 0xF || pActor->eventSlots[i].flags_0x16) {
                     continue;
                 }
-                pActor->eventSlots[i].reqEvent = func_800A3090(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
+                pActor->eventSlots[i].reqEvent = FieldScriptGetBytecodeOffset(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
                 pActor->eventSlots[i].flags_0x12 = SCRIPT_READ_U8_REL(2) >> 5;
                 pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 1;
                 g_FieldScriptVMCurActor->unkCF = i;
@@ -523,19 +521,93 @@ void func_8009F5A8(void) {
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009F5F4);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009FA00);
+extern s32 D_80062590[];
+int func_8009FA00(int arg0) {
+    int i;
+
+    if (arg0 == 0xFF) {
+        return -1;
+    }
+    
+    for (i = 0; i < 3; i++) {
+        if (D_80062590[i] == 0xFF)
+            return -1;
+        
+        if (D_80062590[i] == arg0) {
+            return i;
+        }
+    }
+
+    return -1;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009FA54);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009FB98);
+/*
+Matches, but the struct D_800B2268 is part of needs recovery first.
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009FC10);
+void func_8009FB98(void) {
+    D_8004F34C |= 0xC000;
+    func_8001AD1C();
+    func_8001B044();
+    func_8001B3A8();
+    D_800B2268[0] = SCRIPT_READ_U8_REL(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+}
+*/
+
+extern s32 D_8006F990[];
+int func_8009FC10(int arg0) {
+    int i;
+
+    for (i = 0; i < 3; i++) {
+        if (D_8006F990[i] == arg0) {
+            return i;
+        }
+    }
+    
+    return 0xFF;
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009FC48);
+/*
+Matches, but D_8005A39C needs recovery first.
+
+void func_8009FC48(void) {
+    int index = FieldScriptVMGetArgument(1);
+    if (index >= 3) {
+        index = 2;
+    }
+    *(u8*)(D_8005A39C + index + 0x22B1) = 1;
+    func_8009FD10(index);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
+    */
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009FCAC);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009FD10);
+extern int D_8004F34C;
+void func_8009FD10(int arg0) {
+    switch (arg0) { 
+        case 0:
+            FieldScriptMemoryWriteU16(0x2A, D_8004F34C & 0xFFF);
+            FieldScriptMemoryWriteU16(0x2C, 0);
+            FieldScriptMemoryWriteU16(0x2E, 0);
+            break;
+        case 1:
+            FieldScriptMemoryWriteU16(0x30, D_8004F34C & 0xFFF);
+            FieldScriptMemoryWriteU16(0x32, 0);
+            FieldScriptMemoryWriteU16(0x34, 0);
+            break;
+        case 2:
+            FieldScriptMemoryWriteU16(0x36, D_8004F34C & 0xFFF);
+            FieldScriptMemoryWriteU16(0x38, 0);
+            FieldScriptMemoryWriteU16(0x3A, 0);
+            break;
+    }
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009FDD4);
 
@@ -543,7 +615,25 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009FE4C);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009FEE4);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_800A0158);
+void func_800A0158(s32 arg0, s32* arg1, s32* arg2, s32* arg3) {
+    switch (arg0) {
+        case 0:
+            *arg1 = FieldScriptVMGetVariableValue(0x2A);
+            *arg2 = FieldScriptVMGetVariableValue(0x2C);
+            *arg3 = FieldScriptVMGetVariableValue(0x2E);
+            break;
+        case 1:
+            *arg1 = FieldScriptVMGetVariableValue(0x30);
+            *arg2 = FieldScriptVMGetVariableValue(0x32);
+            *arg3 = FieldScriptVMGetVariableValue(0x34);
+            break;
+        case 2:
+            *arg1 = FieldScriptVMGetVariableValue(0x36);
+            *arg2 = FieldScriptVMGetVariableValue(0x38);
+            *arg3 = FieldScriptVMGetVariableValue(0x3A);
+            break;
+    }
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_800A0228);
 

@@ -42,6 +42,7 @@ WorkListsAddTasks = 0x8001D1D8;
 GraphicsDrawPauseLetters = 0x8001FAB4;
 
 // Animation Stuff
+SpriteSetSpecialAnimFile = 0x80021BF0;
 AnimScriptStackPopU8 = 0x80021C20;
 AnimScriptStackPopU16 = 0x80021C3C;
 AnimScriptStackPopU24 = 0x80021C6C;

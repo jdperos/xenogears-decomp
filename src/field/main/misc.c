@@ -623,8 +623,8 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093D48);
 // The two functions seems to be related to handling room transitions
 void func_80093E30(void) {
     if (!(g_FieldScriptVMCurActor->scriptFlags & 0x100000)) {
-        if (!(g_FieldScriptVMCurActor->flags12C & 0x20)) {
-            g_FieldScriptVMCurActor->flags12C |= 0x20;
+        if (!(g_FieldScriptVMCurActor->flags12C_0x5)) {
+            g_FieldScriptVMCurActor->flags12C_0x5 = 1;
             g_FieldScriptVMCurActor->curDoorStep = 0;
             func_80085634(8, 3);
         } else {
@@ -637,7 +637,7 @@ void func_80093E30(void) {
                 }
             } else {
                 g_FieldScriptVMCurActor->scriptFlags |= 0x100000;
-                g_FieldScriptVMCurActor->flags12C &= ~0x20;
+                g_FieldScriptVMCurActor->flags12C_0x5 = 0;
                 g_FieldScriptVMCurActor->curDoorStep = 0;
                 g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
             }
@@ -651,8 +651,8 @@ void func_80093E30(void) {
 
 void func_80093FC0(void) {
     if (g_FieldScriptVMCurActor->scriptFlags & 0x100000) {
-        if (!(g_FieldScriptVMCurActor->flags12C & 0x20)) {
-            g_FieldScriptVMCurActor->flags12C |= 0x20;
+        if (!(g_FieldScriptVMCurActor->flags12C_0x5)) {
+            g_FieldScriptVMCurActor->flags12C_0x5 = 1;
             g_FieldScriptVMCurActor->curDoorStep = 0;
             func_80085634(8, 3);
         } else {
@@ -665,7 +665,7 @@ void func_80093FC0(void) {
                 }
             } else {
                 g_FieldScriptVMCurActor->scriptFlags &= ~0x100000;
-                g_FieldScriptVMCurActor->flags12C &= ~0x20;
+                g_FieldScriptVMCurActor->flags12C_0x5 = 0;
                 g_FieldScriptVMCurActor->curDoorStep = 0;
                 g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
             }
@@ -1179,9 +1179,26 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009C104);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009C12C);
 
+// https://decomp.me/scratch/tL6mE
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009C154);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009C538);
+// Check if there is a portrait w/ targetId that's free to use?
+int func_8009C538(int targetId) {
+    int i;
+    
+    for (i = 0; i < 4; i++) {
+        if (g_FieldTextBoxes[i].visibility || g_FieldTextBoxes[i].portrait.shouldRenderPortrait != 1) {
+            continue;
+        }
+        
+        if (g_FieldTextBoxes[i].portrait.portraitID == targetId) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009C5A8);
 
@@ -1189,6 +1206,7 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CCF8);
 
 int func_8009CD18(int* pTextBoxIndex) {
     int i;
+
     for (i = 0; i < 4; i++) {
         if (g_FieldTextBoxes[i].ownerActorID == D_800AFD1C && g_FieldTextBoxes[i].visibility == 0) {
             *pTextBoxIndex = i;
@@ -1222,6 +1240,22 @@ u32 FieldScriptVMGetActorIndex(int bytecodeOffset) {
 }
 
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CE48);
+// Set up dialog window / text box
+void func_8009CE48(void) {
+    g_FieldScriptVMCurActor->dialogPixelWidth = SCRIPT_READ_U8_REL(1) * 2;
+    g_FieldScriptVMCurActor->dialogPixelHeight = SCRIPT_READ_U8_REL(2);
+    g_FieldScriptVMCurActor->dialogWidth = SCRIPT_READ_U8_REL(3) * 3;
+    g_FieldScriptVMCurActor->dialogHeight = SCRIPT_READ_U8_REL(4);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 5;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CEE0);
+
+// Set up dialog window / text box
+void func_8009CEE0(void) {
+    g_FieldScriptVMCurActor->dialogPixelWidth = FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->dialogPixelHeight = FieldScriptVMGetArgument(3);
+    g_FieldScriptVMCurActor->dialogWidth = FieldScriptVMGetArgument(5) * 3;
+    g_FieldScriptVMCurActor->dialogHeight = FieldScriptVMGetArgument(7);
+    g_FieldScriptVMCurActor->dialogFlags = FieldScriptVMGetArgument(9);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 0xB;
+}

@@ -21,7 +21,9 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021B
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021BCC);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021BF0);
+void SpriteSetSpecialAnimFile(SpriteData* pSpriteData, void* pAnimFile) {
+    pSpriteData->pSpecialAnimFile = pAnimFile;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021BF8);
 
