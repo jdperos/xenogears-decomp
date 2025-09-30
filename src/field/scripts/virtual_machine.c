@@ -16,7 +16,7 @@ extern char D_8006FD44; // "STACKERR ACT=%d\n"
 
 // Store instruction pointer + 5 on stack
 void func_800A1730(void) {
-    if (g_FieldScriptVMCurActor->flags12C_0x6 != 0x4) {
+    if (g_FieldScriptVMCurActor->flags12C_0x6 != SCRIPT_MAX_STACK_SIZE) {
         g_FieldScriptVMCurActor->scriptPointersStack[g_FieldScriptVMCurActor->flags12C_0x6] = g_FieldScriptVMCurActor->scriptInstructionPointer + 5;
         g_FieldScriptVMCurActor->scriptInstructionPointer = FieldScriptVMGetInstructionArgument(1);
         g_FieldScriptVMCurActor->flags12C_0x6++;
@@ -32,7 +32,7 @@ void func_800A1730(void) {
 
 // Store instruction pointer + 3 on stack
 void func_800A17F4(void) {
-    if (g_FieldScriptVMCurActor->flags12C_0x6 != 0x4) {
+    if (g_FieldScriptVMCurActor->flags12C_0x6 != SCRIPT_MAX_STACK_SIZE) {
         g_FieldScriptVMCurActor->scriptPointersStack[g_FieldScriptVMCurActor->flags12C_0x6] = g_FieldScriptVMCurActor->scriptInstructionPointer + 3;
         g_FieldScriptVMCurActor->scriptInstructionPointer = FieldScriptVMGetInstructionArgument(1);
         g_FieldScriptVMCurActor->flags12C_0x6++;
@@ -53,8 +53,8 @@ void func_800A18B8(void) {
         if (g_FieldSystemMode == 0) {
             func_800379C8(&D_8006FD44, D_800AFD1C);
         }
-        g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x12 = 0xFF;
-        g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].eventId = 0xFF;
+        g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].flags_0x12 = 0xFF;
+        g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].scriptId = 0xFF;
         D_800AFFEC = 1;
         D_800B00C0 = 1;
         return;
@@ -67,42 +67,43 @@ void func_800A18B8(void) {
 void func_800A19B0(void) {
     int i;
     
-    for (i = 0; i < 8; i++) {
-        g_FieldScriptVMCurActor->eventSlots[i].waitTimer = 0;
-        g_FieldScriptVMCurActor->eventSlots[i].flags_0x10 = 0;
-        g_FieldScriptVMCurActor->eventSlots[i].flags_0x12 = 0xF;
-        g_FieldScriptVMCurActor->eventSlots[i].reqEvent = 0xFFFF;
-        g_FieldScriptVMCurActor->eventSlots[i].flags_0x16 = 0;
-        g_FieldScriptVMCurActor->eventSlots[i].eventId = 0xFF;
-        g_FieldScriptVMCurActor->eventSlots[i].flags_0 = 0xFFFF;
-        g_FieldScriptVMCurActor->eventSlots[i].flags_0x17 = 0x0;
+    for (i = 0; i < ACTOR_MAX_NUM_SCRIPTS; i++) {
+        g_FieldScriptVMCurActor->scripts[i].waitTimer = 0;
+        g_FieldScriptVMCurActor->scripts[i].state = SCRIPT_STATE_IDLE;
+        g_FieldScriptVMCurActor->scripts[i].flags_0x12 = 0xF;
+        g_FieldScriptVMCurActor->scripts[i].currentIP = 0xFFFF;
+        g_FieldScriptVMCurActor->scripts[i].isInUse = 0;
+        g_FieldScriptVMCurActor->scripts[i].scriptId = 0xFF;
+        g_FieldScriptVMCurActor->scripts[i].flags_0 = 0xFFFF;
+        g_FieldScriptVMCurActor->scripts[i].flags_0x17 = 0x0;
     }
 
-    g_FieldScriptVMCurActor->curEventSlotId = 0;
+    g_FieldScriptVMCurActor->curScriptIndex = 0;
     g_FieldScriptVMCurActor->unkCF = 0;
     g_FieldScriptVMCurActor->dialogFlags = 0;
     D_800B00C0 = 1;
     g_FieldScriptVMCurActor->flags12C_0x6 = 0;
 }
 
-
+// Yield / Stop, but change IP conditionally
 void func_800A1A8C(void) {
     int i;
 
-    for (i = 0; i < 8; i++) {
-        if (g_FieldScriptVMCurActor->eventSlots[i].flags_0x12 == 7) {
-            g_FieldScriptVMCurActor->eventSlots[i].reqEvent = FieldScriptGetBytecodeOffset(D_800AFD1C, 1);
+    for (i = 0; i < ACTOR_MAX_NUM_SCRIPTS; i++) {
+        if (g_FieldScriptVMCurActor->scripts[i].flags_0x12 == 7) {
+            g_FieldScriptVMCurActor->scripts[i].currentIP = FieldScriptGetBytecodeOffset(D_800AFD1C, 1);
         }
     }
 
-    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x12 = 0xFF;
-    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].eventId = 0xFF;
+    g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].flags_0x12 = 0xFF;
+    g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].scriptId = 0xFF;
     D_800B00C0 = 1;
 }
 
+// Yield / Stop Handler
 void func_800A1B70(void) {
-    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x12 = 0xFF;
-    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].eventId = 0xFF;
+    g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].flags_0x12 = 0xFF;
+    g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].scriptId = 0xFF;
     D_800AFFEC = 1;
     D_800B00C0 = 1;
 }
@@ -226,15 +227,15 @@ void func_800A22AC(int scriptRoutineIndex) {
     *pNewActor = *D_800B06B8->pActorData;
 
     // Reset all event slots
-    for (i = 0; i < 8; i++) {
-        g_FieldScriptVMCurActor->eventSlots[i].waitTimer = 0;
-        g_FieldScriptVMCurActor->eventSlots[i].flags_0x10 = 0;
-        g_FieldScriptVMCurActor->eventSlots[i].flags_0x12 = 0xF;
-        g_FieldScriptVMCurActor->eventSlots[i].reqEvent = 0xFFFF;
-        g_FieldScriptVMCurActor->eventSlots[i].flags_0x16 = 0x0;
-        g_FieldScriptVMCurActor->eventSlots[i].eventId = 0xFF;
-        g_FieldScriptVMCurActor->eventSlots[i].flags_0 = 0xFFFF;
-        g_FieldScriptVMCurActor->eventSlots[i].flags_0x17 = 0x0;
+    for (i = 0; i < ACTOR_MAX_NUM_SCRIPTS; i++) {
+        g_FieldScriptVMCurActor->scripts[i].waitTimer = 0;
+        g_FieldScriptVMCurActor->scripts[i].state = SCRIPT_STATE_IDLE;
+        g_FieldScriptVMCurActor->scripts[i].flags_0x12 = 0xF;
+        g_FieldScriptVMCurActor->scripts[i].currentIP = 0xFFFF;
+        g_FieldScriptVMCurActor->scripts[i].isInUse = 0x0;
+        g_FieldScriptVMCurActor->scripts[i].scriptId = 0xFF;
+        g_FieldScriptVMCurActor->scripts[i].flags_0 = 0xFFFF;
+        g_FieldScriptVMCurActor->scripts[i].flags_0x17 = 0x0;
     }
     
     D_800AFD1C = 0;
@@ -310,6 +311,8 @@ void FieldScriptVMHandlerNop(void) {
     g_FieldScriptVMCurActor->scriptInstructionPointer++;
 }
 
+// Script files contains a sections of sign bits for variables. 
+// This function is a bit of a convoluted way to check if a bit in section of data is set or not.
 int FieldScriptVMGetVariableSign(int index) {
     return -((g_FieldCurScriptFile->signBits[index >> 6] & (1 << ((index >> 1) & 0x1F))) != 0);
 }

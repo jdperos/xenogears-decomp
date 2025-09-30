@@ -41,7 +41,11 @@ FieldMain = 0x80077E88;
 FieldSwapRenderContext = 0x800796FC;
 FieldRenderSyncAndFlush = 0x8007999C;
 
+FieldClampPolyFT4UVs = 0x8007A44C;
+
 FieldSetControllerBuffers = 0x8007AD8C;
+FieldSetMouseSpeed = 0x8007AE14;
+FieldSetMousePosition = 0x8007AE2C;
 
 FieldFadeInitializePrimitives = 0x8007D93C;
 FieldFadeDraw = 0x8007DA44;
@@ -166,7 +170,9 @@ D_800AFE3C = 0x800AFE3C; // size:0x8
 D_800AFE54 = 0x800AFE54; // size:0x10
 
 g_FieldMouseSpeedX = 0x800B005C;
-g_FieldMouseSpeedY = 0x800b0060;
+g_FieldMouseSpeedY = 0x800B0060;
+g_FieldMousePositionsX = 0x800B0068;
+g_FieldMousePositionsY = 0x800B0070;
 
 g_pFieldControllerBuffer1 = 0x800B0054;
 g_pFieldControllerBuffer2 = 0x800B0058;

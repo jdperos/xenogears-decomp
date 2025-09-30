@@ -11,17 +11,26 @@
 #define NUM_8DIR_MOVEMENT_DIRECTIONS 0x8
 #define MASK_8DIR_MOVEMENT_NUM_DIRECTIONS 0x7
 
+#define SCRIPT_MAX_STACK_SIZE 0x4
+
+#define SCRIPT_STATE_IDLE 0x0
+
+#define ACTOR_SCRIPT_EXISTS -1
+
+#define ACTOR_MAX_NUM_SCRIPTS 0x8
+
+
 typedef struct {
-    u_short reqEvent; // Offset to bytecode routine?
-    u_char waitTimer;
-    u_char eventId;
+    u_short currentIP; // Instruction Pointer
+    u_char waitTimer; // Used for sleep() logic in scripts
+    u_char scriptId;
     u_int flags_0: 16;
-    u_int flags_0x10: 2;
+    u_int state: 2; // Execution state
     u_int flags_0x12: 4;
-    u_int flags_0x16: 1;
+    u_int isInUse: 1;
     u_int flags_0x17: 2;
     u_int flags_0x19: 7;
-} ActorEventSlot;
+} ActorScriptSlot;
 
 typedef struct {
     short x, y;
@@ -156,7 +165,7 @@ typedef struct {
     /* 0x74  */ u_char canInteract;
     /* 0x75  */ u_char parentActorId;
     /* 0x76  */ u_short moveSpeed;
-    /* 0x78  */ short scriptPointersStack[4];
+    /* 0x78  */ short scriptPointersStack[SCRIPT_MAX_STACK_SIZE];
     /* 0x80  */ u_char faceId;
     /* 0x81  */ u_char unk81;
     /* 0x82  */ u_char dialogWidth;
@@ -164,9 +173,9 @@ typedef struct {
     /* 0x84  */ u_int dialogFlags;
     /* 0x88  */ u_short dialogPixelWidth;
     /* 0x8A  */ u_short dialogPixelHeight;
-    ActorEventSlot eventSlots[8];
+    /* 0x90  */ ActorScriptSlot scripts[ACTOR_MAX_NUM_SCRIPTS];
     /* 0xCC */ u_short scriptInstructionPointer;
-    /* 0xCE  */ u_char curEventSlotId;
+    /* 0xCE  */ u_char curScriptIndex;
     /* 0xCF  */ u_char unkCF; // Unknown event slot id
     /* 0xD0  */ VECTOR unkD0;
     /* 0xE0  */ u_short unkE0;
@@ -211,7 +220,7 @@ typedef struct {
     // 0x1C0 => Stack index, bit 0x100 is not used since there's only four elements in the stack
     u_int flags12C_0: 5; // Tentative
     u_int flags12C_0x5: 1;
-    u_int flags12C_0x6: 3;
+    u_int flags12C_0x6: 3; // Keeps track of recursion level in scripts - inc on call, dec on ret
     u_int flags12C_0x9: 3; // Tentative
     u_int flags12C_0xD: 1;
     u_int flags12C_3: 19; // Tentative

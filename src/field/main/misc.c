@@ -1159,7 +1159,36 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BA0C);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BA7C);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BB0C);
+void func_8009BB0C(void) {
+    int nTextBoxIndex;
+    u32 lowerFlags;
+    u32 upperFlags;
+
+    // Check if there's no visible textbox owned by current actor
+    if (func_8009CD18(&nTextBoxIndex) == -1) {
+        g_FieldScriptMaxInstructionCount += 8;
+        FieldScriptMemoryWriteU16(0x14, g_FieldScriptVMCurActor->unk81);
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 1;
+        return;
+    }
+    
+    if (g_FieldActors[g_FieldTextBoxes[nTextBoxIndex].talkingActorID].pActorData->flags & 0x200) {
+        upperFlags = g_FieldScriptVMCurActor->dialogFlags >> 0x10;
+        if (g_FieldScriptVMCurActor->dialogFlags >> 0x10 == 0) {
+            lowerFlags = g_FieldScriptVMCurActor->dialogFlags & 0xFFFF;
+        } else {
+            lowerFlags = upperFlags & 0xFFFF;
+        }
+        
+        if (!(lowerFlags & 0x1)) {
+            if (g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].flags_0x12 != 7) {
+                func_800A1B70();
+            }
+            g_FieldTextBoxes[nTextBoxIndex].status = 0;
+        }
+    }
+    D_800B00C0 = 1;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BC98);
 

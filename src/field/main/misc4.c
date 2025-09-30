@@ -102,9 +102,7 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_800799D4);
 
 // Quad rendering
 // --------------------
-
-// Set POLY_FT4 UVs
-void func_8007A44C(POLY_FT4* poly, short u0, short v0, short u1, short v1, short u2, short v2, short u3, short v3) {
+void FieldClampPolyFT4UVs(POLY_FT4* poly, short u0, short v0, short u1, short v1, short u2, short v2, short u3, short v3) {
     if (u0 < 0) u0 = 0;
     if (u1 < 0) u1 = 0;
     if (u2 < 0) u2 = 0;
@@ -187,7 +185,7 @@ void func_8007A7F4(Quad* pPart, int x, int y, int tex) {
     
     pPart->polys[0].clut = GetClut(D_800ADE08[nIndexTex], D_800ADE0A[nIndexTex]);
     
-    func_8007A44C(&pPart->polys[0], 
+    FieldClampPolyFT4UVs(&pPart->polys[0], 
         D_800ADD70[x].x, D_800ADDB8[y].x, 
         D_800ADD70[x].y, D_800ADDB8[y].y, 
         D_800ADD70[x].z, D_800ADDB8[y].z, 
@@ -304,6 +302,8 @@ extern s32 D_800C3A44;
 extern s32 D_800C3A4C;
 extern s32 D_800C3A50;
 extern s32 D_800C3A54;
+extern int g_FieldMousePositionsX[2];
+extern int g_FieldMousePositionsY[2];
 
 void FieldSetControllerBuffers(void* controllerBuffer1, void* controllerBuffer2) {
     g_pFieldControllerBuffer1 = controllerBuffer1;
@@ -317,12 +317,15 @@ void func_8007ADA4(int arg0, int arg1, int arg2, int arg3) {
     D_800C3A54 = arg3 * g_FieldMouseSpeedY;
 }
 
-void func_8007AE14(u_short xSpeed, u_short ySpeed) {
+void FieldSetMouseSpeed(u_short xSpeed, u_short ySpeed) {
     g_FieldMouseSpeedX = xSpeed;
     g_FieldMouseSpeedY = ySpeed;
 }
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007AE2C);
+void FieldSetMousePosition(int mouseIndex, int xMovement, int yMovement) {
+    g_FieldMousePositionsX[mouseIndex] = xMovement * g_FieldMouseSpeedX;
+    g_FieldMousePositionsY[mouseIndex] = yMovement * g_FieldMouseSpeedY;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007AE78);
 

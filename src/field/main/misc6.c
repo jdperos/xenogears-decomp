@@ -80,19 +80,19 @@ void func_8009DC4C(void) {
 }
 
 void FieldScriptVMHandlerSleep(void) {
-    u_char nEventSlotId;
+    u_char nScriptId;
 
-    nEventSlotId = g_FieldScriptVMCurActor->curEventSlotId;
+    nScriptId = g_FieldScriptVMCurActor->curScriptIndex;
 
     // Initialize the value with the argument as the time to sleep, else count down
-    if (g_FieldScriptVMCurActor->eventSlots[nEventSlotId].waitTimer == 0) {
-        g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].waitTimer = FieldScriptVMGetArgument(1);
+    if (g_FieldScriptVMCurActor->scripts[nScriptId].waitTimer == 0) {
+        g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].waitTimer = FieldScriptVMGetArgument(1);
     } else {
-        g_FieldScriptVMCurActor->eventSlots[nEventSlotId].waitTimer--;
+        g_FieldScriptVMCurActor->scripts[nScriptId].waitTimer--;
     }
     
     // When the timer has reached 0, we move to the next instruction
-    if (g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].waitTimer == 0) {
+    if (g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].waitTimer == 0) {
         g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
     }
 
@@ -312,11 +312,13 @@ void func_8009E91C(void) {
 }
 */
 
-int FieldActorHasEventID(ActorData* pActor, int targetId) {
+// -1: Actor has a script slot occupied w/ target ID
+//  0: Actor has no script slot w/ target ID
+int FieldActorGetScriptStatus(ActorData* pActor, int targetId) {
     int i;
 
-    for (i = 0; i < 8; i++) {
-        if (targetId == pActor->eventSlots[i].eventId) {
+    for (i = 0; i < ACTOR_MAX_NUM_SCRIPTS; i++) {
+        if (targetId == pActor->scripts[i].scriptId) {
             return -1;
         }
     }
@@ -327,24 +329,24 @@ void func_8009EB78(void) {
     ActorData* pActor;
     int actorIndex;
     int i;
-    int curEventSlot;
+    int curScriptId;
 
     if (FieldScriptVMGetActorIndex(1) != 0xFF) {
         actorIndex = FieldScriptVMGetActorIndex(1);
         pActor = g_FieldActors[actorIndex].pActorData;
         if (pActor->flags & 0x100000) {
-            curEventSlot = g_FieldScriptVMCurActor->curEventSlotId;
-            g_FieldScriptVMCurActor->eventSlots[curEventSlot].flags_0x10 = 0;
-            pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 0;
-        } else if (FieldActorHasEventID(pActor, SCRIPT_READ_U8_REL(2) & 0x1F) != -1) {
-            for (i = 0; i < 8; i++) {
-                if (pActor->eventSlots[i].flags_0x12 != 0xF || pActor->eventSlots[i].flags_0x16) {
+            curScriptId = g_FieldScriptVMCurActor->curScriptIndex;
+            g_FieldScriptVMCurActor->scripts[curScriptId].state = SCRIPT_STATE_IDLE;
+            pActor->scripts[g_FieldScriptVMCurActor->unkCF].isInUse = 0;
+        } else if (FieldActorGetScriptStatus(pActor, SCRIPT_READ_U8_REL(2) & 0x1F) != ACTOR_SCRIPT_EXISTS) {
+            for (i = 0; i < ACTOR_MAX_NUM_SCRIPTS; i++) {
+                if (pActor->scripts[i].flags_0x12 != 0xF || pActor->scripts[i].isInUse) {
                     continue;
                 }
                 
-                pActor->eventSlots[i].reqEvent = FieldScriptGetBytecodeOffset(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
-                pActor->eventSlots[i].flags_0x12 = SCRIPT_READ_U8_REL(2) >> 0x5;
-                pActor->eventSlots[i].eventId = SCRIPT_READ_U8_REL(2) & 0x1F;
+                pActor->scripts[i].currentIP = FieldScriptGetBytecodeOffset(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
+                pActor->scripts[i].flags_0x12 = SCRIPT_READ_U8_REL(2) >> 0x5;
+                pActor->scripts[i].scriptId = SCRIPT_READ_U8_REL(2) & 0x1F;
                 g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
                 return;
             }
@@ -367,35 +369,35 @@ void func_8009ED68(void) {
     actorIndex = FieldScriptVMGetActorIndex(1);
     pActor = g_FieldActors[actorIndex].pActorData;
     if (pActor->flags & 0x100000) {
-        g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 0;
-        pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 0;
+        g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].state = SCRIPT_STATE_IDLE;
+        pActor->scripts[g_FieldScriptVMCurActor->unkCF].isInUse = 0;
     } else {
-        switch (g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10) {
+        switch (g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].state) {
         case 0:
-            if (FieldActorHasEventID(pActor, SCRIPT_READ_U8_REL(2) & 0x1F) == -1) {
+            if (FieldActorGetScriptStatus(pActor, SCRIPT_READ_U8_REL(2) & 0x1F) == ACTOR_SCRIPT_EXISTS) {
                 break;
             }
             
-            for (i = 0; i < 8; i++) {
-                if (pActor->eventSlots[i].flags_0x12 != 0xF || pActor->eventSlots[i].flags_0x16) {
+            for (i = 0; i < ACTOR_MAX_NUM_SCRIPTS; i++) {
+                if (pActor->scripts[i].flags_0x12 != 0xF || pActor->scripts[i].isInUse) {
                     continue;
                 }
-                pActor->eventSlots[i].reqEvent = FieldScriptGetBytecodeOffset(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
-                pActor->eventSlots[i].flags_0x12 = SCRIPT_READ_U8_REL(2) >> 5;
-                pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 1;
-                pActor->eventSlots[i].eventId = SCRIPT_READ_U8_REL(2) & 0x1F;
+                pActor->scripts[i].currentIP = FieldScriptGetBytecodeOffset(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
+                pActor->scripts[i].flags_0x12 = SCRIPT_READ_U8_REL(2) >> 5;
+                pActor->scripts[g_FieldScriptVMCurActor->unkCF].isInUse = 1;
+                pActor->scripts[i].scriptId = SCRIPT_READ_U8_REL(2) & 0x1F;
                 g_FieldScriptVMCurActor->unkCF = i;
-                g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 1;
+                g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].state = 1;
                 break;
             }
             return;
         case 1:
-            if ((pActor->curEventSlotId == g_FieldScriptVMCurActor->unkCF) || pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x12 == 0xF) {
+            if ((pActor->curScriptIndex == g_FieldScriptVMCurActor->unkCF) || pActor->scripts[g_FieldScriptVMCurActor->unkCF].flags_0x12 == 0xF) {
                 g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
-                g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 0;
-                pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 0;
+                g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].state = SCRIPT_STATE_IDLE;
+                pActor->scripts[g_FieldScriptVMCurActor->unkCF].isInUse = 0;
             } else {
-                D_800B00C0 = g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10;
+                D_800B00C0 = g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].state;
             }
             return;
         default:
@@ -419,40 +421,40 @@ void func_8009F0A0(void) {
     actorIndex = FieldScriptVMGetActorIndex(1);
     pActor = g_FieldActors[actorIndex].pActorData;
     if (pActor->flags & 0x100000) {
-        g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 0;
-        pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 0;
+        g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].state = SCRIPT_STATE_IDLE;
+        pActor->scripts[g_FieldScriptVMCurActor->unkCF].isInUse = 0;
     } else {
-        switch (g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10) {
+        switch (g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].state) {
         case 0:
-            if (FieldActorHasEventID(pActor, SCRIPT_READ_U8_REL(2) & 0x1F) == -1) {
+            if (FieldActorGetScriptStatus(pActor, SCRIPT_READ_U8_REL(2) & 0x1F) == ACTOR_SCRIPT_EXISTS) {
                 g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
                 break;
             }
             
-            for (i = 0; i < 8; i++) {
-                if (pActor->eventSlots[i].flags_0x12 != 0xF || pActor->eventSlots[i].flags_0x16) {
+            for (i = 0; i < ACTOR_MAX_NUM_SCRIPTS; i++) {
+                if (pActor->scripts[i].flags_0x12 != 0xF || pActor->scripts[i].isInUse) {
                     continue;
                 }
-                pActor->eventSlots[i].reqEvent = FieldScriptGetBytecodeOffset(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
-                pActor->eventSlots[i].flags_0x12 = SCRIPT_READ_U8_REL(2) >> 5;
-                pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 1;
+                pActor->scripts[i].currentIP = FieldScriptGetBytecodeOffset(actorIndex, SCRIPT_READ_U8_REL(2) & 0x1F);
+                pActor->scripts[i].flags_0x12 = SCRIPT_READ_U8_REL(2) >> 5;
+                pActor->scripts[g_FieldScriptVMCurActor->unkCF].isInUse = 1;
                 g_FieldScriptVMCurActor->unkCF = i;
-                g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 1;
-                pActor->eventSlots[i].eventId = SCRIPT_READ_U8_REL(2) & 0x1F;
+                g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].state = 1;
+                pActor->scripts[i].scriptId = SCRIPT_READ_U8_REL(2) & 0x1F;
                 return;
             }
             break;
         case 1:
-            if ((pActor->curEventSlotId == g_FieldScriptVMCurActor->unkCF) || pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x12 == 0xF) {
-                g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 2;
+            if ((pActor->curScriptIndex == g_FieldScriptVMCurActor->unkCF) || pActor->scripts[g_FieldScriptVMCurActor->unkCF].flags_0x12 == 0xF) {
+                g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].state = 2;
                 return;
             }
             D_800B00C0 = 1;
             break;
         case 2:
-            if (pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x12 == 0xF) {
-                g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags_0x10 = 0;
-                pActor->eventSlots[g_FieldScriptVMCurActor->unkCF].flags_0x16 = 0;
+            if (pActor->scripts[g_FieldScriptVMCurActor->unkCF].flags_0x12 == 0xF) {
+                g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].state = SCRIPT_STATE_IDLE;
+                pActor->scripts[g_FieldScriptVMCurActor->unkCF].isInUse = 0;
                 g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
                 return;
             }
