@@ -634,11 +634,9 @@ void func_80093CD0(void) {
     g_FieldScriptVMCurActor->scriptInstructionPointer += 7;
 }
 
-//Co-Authored-By: karas84 <karas84@users.noreply.github.com>
 // Write U16/S16 handler
 // Arg1 + Arg3 = Offset in script to short to write
 // Arg3: Write address
-/*
 void func_80093D48(void) {
     int arg1;
     int nAddress;
@@ -664,7 +662,6 @@ void func_80093D48(void) {
     
     g_FieldScriptVMCurActor->scriptInstructionPointer += 8;
 }
-*/
 
 // The two functions seems to be related to handling room transitions
 void func_80093E30(void) {
