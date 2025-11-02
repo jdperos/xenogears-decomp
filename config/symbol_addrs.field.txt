@@ -107,7 +107,7 @@ FieldScriptVMHandlerShowActor = 0x8009DF10;
 
 FieldScriptVMHandlerHideActor = 0x8009E040;
 
-FieldActorHasEventID = 0x8009EB48;
+FieldActorGetScriptStatus = 0x8009EB48;
 
 FieldScriptVMHandlerConditionalJmp = 0x800A1BD0;
 FieldScriptVMHandlerJmp = 0x800A1E74;

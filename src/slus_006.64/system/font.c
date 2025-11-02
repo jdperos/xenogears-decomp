@@ -331,8 +331,6 @@ void FontFree(void) {
     D_800593A0 = NULL;
 }
 
-//INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/font", FontLoadFont);
-
 void* FontLoadFont(int startX, int startY, int width, int height, int maxLetters, unsigned int flags,  int texpageX, int texpageY, int clutX, int clutY, void* pCompressedFontFile) {
     RECT rect;
     short nStartX;

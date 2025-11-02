@@ -5,9 +5,6 @@
 
 #define ACTOR_STATUS_INVISIBLE 0x20
 
-#define SCRIPT_VM_DISABLED 0x1
-#define SCRIPT_DIALOG_ACTIVATION_DISABLED 0x20000
-
 #define NUM_8DIR_MOVEMENT_DIRECTIONS 0x8
 #define MASK_8DIR_MOVEMENT_NUM_DIRECTIONS 0x7
 
@@ -140,7 +137,17 @@ typedef struct {
 } SpriteData;
 
 typedef struct {
-    /* 0x0  */ u_int scriptFlags;
+    /* 0x0 */ u_int scriptFlags_0x0: 1; // isDisabled?
+    u_int scriptFlags_0x1: 7;
+    u_int scriptFlags_0x8: 1;
+    u_int scriptFlags_0x9: 8;
+    u_int scriptFlags_0xA: 1; // isDialogActivationDisabled?
+    u_int scriptFlags_0x10: 1;
+    u_int scriptFlags_0x11: 2;
+    u_int scriptFlags_0x14: 1;
+    u_int scriptFlags_0x15: 1;
+    u_int scriptFlags_0x16: 1;
+    u_int scriptFlags_0x17: 8;
     /* 0x4  */ u_int flags; // ?
     /* 0x8  */ u_short walkmesh0TriId;
     /* 0xA  */ u_short walkmesh1TriId;
@@ -218,7 +225,8 @@ typedef struct {
 
 
     // 0x1C0 => Stack index, bit 0x100 is not used since there's only four elements in the stack
-    u_int flags12C_0: 5; // Tentative
+    u_int flags12C_0: 2;
+    u_int flags12C_0x2: 3; // Tentative
     u_int flags12C_0x5: 1;
     u_int flags12C_0x6: 3; // Keeps track of recursion level in scripts - inc on call, dec on ret
     u_int flags12C_0x9: 3; // Tentative

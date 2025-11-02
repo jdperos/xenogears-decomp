@@ -8,22 +8,22 @@ extern void func_800A0C94();
 extern s32 D_800AFD1C; // Current actor index
 
 void FieldScriptVMHandlerDisableDialogActivation(void) {
-    g_FieldScriptVMCurActor->scriptFlags |= SCRIPT_DIALOG_ACTIVATION_DISABLED;
+    g_FieldScriptVMCurActor->scriptFlags_0xA = 0x1;
     g_FieldScriptVMCurActor->scriptInstructionPointer++;
 }
 
 void FieldScriptVMHandlerEnableDialogActivation(void) {
-    g_FieldScriptVMCurActor->scriptFlags &= ~SCRIPT_DIALOG_ACTIVATION_DISABLED;
+    g_FieldScriptVMCurActor->scriptFlags_0xA = 0x0;
     g_FieldScriptVMCurActor->scriptInstructionPointer++;
 }
 
 void func_8009DA70(void) {
-    g_FieldScriptVMCurActor->scriptFlags |= 0x800000;
+    g_FieldScriptVMCurActor->scriptFlags_0x16 = 0x1;
     g_FieldScriptVMCurActor->scriptInstructionPointer++;
 }
 
 void func_8009DA98(void) {
-    g_FieldScriptVMCurActor->scriptFlags &= ~0x800000;
+    g_FieldScriptVMCurActor->scriptFlags_0x16 = 0;
     g_FieldScriptVMCurActor->scriptInstructionPointer++;
 }
 
@@ -34,7 +34,7 @@ void func_8009DAC4(void) {
 
     if (FieldScriptVMGetActorIndex(1) != 0xFF) {
         pActor = g_FieldActors[FieldScriptVMGetActorIndex(1)].pActorData;
-        pActor->scriptFlags |= 0x1;
+        pActor->scriptFlags_0x0 = 0x1;
         pActor->flags |= 0x100000;
         pFieldActor = &g_FieldActors[FieldScriptVMGetActorIndex(1)];
         pFieldActor->status |= ACTOR_STATUS_INVISIBLE;
@@ -50,7 +50,7 @@ void FieldScriptVMHandlerEnableActorVM(void) {
 
     if (FieldScriptVMGetActorIndex(1) != 0xFF) {
         pActor = g_FieldActors[FieldScriptVMGetActorIndex(1)].pActorData;
-        pActor->scriptFlags &= ~SCRIPT_VM_DISABLED;
+        pActor->scriptFlags_0x0 = 0;
     }
     g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
 }
@@ -68,7 +68,7 @@ void func_8009DC4C(void) {
         pActor->move.vx = 0;
         pActor->move.vy = 0;
         pActor->move.vz = 0;
-        pActor->scriptFlags |= 1;
+        pActor->scriptFlags_0x0 = 1;
         nNewRotation = pActor->rotationX | 0x8000;
         pActor->rotationY = nNewRotation;
         pActor->rotationX = nNewRotation;
@@ -162,6 +162,10 @@ void func_8009E094(void) {
     g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
 }
 
+INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009E10C);
+/*
+Matches when scriptFlags is a u32, not bitfields.
+
 void func_8009E10C(void) {
     int nValue;
     int nUnkFlags;
@@ -178,6 +182,7 @@ void func_8009E10C(void) {
     g_FieldScriptVMCurActor->scriptFlags |= nUnkFlags;
     g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
 }
+*/
 
 void func_8009E1A0(void) {
     u32 nValue;
@@ -195,7 +200,8 @@ void func_8009E1A0(void) {
 
 void func_8009E208(void) {
     g_FieldScriptVMCurActor->unkEC = 0;
-    g_FieldScriptVMCurActor->scriptFlags = (g_FieldScriptVMCurActor->scriptFlags & 0xFFFBFFFF) | 0x400000;
+    g_FieldScriptVMCurActor->scriptFlags_0x10 = 0x0;
+    g_FieldScriptVMCurActor->scriptFlags_0x15 = 0x1;
     g_FieldScriptVMCurActor->scriptInstructionPointer++;
     g_FieldScriptVMCurActor->curYPos = g_FieldScriptVMCurActor->position.vy >> 0x10;
 }
@@ -206,13 +212,13 @@ void func_8009E248(void) {
         FieldScriptVMGetInstructionArgumentS16(3)
     );
     func_8009E810(FieldScriptVMGetInstructionArgumentS16(5));
-    g_FieldScriptVMCurActor->scriptFlags |= 0x40000;
+    g_FieldScriptVMCurActor->scriptFlags_0x10 = 0x1;
     g_FieldScriptVMCurActor->scriptInstructionPointer += 7;
 }
 
 void func_8009E2C8(void) {
     func_8009E810(func_8009CF78(1, SCRIPT_READ_U8_REL(3)));
-    g_FieldScriptVMCurActor->scriptFlags |= 0x40000;
+    g_FieldScriptVMCurActor->scriptFlags_0x10 = 0x1;
     g_FieldScriptVMCurActor->scriptInstructionPointer += 4;
 }
 
@@ -228,7 +234,7 @@ void func_8009E35C(void) {
         func_8009CFBC(3, SCRIPT_READ_U8_REL(6))
     );
     g_FieldScriptVMCurActor->flags &= ~0x200000;
-    g_FieldScriptVMCurActor->scriptFlags &= ~0x10000;
+    g_FieldScriptVMCurActor->scriptFlags_0x14 = 0x0;
     g_FieldScriptVMCurActor->scriptInstructionPointer += 7;
 }
 
@@ -247,7 +253,7 @@ void func_8009E4BC(void) {
         func_8009CFBC(3, SCRIPT_READ_U8_REL(5))
     );
     g_FieldScriptVMCurActor->flags &= ~0x200000;
-    g_FieldScriptVMCurActor->scriptFlags &= ~0x10000;
+    g_FieldScriptVMCurActor->scriptFlags_0x14 = 0x0;
     g_FieldScriptVMCurActor->scriptInstructionPointer += 6;
 }
 
@@ -653,7 +659,7 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_800A0C94);
 void func_800A0D3C(void) {
     func_80076AC0(D_800AFD1C, 0, (void*)((*(s32*)(g_FieldSpriteData + 4)) + (s32)g_FieldSpriteData), 0, 0, 0x80, 1);
     func_800A0C94();
-    g_FieldScriptVMCurActor->scriptFlags |= 0x100;
+    g_FieldScriptVMCurActor->scriptFlags_0x8 = 0x1;
     g_FieldScriptVMCurActor->flags |= 0x800;
     g_FieldScriptVMCurActor->scriptInstructionPointer++;
 }
