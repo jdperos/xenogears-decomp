@@ -108,9 +108,35 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800871B0);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800873C4);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80087420);
+void func_80087420(void) {
+    int arg1, arg2, arg3, arg4, arg5, arg6;
+    int value1, value2;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008752C);
+    arg1 = FieldScriptVMGetArgument(1);
+    arg2 = FieldScriptVMGetArgument(3);
+    arg3 = FieldScriptVMGetArgument(5);
+    arg4 = FieldScriptVMGetArgument(7);
+    arg5 = FieldScriptVMGetArgument(9);
+    arg6 = FieldScriptVMGetArgument(0xB);
+
+    value1 = ((arg5 << 0x10) / arg3 * arg1) >> 0x10;
+    value2 = ((arg6 << 0x10) / arg4 * arg2) >> 0x10;
+    
+    FieldScriptMemoryWriteU16(
+        FieldScriptVMGetInstructionArgument(0xD) & 0xFFFF, 
+        value1
+    );
+    FieldScriptMemoryWriteU16(
+        FieldScriptVMGetInstructionArgument(0xF) & 0xFFFF, 
+        value2
+    );
+    
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 0x11;
+}
+
+void func_8008752C(void) {
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008754C);
 
@@ -118,7 +144,15 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80087580);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008764C);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80087800);
+extern u8 D_80050622;
+
+void func_80087800(void) {
+    FieldScriptMemoryWriteU16(
+        FieldScriptVMGetInstructionArgument(1) & 0xFFFF, 
+        D_80050622
+    );
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80087848);
 
@@ -1565,7 +1599,27 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BC98);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BE58);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BE9C);
+// Reset text box?
+void func_8009BE9C(void) {
+    int index;
+    
+    if (SCRIPT_READ_U8_REL(1) == 0) {
+        if (func_8009CD18(&index) == 0) {
+            g_FieldTextBoxes[index].status = 0;
+            g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+        } else {
+            g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+        }
+    } else {
+        g_FieldScriptVMCurActor->dialogPixelWidth = 0;
+        g_FieldScriptVMCurActor->dialogPixelHeight = 0;
+        g_FieldScriptVMCurActor->dialogWidth = 0;
+        g_FieldScriptVMCurActor->dialogHeight = 0;
+        g_FieldScriptVMCurActor->dialogFlags = 0;
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+    }
+    D_800B00C0 = 1;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BF8C);
 
@@ -1602,7 +1656,11 @@ int func_8009C538(int targetId) {
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009C5A8);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CCF8);
+extern u16 D_800B2174[];
+
+void func_8009CCF8(int arg0) {
+    D_800B2174[0] |= 1 << arg0;
+}
 
 int func_8009CD18(int* pTextBoxIndex) {
     int i;

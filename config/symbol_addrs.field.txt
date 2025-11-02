@@ -179,6 +179,8 @@ g_pFieldControllerBuffer2 = 0x800B0058;
 
 g_FieldScriptVMCurActor = 0x800B0078;
 
+D_800B0188 = 0x800B0188; // size:0x140
+
 g_FieldZoomFadeEffect = 0x800B11AC; // size:0x2F8
 
 g_FieldPixelIndex = 0x800B14A8;
