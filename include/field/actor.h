@@ -140,14 +140,16 @@ typedef struct {
     /* 0x0 */ u_int scriptFlags_0x0: 1; // isDisabled?
     u_int scriptFlags_0x1: 7;
     u_int scriptFlags_0x8: 1;
-    u_int scriptFlags_0x9: 8;
+    u_int scriptFlags_0x9: 7;
+    u_int scriptFlags_0xX: 1;
     u_int scriptFlags_0xA: 1; // isDialogActivationDisabled?
     u_int scriptFlags_0x10: 1;
-    u_int scriptFlags_0x11: 2;
-    u_int scriptFlags_0x14: 1;
-    u_int scriptFlags_0x15: 1;
-    u_int scriptFlags_0x16: 1;
-    u_int scriptFlags_0x17: 8;
+    u_int scriptFlags_0x11: 1; // OK
+    u_int scriptFlags_0x13: 1; // OK
+    u_int scriptFlags_0x14: 1; // OK
+    u_int scriptFlags_0x15: 1; // OK
+    u_int scriptFlags_0x16: 1; // OK
+    u_int scriptFlags_0x17: 8; // OK
     /* 0x4  */ u_int flags; // ?
     /* 0x8  */ u_short walkmesh0TriId;
     /* 0xA  */ u_short walkmesh1TriId;

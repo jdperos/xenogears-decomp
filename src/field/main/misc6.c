@@ -234,7 +234,7 @@ void func_8009E35C(void) {
         func_8009CFBC(3, SCRIPT_READ_U8_REL(6))
     );
     g_FieldScriptVMCurActor->flags &= ~0x200000;
-    g_FieldScriptVMCurActor->scriptFlags_0x14 = 0x0;
+    g_FieldScriptVMCurActor->scriptFlags_0xX = 0x0;
     g_FieldScriptVMCurActor->scriptInstructionPointer += 7;
 }
 
@@ -253,7 +253,7 @@ void func_8009E4BC(void) {
         func_8009CFBC(3, SCRIPT_READ_U8_REL(5))
     );
     g_FieldScriptVMCurActor->flags &= ~0x200000;
-    g_FieldScriptVMCurActor->scriptFlags_0x14 = 0x0;
+    g_FieldScriptVMCurActor->scriptFlags_0xX = 0x0;
     g_FieldScriptVMCurActor->scriptInstructionPointer += 6;
 }
 
