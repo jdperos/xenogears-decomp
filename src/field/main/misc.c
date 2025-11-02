@@ -25,13 +25,82 @@ void FieldSetScreenDimensions(void) {
     g_FieldRenderContexts[1].dispEnv.screen.h = 0xd8;
 }
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80086DE0);
+extern u8 D_800B2358[]; // Is pause disabled?
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80086E1C);
+void func_80086DE0(void) {
+    D_800B2358[0] = SCRIPT_READ_U8_REL(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80086F7C);
+extern s16 D_800ADB54;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80086FD0);
+void func_80086E1C(void) {
+    RECT rect;
+    switch (FieldScriptVMGetArgument(1)) {
+        case 0:
+            rect.w = 0x500;
+            rect.x = 0;
+            rect.y = 0;
+            rect.h = 0x200;
+            ClearImage(&rect, 0x0, 0x0, 0x0);
+            DrawSync(0);
+            Vsync(0);
+            SetDefDrawEnv(g_FieldRenderContexts[0].drawEnvs, 0, 0, 0x280, 0xE0);
+            SetDefDrawEnv(g_FieldRenderContexts[1].drawEnvs, 0, 0x100, 0x280, 0xE0);
+            SetDefDispEnv(&g_FieldRenderContexts[0].dispEnv, 0, 0x100, 0x280, 0xE0);
+            SetDefDispEnv(&g_FieldRenderContexts[1].dispEnv, 0, 0, 0x280, 0xE0);
+            FieldSetScreenDimensions();
+            break;
+        case 1:
+            D_800ADB54 = 0x1;
+            break;
+        case 2:
+            D_800ADB54 = 0x0;
+            break;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
+
+// Set model animation for actor
+void func_80086F7C(void) {
+    g_FieldScriptVMCurActor->modelAnimation = (FieldScriptVMGetArgument(1) << 0xC) | FieldScriptVMGetArgument(3);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 5;
+}
+
+void func_80086FD0(void) {
+    switch (SCRIPT_READ_U8_REL(1)) {
+        case 0:
+            // Initialize Sprite List
+            func_800AAC08();
+            g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+            return;
+        case 2:
+            // Free Sprite List
+            func_800AABD8();
+            g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+            return;
+        case 1:
+            // Set X, Y of Sprite and add it to OT for drawing
+            func_800AAE4C(
+                FieldScriptVMGetArgument(2), // Sprite Index
+                FieldScriptVMGetArgument(4), // X
+                FieldScriptVMGetArgument(6), // Y
+                FieldScriptVMGetArgument(8)  // Sprite type
+            );
+            g_FieldScriptVMCurActor->scriptInstructionPointer += 0xA;
+            return;
+        case 3:
+            // Set Sprite Color
+            func_800AADC8(
+                FieldScriptVMGetArgument(2), // Sprite Index
+                FieldScriptVMGetArgument(4), // Red
+                FieldScriptVMGetArgument(6), // Green
+                FieldScriptVMGetArgument(8)  // Blue
+            );
+            g_FieldScriptVMCurActor->scriptInstructionPointer += 0xA;
+            return;
+    }
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80087148);
 
@@ -573,41 +642,105 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093790);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800937E0);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093824);
+extern s32 D_8004F350;
+extern s8 D_80059171;
+extern s32 D_800ADB64;
+
+void func_80093824(void) {
+    D_80059171 = FieldScriptVMGetArgument(1);
+    D_800ADB64 = 0x3;
+    D_800B00C0 = 1;
+    D_8004F350++;
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093888);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093930);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800939A0);
+void func_800939A0(void) {
+    D_80059171 = FieldScriptVMGetArgument(1);
+    D_800ADB64 = 0x4;
+    D_800B00C0 = 1;
+    D_8004F350++;
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093A04);
+void func_80093A04(void) {
+    D_80059171 = FieldScriptVMGetArgument(1);
+    D_800ADB64 = 0x5;
+    D_800B00C0 = 1;
+    D_8004F350++;
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093A68);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093A98);
+// Random encounter stuff
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093AC8);
+// These are likely part of a struct
+extern s8 D_800B21D0[];
+extern s8 D_800B21D1[];
+extern s32 D_800AF9D8[];
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093B10);
+extern s32 D_800ADBDC;
+extern s32 D_800ADBE4;
+extern s32 D_800B00C0;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093BB0);
+void func_80093A68(void) {
+    D_800AF9D8[0] &= 0x7FFF;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093BD4);
+void func_80093A98(void) {
+    D_800AF9D8[0] |= 0x8000;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093BFC);
+void func_80093AC8(void) {
+    g_FieldControl.isRandomEncountersEnabled = 0;
+    D_800B21D0[0] = 0;
+    D_800B21D1[0] = 0;
+    D_800AF9D8[0] &= 0x3FFF;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093C20);
+void func_80093B10(void) {
+    g_FieldControl.isRandomEncountersEnabled = -1;
+    D_800B21D0[0] = 1;
+    D_800B21D1[0] = 1;
+    D_800AF9D8[0] |= 0xC000;
+    if ((D_800ADBDC == 0) || (D_800ADBE4 == 0)) {
+        D_800B00C0 = 1; // Stop script VM execution?
+        g_FieldScriptVMCurActor->scriptInstructionPointer--;
+        return;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
+
+void func_80093BB0(void) {
+    D_800B21D0[0] = 0x0;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
+
+void func_80093BD4(void) {
+    D_800B21D0[0] = 0x1;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
+
+void func_80093BFC(void) {
+    D_800B21D1[0] = 0x0;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
+
+void func_80093C20(void) {
+    D_800B21D1[0] = 0x1;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
 void FieldScriptVMHandlerDisableRandomEncounters(void) {
     g_FieldControl.isRandomEncountersEnabled = 0;
     g_FieldScriptVMCurActor->scriptInstructionPointer++;
 }
-
-
-extern s32 D_800ADBDC;
-extern s32 D_800ADBE4;
-extern s32 D_800B00C0;
 
 void func_80093C6C(void) {
     if (D_800ADBDC == 0 || D_800ADBE4 == 0) {
@@ -617,6 +750,8 @@ void func_80093C6C(void) {
     g_FieldControl.isRandomEncountersEnabled = -1;
     g_FieldScriptVMCurActor->scriptInstructionPointer += 1;
 }
+// End of random encounter stuff
+
 
 // Write U8 Handler
 // Arg1 + Arg3 = Offset to U8 value in script
@@ -885,8 +1020,6 @@ void func_800947B0(void) {
     g_FieldScriptVMCurActor->scriptInstructionPointer += 5;
 }
 
-void func_80072254(s32);
-
 // Set X, Y or Z rotaiton of Actor D_800AFD1C
 void func_80094918(void) {
     switch (SCRIPT_READ_U8_REL(3)) { 
@@ -919,16 +1052,32 @@ void func_80094ACC(void) {
 }
 
 // Increase Y Rotation of Actor D_800AFD1C
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094B3C);
+void func_80094B3C(void) {
+    (&g_FieldActors[D_800AFD1C])->rotation.y += FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+    func_80072254(D_800AFD1C);
+}
 
 // Decrease Y Rotation of Actor D_800AFD1C
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094BAC);
+void func_80094BAC(void) {
+    (&g_FieldActors[D_800AFD1C])->rotation.y -= FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+    func_80072254(D_800AFD1C);
+}
 
 // Increase Z Rotation of Actor D_800AFD1C
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094C1C);
+void func_80094C1C(void) {
+    (&g_FieldActors[D_800AFD1C])->rotation.z += FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+    func_80072254(D_800AFD1C);
+}
 
 // Decrease Z Rotation of Actor D_800AFD1C
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094C8C);
+void func_80094C8C(void) {
+    (&g_FieldActors[D_800AFD1C])->rotation.z -= FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+    func_80072254(D_800AFD1C);
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094CFC);
 

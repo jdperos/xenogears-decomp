@@ -4,6 +4,7 @@
 #include "system/memory.h"
 #include "psyq/libgpu.h"
 #include "field/effects.h"
+#include "field/graphics.h"
 
 //
 INCLUDE_ASM("asm/field/nonmatchings/main/misc5", func_800A55B8);
@@ -304,11 +305,52 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc5", func_800AA9DC);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc5", func_800AAA74);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc5", func_800AABD8);
+extern SpriteList* D_800AFC68;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc5", func_800AAC08);
+void func_800AABD8(void) {
+    HeapFree(D_800AFC68);
+    DrawSync(0);
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc5", func_800AADC8);
+void func_800AAC08(void) {
+    RECT rect;
+    SPRT* pSprite;
+    SPRT* pSprite2;
+    int i;
+
+    D_800AFC68 = HeapAlloc(0x840, 0x0);
+    
+    rect.x = 0;
+    rect.y = 0;
+    rect.w = 0xFF;
+    rect.h = 0xFF;
+    
+    for (i = 0; i < 0x21; i++) {
+        SetDrawMode(&D_800AFC68->drModes[i * 2], 0, 0, GetTPage(0, 0, 0x3C0, 0x100) & 0xFFFF, &rect);
+        SetDrawMode(&D_800AFC68->drModes[i * 2] + 1, 0, 0, GetTPage(0, 0, 0x3C0, 0x140) & 0xFFFF, &rect);
+        pSprite = &D_800AFC68->sprites[i * 2];
+        pSprite2 = &D_800AFC68->sprites[i * 2] + 1;
+        
+        SetSprt(pSprite);
+        setRGB0(pSprite, 0x80, 0x80, 0x80);
+        if (i == 0) {
+            setUV0(pSprite, 0xE0, 0x70);
+            setWH(pSprite, 0x10, 0x10);
+        } else {
+            setUV0(pSprite, 0xE0, 0x60);
+            setWH(pSprite, 8, 8);
+        }
+        setXY0(pSprite, 0xA0, 0x70);
+        pSprite->clut = GetClut(0x100, 0xF7);
+        *pSprite2 = *pSprite;
+    };
+}
+
+// Set RGB of sprites
+void func_800AADC8(int index, int red, int green, int blue) {
+    setRGB0(&D_800AFC68->sprites[index * 2], red, green, blue);
+    setRGB0(&D_800AFC68->sprites[index * 2] + 1, red, green, blue);
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc5", func_800AAE4C);
 
