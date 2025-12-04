@@ -1,4 +1,5 @@
 #include "common.h"
+#include "main/game.h"
 #include "field/script_vm.h"
 #include "field/actor.h"
 #include "field/text_box.h"
@@ -529,19 +530,18 @@ void func_8009F5A8(void) {
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009F5F4);
 
-extern s32 D_80062590[];
-int func_8009FA00(int arg0) {
+int FieldCharacterIdToPartyId(int characterId) {
     int i;
 
-    if (arg0 == 0xFF) {
+    if (characterId == 0xFF) {
         return -1;
     }
     
     for (i = 0; i < 3; i++) {
-        if (D_80062590[i] == 0xFF)
+        if (g_GamePartyMembers[i] == 0xFF)
             return -1;
         
-        if (D_80062590[i] == arg0) {
+        if (g_GamePartyMembers[i] == characterId) {
             return i;
         }
     }
@@ -581,7 +581,7 @@ int func_8009FC10(int arg0) {
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009FC48);
 /*
-Matches, but D_8005A39C needs recovery first.
+Matches, but D_8005A39C (g_GameState) needs recovery first.
 
 void func_8009FC48(void) {
     int index = FieldScriptVMGetArgument(1);

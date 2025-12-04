@@ -16,6 +16,9 @@ KernelMenuInitialize = 0x8001A250;
 KernelMenuUpdate = 0x8001A344;
 KernelMenuMain = 0x8001A4B4;
 
+//
+GameCharacterGetGearID = 0x8001ACF0;
+
 // Work List
 WorkListsFreeAllEntries = 0x8001C8DC;
 WorkListsReset = 0x8001C944;
@@ -49,6 +52,9 @@ AnimScriptStackPopU24 = 0x80021C6C;
 AnimScriptStackPushU8 = 0x80021CA0;
 AnimScriptStackPushU16 = 0x80021CC4;
 AnimScriptStackPushU24 = 0x80021CF8;
+
+SpriteSetScale = 0x80022000;
+SpriteComputeTransformMatrix = 0x80022090;
 
 GfxLoadImageAccelerated = 0x80022A0C;
 GfxLoadClutsAccelerated = 0x80022A70;
@@ -636,6 +642,8 @@ g_ArchiveCurStreamFile = 0x8004FE30;
 g_ArchiveDebugTable = 0x8004FE48;
 g_ArchiveCdCurLocation = 0x80059F10;
 
+g_GfxPauseLettersCompressed = 0x8004FBD8;
+
 g_pRCounters = 0x80056400;
 g_InterruptStatusMasks = 0x80056404;
 g_pInterruptStatusRegister = 0x800563FC;
@@ -840,6 +848,9 @@ g_C1ButtonStatesReleased = 0x8005A13C;
 g_C2ButtonStatesReleased = 0x8005A15C;
 g_C1ButtonStatesPressedOnce = 0x8005A17C;
 g_C2ButtonStatesPressedOnce = 0x8005A19C;
+
+g_GameState = 0x8005A39C;
+g_GamePartyMembers = 0x80062590; // size:0xC
 
 g_C1Buffer = 0x800625FC;
 g_C2Buffer = 0x8006261E;

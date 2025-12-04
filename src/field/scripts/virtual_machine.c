@@ -1,4 +1,5 @@
 #include "common.h"
+#include "main/game.h"
 #include "field/main.h"
 #include "field/actor.h"
 #include "field/script_vm.h"
@@ -296,7 +297,7 @@ void func_800A2714(void) {
         }
         
         FieldScriptMemoryWriteU16(0x10, 0x0);
-        func_800A30B4();
+        FieldScriptWritePartyMemberIDs();
 
         // Apply rotation and scale
         for (i = 0; i < D_800ADBFC; i++) {
@@ -338,13 +339,10 @@ u_short FieldScriptGetBytecodeOffset(int scriptIndex, int routineIndex) {
     return *(pScriptData + nOffset);
 }
 
-extern s32 D_80062590;
-extern s32 D_80062594;
-extern s32 D_80062598;
-void func_800A30B4(void) {
-    FieldScriptMemoryWriteU16(0x3E, D_80062590);
-    FieldScriptMemoryWriteU16(0x40, D_80062594);
-    FieldScriptMemoryWriteU16(0x42, D_80062598);
+void FieldScriptWritePartyMemberIDs(void) {
+    FieldScriptMemoryWriteU16(0x3E, g_GamePartyMembers[0]);
+    FieldScriptMemoryWriteU16(0x40, g_GamePartyMembers[1]);
+    FieldScriptMemoryWriteU16(0x42, g_GamePartyMembers[2]);
 }
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A30FC);

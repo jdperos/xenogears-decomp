@@ -65,12 +65,71 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021F
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021FE0);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80022000);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", SpriteSetScale);
+/*
+Matches on GCC 2.7.2-970404, ASPSX 2.67
+
+void SpriteSetScale(SpriteData* pSpriteData, short scale) {
+    SpriteDataI1* pBase = pSpriteData->pBase;
+    if (pBase) {
+        pSpriteData->scale = scale;
+        pBase->scale.z = scale;
+        pBase->scale.y = scale;
+        pBase->scale.x = scale;
+        pSpriteData->field_0x3C_6 = 0x1;
+    }
+}
+*/
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80022038);
+/*
+Matches on GCC 2.7.2-970404, ASPSX 2.67
 
+// Recompute transform matrix if flag is set
+void func_80022038(SpriteData* pSpriteData) {
+    if (pSpriteData->field_0x3C_6 & 0x1) {
+        SpriteComputeTransformMatrix(pSpriteData);
+        pSpriteData->field_0x3C_6 = 0x0;
+    }
+}
+*/
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80022090);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", SpriteComputeTransformMatrix);
+/*
+Matches on GCC 2.7.2-970404, ASPSX 2.67
+
+extern MATRIX D_80018644;
+
+void SpriteComputeTransformMatrix(SpriteData* pSpriteData) {
+    VECTOR unused;
+    VECTOR scale;
+    VECTOR scale2;
+    MATRIX rotationMatrix;
+    MATRIX transformMatrix;
+    
+    if (!(pSpriteData->field_0x40 & 1)) {
+        scale.vx = pSpriteData->pBase->scale.x;
+        scale.vy = pSpriteData->pBase->scale.y;
+        scale.vz = pSpriteData->pBase->scale.z;
+        RotMatrix(&pSpriteData->pBase->rotation, &pSpriteData->pBase->transformMatrix);
+        ScaleMatrixL(&pSpriteData->pBase->transformMatrix, &scale);
+    } else {
+        transformMatrix = D_80018644;
+        scale2.vx = pSpriteData->pBase->scale.x;
+        scale2.vy = pSpriteData->pBase->scale.y;
+        scale2.vz = pSpriteData->pBase->scale.z;
+        ScaleMatrixL(&transformMatrix, &scale2);
+        RotMatrix(&pSpriteData->pBase->rotation, &rotationMatrix);
+        MulMatrix0(&rotationMatrix, &transformMatrix, &pSpriteData->pBase->transformMatrix);
+    }
+    if (pSpriteData->field_0x3A) {
+        scale.vx = pSpriteData->field_0x3A >> 1;
+        scale.vy = pSpriteData->field_0x3A >> 1;
+        scale.vz = pSpriteData->field_0x3A >> 1;
+        ScaleMatrix(&pSpriteData->pBase->transformMatrix, &scale);
+    }
+}
+*/
 
 // Set animation package
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80022224);
@@ -107,8 +166,10 @@ void func_800222BC(SpriteData* pSprite, SpriteAnimPackageFileHeader* pAnimPackag
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_800223B0);
 
+// Run Sprite Animation VM
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80022660);
 
+// Recompute animation speed
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80022974);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80022A00);

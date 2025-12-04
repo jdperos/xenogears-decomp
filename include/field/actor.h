@@ -69,7 +69,6 @@ typedef struct {
     /* 0x4 */ u16 unkOffset;
 } SpriteAnimPackageFileAnimation;
 
-
 // An animation package which has been parsed and possibly loaded in memory
 typedef struct {
     /* 0x0  */ void* pFrames;
@@ -91,6 +90,52 @@ typedef struct {
     /* 0x0 */ SpriteDirectionTransform dirTransforms[8];
 } SpriteDirectionTransforms;
 
+typedef struct {
+    /* 0x0  */ s16 rotationX;
+    /* 0x2  */ s16 rotationY;
+    /* 0x4  */ s16 rotationZ;
+    /* 0x6  */ s16 scaleX;
+    /* 0x8  */ s16 scaleY;
+    /* 0xA  */ s16 scaleZ;
+    /* 0xC  */ MATRIX transformMatrix;
+    /* 0x2C */ void* pFramesData;
+    /* 0x30 */ void* pCurRenderFramesData;
+    /* 0x34 */ SpriteDirectionTransforms* pDirTransforms;
+    /* 0x38 */ void* pNextSpriteData;
+    /* 0x3C */ u8 offsetX;
+    /* 0x3D */ u8 offsetY;
+    /* 0x3E */ s16 field_0x3E;
+} SpriteDataI1;
+
+typedef struct {
+    /* 0x0  */ s32 field_0x0;
+    /* 0x4  */ s32 field_0x4;
+    /* 0x8  */ s32 field_0x8;
+    /* 0xC  */ s16 field_0xC;
+    /* 0xE  */ s16 texX;
+    /* 0x10 */ s16 texY;
+    /* 0x12 */ s16 field_0x12;
+    /* 0x14 */ s16 entityId;
+    /* 0x16 */ s16 field_0x16;
+    /* 0x18 */ void* field_0x18;
+} SpriteDataI3;
+
+typedef struct {
+    /* 0x0  */ s16 tileX;
+    /* 0x2  */ s16 tileY;
+    /* 0x4  */ u8 texX;
+    /* 0x5  */ u8 texY;
+    /* 0x6  */ u8 width;
+    /* 0x7  */ u8 height;
+    /* 0x8  */ u8 deltaWidth;
+    /* 0x9  */ u8 deltaHeight;
+    /* 0xA  */ s16 texPage;
+    /* 0xC  */ s16 clutID;
+    /* 0xE  */ s16 field_0xE;
+    /* 0x10 */ u32 colorAndCode;
+    /* 0x14 */ s32 flags;
+} SpriteFrameData;
+
 // Flags (Field 0xB0):
 // 0x400: Current animation is using non-default animation package
 typedef struct {
@@ -98,20 +143,22 @@ typedef struct {
     /* 0xC  */ IVEC3 step;
     /* 0x18 */ int moveSpeed;
     /* 0x1C */ u32 gravity;
-    /* 0x20 */ void* pBase;
+    /* 0x20 */ SpriteDataI1* pBase;
     /* 0x24 */ void* pVramData;
     /* 0x28 */ u32 colorAndCode; //  color, prim code
     /* 0x2C */ s16 scale;
     /* 0x2E */ s16 field_0x2e;
     /* 0x30 */ s16 field_0x30;
-    /* 0x32 */ s16 direction;
+    /* 0x32 */ s16 direction; // Angle
     /* 0x34 */ s16 curSpriteFrame;
     /* 0x36 */ s16 field_0x36;
     /* 0x38 */ s16 field_0x38;
-    /* 0x3A */ s16 field_0x3A;
+    /* 0x3A */ u16 field_0x3A;
     /* 0x3C */ u32 field_0x3C_0: 20;
     /* 0x3C */ u32 field_0x3C_1: 4;
-    /* 0x3C */ u32 field_0x3C_2: 6;
+    /* 0x3C */ u32 field_0x3C_2: 4;
+    /* 0x3C */ u32 field_0x3C_6: 1; // Needs to recompute transform matrix?
+    /* 0x3C */ u32 field_0x3C_5: 1;
     /* 0x3C */ u32 field_0x3C_3: 1;
     /* 0x3C */ u32 field_0x3C_4: 1;
     /* 0x40 */ u32 field_0x40;
@@ -133,7 +180,23 @@ typedef struct {
     /* 0x80 */ s16 field_0x80;
     /* 0x82 */ s16 field_0x82;
     /* 0x84 */ s16 field_0x84;
-    // ...
+    /* 0x86 */ s16 allocatedDataSize;
+    /* 0x88 */ void* field_0x88;
+    /* 0x8C */ u8 stackIndex;
+    /* 0x8D */ u8 field_0x8D;
+    /* 0x8E */ u8 stack[16];
+    /* 0x9E */ s16 animScriptWaitTimer;
+    /* 0xA0 */ s16 field_0xA0;
+    /* 0xA2 */ s16 field_0xA2;
+    /* 0xA4 */ s16 field_0xA4;
+    /* 0xA6 */ s16 field_0xA6;
+    /* 0xA8 */ s32 flags_0xA8;
+    /* 0xAC */ s32 flags_0xAC;
+    /* 0xB0 */ s32 flags_0xB0;
+    /* 0xB4 */ SpriteDataI1 inner1;
+    /* 0xF4 */ SpriteDataI3 inner3;
+    /* 0x110 */ SpriteAnimPackage i2CurPackage;
+    /* 0x124 */ SpriteDirectionTransforms directionTransforms;
 } SpriteData;
 
 typedef struct {

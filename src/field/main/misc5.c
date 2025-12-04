@@ -258,10 +258,7 @@ void func_800A915C(void) {
         D_800ADB34 = 1;
         HeapChangeCurrentUser(HEAP_USER_YOSI, NULL);
         D_800AFC70 = HeapAlloc(0x8000, 0x1);
-        g_FieldStoredImageDest.x = 0x3C0;
-        g_FieldStoredImageDest.y = 0x100;
-        g_FieldStoredImageDest.w = 0x40;
-        g_FieldStoredImageDest.h = 0x100;
+        setRECT(&g_FieldStoredImageDest, 0x3C0, 0x100, 0x40, 0x100);
         StoreImage(&g_FieldStoredImageDest, D_800AFC70);
         DrawSync(0);
     }
@@ -326,10 +323,10 @@ void func_800AAC08(void) {
     rect.h = 0xFF;
     
     for (i = 0; i < 0x21; i++) {
-        SetDrawMode(&D_800AFC68->drModes[i * 2], 0, 0, GetTPage(0, 0, 0x3C0, 0x100) & 0xFFFF, &rect);
-        SetDrawMode(&D_800AFC68->drModes[i * 2] + 1, 0, 0, GetTPage(0, 0, 0x3C0, 0x140) & 0xFFFF, &rect);
-        pSprite = &D_800AFC68->sprites[i * 2];
-        pSprite2 = &D_800AFC68->sprites[i * 2] + 1;
+        SetDrawMode(&D_800AFC68->drModes[i][0], 0, 0, GetTPage(0, 0, 0x3C0, 0x100) & 0xFFFF, &rect);
+        SetDrawMode(&D_800AFC68->drModes[i][1], 0, 0, GetTPage(0, 0, 0x3C0, 0x140) & 0xFFFF, &rect);
+        pSprite = &D_800AFC68->sprites[i][0];
+        pSprite2 = &D_800AFC68->sprites[i][1];
         
         SetSprt(pSprite);
         setRGB0(pSprite, 0x80, 0x80, 0x80);
@@ -348,12 +345,27 @@ void func_800AAC08(void) {
 
 // Set RGB of sprites
 void func_800AADC8(int index, int red, int green, int blue) {
-    setRGB0(&D_800AFC68->sprites[index * 2], red, green, blue);
-    setRGB0(&D_800AFC68->sprites[index * 2] + 1, red, green, blue);
+    setRGB0(&D_800AFC68->sprites[index][0], red, green, blue);
+    setRGB0(&D_800AFC68->sprites[index][1], red, green, blue);
 }
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc5", func_800AAE4C);
+void func_800AAE4C(int index, int x, int y, int type) {
+    switch (type) {
+        case 0:
+            y -= 0xC;
+            x -= 4;
+            break;
+        case 1:
+            y -= 4;
+            x -= 4;
+            break;
+    }
 
+    D_800AFC68->sprites[index][g_FieldCurRenderContextIndex].x0 = x;
+    D_800AFC68->sprites[index][g_FieldCurRenderContextIndex].y0 = y;
+    addPrim(g_FieldCurRenderContext->ot3, &D_800AFC68->sprites[index][g_FieldCurRenderContextIndex]);
+    addPrim(g_FieldCurRenderContext->ot3, &D_800AFC68->drModes[index][g_FieldCurRenderContextIndex]);
+}
 
 extern SpriteList2* D_800B1DF0;
 extern PolyList2* D_800C3A3C;

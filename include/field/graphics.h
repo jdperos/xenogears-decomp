@@ -4,8 +4,8 @@
 #include "psyq/libgpu.h"
 
 typedef struct {
-    DR_MODE drModes[0x21 * 2];
-    SPRT sprites[0x21 * 2];
+    DR_MODE drModes[0x21][2];
+    SPRT sprites[0x21][2];
 } SpriteList;
 
 typedef struct {
