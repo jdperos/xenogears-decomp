@@ -533,12 +533,12 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc6", func_8009F5F4);
 int FieldCharacterIdToPartyId(int characterId) {
     int i;
 
-    if (characterId == 0xFF) {
+    if (characterId == CHARACTER_ID_NONE) {
         return -1;
     }
     
     for (i = 0; i < 3; i++) {
-        if (g_GamePartyMembers[i] == 0xFF)
+        if (g_GamePartyMembers[i] == CHARACTER_ID_NONE)
             return -1;
         
         if (g_GamePartyMembers[i] == characterId) {
@@ -558,8 +558,8 @@ Matches, but the struct D_800B2268 is part of needs recovery first.
 void func_8009FB98(void) {
     D_8004F34C |= 0xC000;
     func_8001AD1C();
-    func_8001B044();
-    func_8001B3A8();
+    GamePartySyncSkinData();
+    GamePartySyncStreamedData();
     D_800B2268[0] = SCRIPT_READ_U8_REL(1);
     g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
 }

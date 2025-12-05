@@ -4,6 +4,7 @@
 #define MAX_GAME_CHARACTERS 11
 #define MAX_GAME_GEARS 20
 #define MAX_PARTY_MEMBERS 3
+#define CHARACTER_ID_NONE 0xFF
 
 typedef struct {
     /* 0x0  */ u8 field_0x0[0x4C];
@@ -22,7 +23,9 @@ typedef struct {
     /* 0x5F */ u8 evadePercentage;
     /* 0x60 */ u16 field_0x60;
     /* 0x61 */ u8 level;
-    /* 0x62 */ u8 field_0x62[0x3f];
+    /* 0x62 */ u8 field_0x62[0x3d];
+    /* 0xA0 */ u8 gearId;
+    /* 0xA1 */ u8 field_0xA1[0x3]
 } GameCharacter; // size: 0xA4
 
 typedef struct {
@@ -42,7 +45,8 @@ typedef struct {
     /* 0x0    */ u8 field_0x0[0x26C];
     /* 0x26C  */ GameCharacter characters[MAX_GAME_CHARACTERS];
     /* 0x978  */ GameGear gears[MAX_GAME_GEARS];
-    /* 0x1648 */ u8 field_0x1648[0x4];
+    /* 0x1648 */ u8 field_0x1648[0x6EC];
+    /* 0x1D34 */ u8 partyMembers[MAX_PARTY_MEMBERS];
 } GameState; // size: unknown
 
 extern GameState* g_GameState;

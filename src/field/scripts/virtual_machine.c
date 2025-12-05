@@ -259,7 +259,7 @@ INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A2488);
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A24C4);
 
-extern s32 D_8004F30C;
+extern s32 g_GamePartySkinsInitialized;
 extern s32 D_800ADBFC;
 void func_800A2714(void) {
     ActorData* pActor;
@@ -267,7 +267,7 @@ void func_800A2714(void) {
     int i;
     void* pData;
 
-    if (D_8004F30C) {
+    if (g_GamePartySkinsInitialized) {
         // Read animation files
         for (i = 0; i < D_800ADBFC; i++) {
             ArchiveSetIndex(0x4, 0x0);

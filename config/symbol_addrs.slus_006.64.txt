@@ -17,7 +17,14 @@ KernelMenuUpdate = 0x8001A344;
 KernelMenuMain = 0x8001A4B4;
 
 //
+GamePartySignalReinitialize = 0x8001AC94;
 GameCharacterGetGearID = 0x8001ACF0;
+GameWaitForCdData = 0x8001AD1C;
+GamePartyCharactersInitializeSkins = 0x8001AD4C;
+GamePartyGearsInitializeSkins = 0x8001AEB8;
+GamePartySyncSkinData = 0x8001B044;
+GamePartyStreamLoadSkinData = 0x8001B158;
+GamePartySyncStreamedData = 0x8001B3A8;
 
 // Work List
 WorkListsFreeAllEntries = 0x8001C8DC;
@@ -851,6 +858,14 @@ g_C2ButtonStatesPressedOnce = 0x8005A19C;
 
 g_GameState = 0x8005A39C;
 g_GamePartyMembers = 0x80062590; // size:0xC
+
+g_PartyIsWaitingForStreamData = 0x8004F374;
+g_PartyDataBuffers = 0x8005A414;
+g_PartyStreamDataQueue = 0x800625A4; // type:StreamDataQueueEntry[] size:0x20
+g_PartyStreamDataPointers = 0x80065AFC;
+
+g_GamePartyMemberSkins = 0x8006FABC; // size:0xC
+g_GamePartySkinsInitialized = 0x8004F30C;
 
 g_C1Buffer = 0x800625FC;
 g_C2Buffer = 0x8006261E;

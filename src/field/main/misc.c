@@ -416,7 +416,7 @@ int FieldPartyMemberIncreaseGearHp(int partyMemberIndex, unsigned int amount) {
     unsigned int newHp;
 
     gearId = GameCharacterGetGearID(g_GamePartyMembers[partyMemberIndex]);
-    if (gearId != 0xFF) {
+    if (gearId != CHARACTER_ID_NONE) {
         maxHp = g_GameState->gears[gearId].maxHp;
         newHp = g_GameState->gears[gearId].hp + amount;
         g_GameState->gears[gearId].hp = newHp;
@@ -431,7 +431,7 @@ int FieldPartyMemberDecreaseGearHp(int partyMemberIndex, unsigned int amount) {
     int newHp;
 
     gearId = GameCharacterGetGearID(g_GamePartyMembers[partyMemberIndex]);
-    if (gearId != 0xFF) {
+    if (gearId != CHARACTER_ID_NONE) {
         newHp = g_GameState->gears[gearId].hp - amount;
         if (newHp <= 0) {
             newHp = 1;
@@ -451,7 +451,7 @@ void FieldScriptVMHandlerIncreasePartyGearHp(void) {
     mask = g_FieldNumPartyMembersMasks[SCRIPT_READ_U8_REL(3) & 0x3];
 
     for (i = 0; i < MAX_PARTY_MEMBERS; i++) {
-        if ((g_GamePartyMembers[i] != 0xFF) && (mask & 1)) {
+        if ((g_GamePartyMembers[i] != CHARACTER_ID_NONE) && (mask & 1)) {
             FieldPartyMemberIncreaseGearHp(i, amount);
         }
         mask >>= 1;
@@ -468,7 +468,7 @@ void FieldScriptVMHandlerDecreasePartyGearHp(void) {
     mask = g_FieldNumPartyMembersMasks[SCRIPT_READ_U8_REL(3) & 0x3];
 
     for (i = 0; i < MAX_PARTY_MEMBERS; i++) {
-        if ((g_GamePartyMembers[i] != 0xFF) && (mask & 1)) {
+        if ((g_GamePartyMembers[i] != CHARACTER_ID_NONE) && (mask & 1)) {
             FieldPartyMemberDecreaseGearHp(i, amount);
         }
         mask >>= 1;
@@ -1351,7 +1351,7 @@ void FieldScriptVMHandlerDecreasePartyHp(void) {
     mask = g_FieldNumPartyMembersMasks[SCRIPT_READ_U8_REL(3) & 0x3];
 
     for (i = 0; i < MAX_PARTY_MEMBERS; i++) {
-        if ((g_GamePartyMembers[i] != 0xFF) && (mask & 1)) {
+        if ((g_GamePartyMembers[i] != CHARACTER_ID_NONE) && (mask & 1)) {
             FieldPartyMemberDecreaseHp(i, amount);
         }
         mask >>= 1;
@@ -1363,7 +1363,7 @@ void FieldScriptVMHandlerDecreasePartyHp(void) {
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80096AF4);
 
 void FieldScriptVMHandlerWritePartyMemberHp(void) {
-    if (g_GamePartyMembers[SCRIPT_READ_U8_REL(3)] != 0xFF) {
+    if (g_GamePartyMembers[SCRIPT_READ_U8_REL(3)] != CHARACTER_ID_NONE) {
         FieldScriptMemoryWriteU16(
             FieldScriptVMGetInstructionArgument(1) & 0xFFFF, 
             g_GameState->characters[g_GamePartyMembers[SCRIPT_READ_U8_REL(3)]].hp
@@ -1373,7 +1373,7 @@ void FieldScriptVMHandlerWritePartyMemberHp(void) {
 }
 
 void FieldScriptVMHandlerWritePartyMemberMp(void) {
-    if (g_GamePartyMembers[SCRIPT_READ_U8_REL(3)] != 0xFF) {
+    if (g_GamePartyMembers[SCRIPT_READ_U8_REL(3)] != CHARACTER_ID_NONE) {
         FieldScriptMemoryWriteU16(
             FieldScriptVMGetInstructionArgument(1) & 0xFFFF, 
             g_GameState->characters[g_GamePartyMembers[SCRIPT_READ_U8_REL(3)]].mp
@@ -1423,7 +1423,7 @@ void FieldScriptVMHandlerIncreasePartyMp(void) {
     mask = g_FieldNumPartyMembersMasks[SCRIPT_READ_U8_REL(3) & 0x3];
 
     for (i = 0; i < MAX_PARTY_MEMBERS; i++) {
-        if ((g_GamePartyMembers[i] != 0xFF) && (mask & 1)) {
+        if ((g_GamePartyMembers[i] != CHARACTER_ID_NONE) && (mask & 1)) {
             FieldPartyMemberIncreaseMp(i, amount);
         }
         mask >>= 1;
@@ -1440,7 +1440,7 @@ void FieldScriptVMHandlerDecreasePartyMp(void) {
     mask = g_FieldNumPartyMembersMasks[SCRIPT_READ_U8_REL(3) & 0x3];
 
     for (i = 0; i < MAX_PARTY_MEMBERS; i++) {
-        if ((g_GamePartyMembers[i] != 0xFF) && (mask & 1)) {
+        if ((g_GamePartyMembers[i] != CHARACTER_ID_NONE) && (mask & 1)) {
             FieldPartyMemberDecreaseMp(i, amount);
         }
         mask >>= 1;

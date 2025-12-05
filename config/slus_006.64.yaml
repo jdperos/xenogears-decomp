@@ -86,7 +86,7 @@ segments:
       - [0xA164, asm]
       - [0xA16C, c, main/main_loop]
       - [0xA9E4, c, system/kernel_menu]
-      - [0xADCC, asm]
+      - [0xADCC, c, system/temp3]
       - [0xD0DC, c, system/work_list]
       - [0xDCE8, c, system/rendering]
       - [0x103A4, c, system/animation_scripts]
@@ -94,7 +94,7 @@ segments:
       - [0x1332C, c, system/temp1] # Graphics stuff
       - [0x18A30, c, system/libarchive]
       - [0x19E90, c, system/archive]
-      - [0x1B424, asm]
+      - [0x1B424, c, system/temp2]
       - [0x22094, c, system/memory]
       - [0x235CC, c, system/heap_debug]
       - [0x23688, hasm, util/lzss]
