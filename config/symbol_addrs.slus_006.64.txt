@@ -52,6 +52,7 @@ WorkListsAddTasks = 0x8001D1D8;
 GraphicsDrawPauseLetters = 0x8001FAB4;
 
 // Animation Stuff
+SpriteSetColor = 0x80021B98;
 SpriteSetSpecialAnimFile = 0x80021BF0;
 AnimScriptStackPopU8 = 0x80021C20;
 AnimScriptStackPopU16 = 0x80021C3C;
@@ -65,6 +66,8 @@ SpriteComputeTransformMatrix = 0x80022090;
 
 GfxLoadImageAccelerated = 0x80022A0C;
 GfxLoadClutsAccelerated = 0x80022A70;
+
+AnimScriptTick = 0x80023210;
 
 GfxAllocateWorkBuffers = 0x80024F64;
 GfxFreeWorkBuffers = 0x80024FB8;
@@ -93,6 +96,7 @@ ArchiveReadFile = 0x80029690;
 ArchiveAllocStreamFile = 0x8002A260;
 ArchiveCdSeekToFile = 0x8002A394;
 ArchiveCdSetMode = 0x8002A428;
+ArchiveStreamFreeQueueData = 0x8002A524;
 ArchiveCdDriveCommandHandler = 0x8002A68C;
 
 // Heap / Dynamic Memory
@@ -635,6 +639,9 @@ g_MainGameStates = 0x8001808C;
 g_CurGameStateOverlayBuffer = 0x800592bc;
 g_CurGameStateOverlayID =  0x800592C0;
 g_GameStateOverlayArchiveOffsets = 0x8004EAA0;
+
+g_GameHasLoadedWDS = 0x8004F360;
+g_GameCurLoadedWDS = 0x8006258C;
 
 g_PublishedByLogoCompressed = 0x8004EABC;
 

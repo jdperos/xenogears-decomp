@@ -30,7 +30,24 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp1", func_800231E0);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp1", func_800231F8);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp1", func_80023210);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp1", AnimScriptTick);
+/*
+Matches on  GCC 2.7.2-970404, ASPSX 2.67
+
+extern s32 D_80059198;
+
+void AnimScriptTick(SpriteData* pSpriteData) {
+    int i;
+    for (i = 0; i != D_80059198 + 1; i++) {
+        if (pSpriteData->animScriptWaitTimer) {
+            pSpriteData->animScriptWaitTimer--;
+            if (pSpriteData->animScriptWaitTimer == 0) {
+                func_800248D4(pSpriteData);
+            }
+        }
+    }
+}
+*/
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp1", func_80023290);
 

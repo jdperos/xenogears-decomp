@@ -1,6 +1,6 @@
 /*
  * Archive code is split into two C files due to a compiler mismatch.
- * archive.c contains two functions which seemingly only compiles on GCC 2.6.X.
+ * libarchive.c contains two functions which seemingly only compiles on GCC 2.6.X.
  * Meanwhile, ArchiveReadFile only seemingly compiles on GCC 2.7.2.
  * This suggests that archive.c is compiled on its own, maybe as a library.
 */
@@ -257,7 +257,8 @@ void func_8002A498(int channel) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A524);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", ArchiveStreamFreeQueueData);
+
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/archive", func_8002A57C);
 
 void ArchiveCdDriveCommandHandler(u_char status, u_char* pResult) {

@@ -145,7 +145,10 @@ typedef struct {
     /* 0x1C */ u32 gravity;
     /* 0x20 */ SpriteDataI1* pBase;
     /* 0x24 */ void* pVramData;
-    /* 0x28 */ u32 colorAndCode; //  color, prim code
+    /* 0x28 */ u8 red;
+    /* 0x29 */ u8 green;
+    /* 0x2A */ u8 blue;
+    /* 0x2B */ u8 prim;
     /* 0x2C */ s16 scale;
     /* 0x2E */ s16 field_0x2e;
     /* 0x30 */ s16 field_0x30;

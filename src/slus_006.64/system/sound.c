@@ -7,12 +7,12 @@
 // SPU DECLARATIONS
 //----------------------------------------------------------------------------------------------------------------------
 typedef struct {
-    SpuVolume volume;
-    u16 pitch;
-    u16 addr;
-    u16 adsr[2];
-    u16 volumex;
-    u16 loop_addr;
+    /* 0x0 */ SpuVolume volume;
+    /* 0x4 */ u16 pitch;
+    /* 0x6 */ u16 addr;
+    /* 0x8 */ u16 adsr[2];
+    /* 0xC */ u16 volumex;
+    /* 0xE */ u16 loop_addr;
 } SPU_VOICE_REG;
 
 #define SPU_VOICE_REG_VOLUME_L    0

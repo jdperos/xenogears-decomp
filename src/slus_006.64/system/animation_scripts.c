@@ -2,10 +2,36 @@
 #include "field/actor.h"
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_8001FBA4);
+/*
+Matches on GCC 2.7.2-970404, ASPSX 2.67
+Co-Authored-By: eagleflo <eagleflo@users.noreply.github.com>
+
+void* func_8001FBA4(SpriteData* pSpriteData, u8* pIndex) {
+    u8 index = *pIndex;
+    if (!(index & 0x80)) {
+        s32 signedIndex = (s8)index;
+        return &pSpriteData->stack[pSpriteData->stackIndex + signedIndex];
+    }
+    return &pSpriteData->field_0x88[index & 0x7F];
+}
+*/
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_8001FBE4);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021AD8);
+/*
+Matches on GCC 2.7.2-970404, ASPSX 2.67
+
+s32 func_80021AD8(s32 color, s32 value) {
+    color += value;
+    if (color >= 0x100) {
+        color = 0xFF;
+    } else if (color < 0) {
+        color = 0;
+    }
+    return color;
+}
+*/
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021B04);
 
@@ -16,8 +42,28 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021B
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021B48);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021B6C);
+/*
+Matches on GCC 2.7.2-970404, ASPSX 2.67
+NOTE: Required SpriteData to have own field for prim
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021B98);
+void func_80021B6C(SpriteData* pSpriteData) {
+    pSpriteData->prim |= 1;
+    func_8001F6B0(pSpriteData);
+}
+*/
+
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", SpriteSetColor);
+/*
+Matches on GCC 2.7.2-970404, ASPSX 2.67
+
+void SpriteSetColor(SpriteData *pSpriteData, u8 red, u8 green, u8 blue) {
+    pSpriteData->red = red;
+    pSpriteData->green = green;
+    pSpriteData->blue = blue;
+    pSpriteData->prim &= 0xFE;
+    func_8001F6B0(pSpriteData);
+}
+*/
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/animation_scripts", func_80021BCC);
 

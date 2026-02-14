@@ -557,7 +557,7 @@ Matches, but the struct D_800B2268 is part of needs recovery first.
 
 void func_8009FB98(void) {
     D_8004F34C |= 0xC000;
-    func_8001AD1C();
+    GameWaitForCdData();
     GamePartySyncSkinData();
     GamePartySyncStreamedData();
     D_800B2268[0] = SCRIPT_READ_U8_REL(1);

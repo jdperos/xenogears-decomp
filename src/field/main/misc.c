@@ -395,11 +395,40 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008D5C8);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008D604);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008D684);
+void func_8008D684(void) {
+    int mask;
+    unsigned int slotIndex;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008D700);
+    slotIndex = (unsigned int) (FieldScriptVMGetInstructionArgument(1) & 0xFFFF) >> 4;
+    mask = 1 << (FieldScriptVMGetInstructionArgument(1) & 0xF);
+    FieldScriptMemoryWriteU16(slotIndex, FieldScriptVMGetVariableValue(slotIndex) | mask);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008D780);
+void func_8008D700(void) {
+    int mask;
+    unsigned int slotIndex;
+
+    slotIndex = (unsigned int) (FieldScriptVMGetInstructionArgument(1) & 0xFFFF) >> 4;
+    mask = 1 << (FieldScriptVMGetInstructionArgument(1) & 0xF);
+    FieldScriptMemoryWriteU16(slotIndex, FieldScriptVMGetVariableValue(slotIndex) & ~mask);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
+
+void func_8008D780(void) {
+    short destination;
+    int mask;
+    unsigned int slotIndex;
+
+    slotIndex = (unsigned int) (FieldScriptVMGetInstructionArgument(1) & 0xFFFF) >> 4;
+    mask = 1 << (FieldScriptVMGetInstructionArgument(1) & 0xF);
+    if (FieldScriptVMGetVariableValue(slotIndex) & mask) {
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 5;
+    } else {
+        destination = FieldScriptVMGetInstructionArgument(3);
+        g_FieldScriptVMCurActor->scriptInstructionPointer = destination;
+    }
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008D808);
 

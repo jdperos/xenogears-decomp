@@ -2,6 +2,8 @@
 #include "main/game.h"
 #include "system/archive.h"
 #include "system/memory.h"
+#include "system/sound.h"
+#include "psyq/libgpu.h"
 
 extern s32 D_8004F330;
 extern s32 D_8004F334;
@@ -232,24 +234,66 @@ void GamePartySyncStreamedData(void) {
     }
 }
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp3", func_8001B484);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp3", func_8001B53C);
+extern int D_8005A4C0; // File size
+extern void* D_8005A4E0; // File buffer
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp3", func_8001B5A8);
+extern s32 D_8004F330;
+extern s32 D_8004F334;
+
+int func_8001B484(int fileIndex, s32 arg1) {
+    if (D_8004F334 == arg1 && D_8004F330 == fileIndex) {
+        return 0;
+    }
+
+    if (ArchiveDataSync() == 0) {
+        ArchiveCdDataSync(0);
+        if (D_8004F334 != -1) {
+            HeapUnpinBlock(D_8005A4E0);
+            HeapFree(D_8005A4E0);
+        }
+        func_8001B53C(fileIndex);
+        D_8004F334 = arg1;
+        D_8004F330 = fileIndex;
+    }
+    
+    return -1;
+}
+
+void func_8001B53C(int index) {
+    D_8005A4C0 = ArchiveDecodeAlignedSize(index + 0xB8);
+    D_8005A4E0 = HeapAlloc(D_8005A4C0, 1);
+    HeapPinBlock(D_8005A4E0);
+    func_800295D8(index + 0xB8, D_8005A4E0, 0, 0x80);
+}
+
+extern int g_GameHasLoadedWDS;
+extern SoundWDSEntry* g_GameCurLoadedWDS;
+
+void func_8001B5A8(void) {
+    if (g_GameHasLoadedWDS == 1) {
+        SoundFreeWdsEntry(g_GameCurLoadedWDS);
+        g_GameHasLoadedWDS = 0;
+    }
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp3", func_8001B5E8);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp3", func_8001B66C);
 
-void func_8001B6BC(void) {
-}
+void func_8001B6BC(void) {}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp3", func_8001B6C4);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp3", func_8001B844);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp3", func_8001B94C);
+void func_8001B94C(DRAWENV* pDrawEnv) {
+    pDrawEnv->isbg = 1;
+    pDrawEnv->dtd = 1;
+    pDrawEnv->r0 = 60;
+    pDrawEnv->g0 = 120;
+    pDrawEnv->b0 = 120;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp3", func_8001B970);
 
@@ -261,7 +305,24 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp3", func_8001BBAC);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp3", func_8001BD40);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp3", func_8001BDDC);
+typedef struct {
+    /* 0x0  */ DRAWENV drawEnv;
+    /* 0x5C */ DISPENV dispEnv;
+    /* 0x70 */ unsigned long ot[16];
+    /* 0xB0 */ 
+} GfxEnvironment; // Size: 0xB4
+
+void func_8001BDDC(GfxEnvironment* pGfxEnv) {
+    pGfxEnv->drawEnv.dtd = 1;
+    pGfxEnv->dispEnv.screen.y = 10;
+    pGfxEnv->dispEnv.screen.w = 256;
+    pGfxEnv->drawEnv.isbg = 0;
+    pGfxEnv->drawEnv.r0 = 0;
+    pGfxEnv->drawEnv.g0 = 0;
+    pGfxEnv->drawEnv.b0 = 0;
+    pGfxEnv->dispEnv.screen.x = 0;
+    pGfxEnv->dispEnv.screen.h = 216;
+}
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp3", func_8001BE14);
 
