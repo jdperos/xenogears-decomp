@@ -1,8 +1,11 @@
 #include "common.h"
+#include "main/game.h"
 #include "field/main.h"
 #include "field/actor.h"
 #include "field/script_vm.h"
+#include "field/effects.h"
 #include "system/memory.h"
+#include "system/archive.h"
 #include "psyq/libgpu.h"
 
 extern s32 D_800AFFEC;
@@ -14,36 +17,26 @@ extern char D_8006FD44; // "STACKERR ACT=%d\n"
 
 // Store instruction pointer + 5 on stack
 void func_800A1730(void) {
-    u_int nFlags;
-    u_int nNewFlags;
-
-    nFlags = g_FieldScriptVMCurActor->flags12C;
-    if ((nFlags & 0x1C0) != 0x100) {
-        g_FieldScriptVMCurActor->scriptPointersStack[(nFlags >> 6) & 0x7] = g_FieldScriptVMCurActor->scriptInstructionPointer + 5;
+    if (g_FieldScriptVMCurActor->flags12C_0x6 != SCRIPT_MAX_STACK_SIZE) {
+        g_FieldScriptVMCurActor->scriptPointersStack[g_FieldScriptVMCurActor->flags12C_0x6] = g_FieldScriptVMCurActor->scriptInstructionPointer + 5;
         g_FieldScriptVMCurActor->scriptInstructionPointer = FieldScriptVMGetInstructionArgument(1);
-        nNewFlags = g_FieldScriptVMCurActor->flags12C;
-        g_FieldScriptVMCurActor->flags12C = (nNewFlags & ~0x1C0) | (((((nNewFlags >> 6) & 7) + 1) & 7) << 6);
+        g_FieldScriptVMCurActor->flags12C_0x6++;
         return;
     }
 
     // Error
     if (g_FieldSystemMode == 0) {
-        func_800379C8(&D_8006FD44, D_800AFD1C, nFlags);
+        func_800379C8(&D_8006FD44, D_800AFD1C);
     }
     D_800B00C0 = 1;
 }
 
 // Store instruction pointer + 3 on stack
 void func_800A17F4(void) {
-    u_int nFlags;
-    u_int nCurFlags;
-
-    nFlags = g_FieldScriptVMCurActor->flags12C;
-    if ((nFlags & 0x1C0) != 0x100) {
-        g_FieldScriptVMCurActor->scriptPointersStack[(nFlags >> 6) & 0x7] = g_FieldScriptVMCurActor->scriptInstructionPointer + 3;
+    if (g_FieldScriptVMCurActor->flags12C_0x6 != SCRIPT_MAX_STACK_SIZE) {
+        g_FieldScriptVMCurActor->scriptPointersStack[g_FieldScriptVMCurActor->flags12C_0x6] = g_FieldScriptVMCurActor->scriptInstructionPointer + 3;
         g_FieldScriptVMCurActor->scriptInstructionPointer = FieldScriptVMGetInstructionArgument(1);
-        nCurFlags = g_FieldScriptVMCurActor->flags12C;
-        g_FieldScriptVMCurActor->flags12C =  ((nCurFlags & ~0x1C0) | (((((nCurFlags >> 6) & 7) + 1) & 7) << 6));
+        g_FieldScriptVMCurActor->flags12C_0x6++;
         return;
     }
     
@@ -51,54 +44,67 @@ void func_800A17F4(void) {
     if (g_FieldSystemMode == 0) {
         func_800379C8(&D_8006FD44, D_800AFD1C);
     }
-    
     D_800B00C0 = 1;
 }
 
 // Restore instruction pointer from stack
 void func_800A18B8(void) {
-    u_int nNewFlags;
-    u_int nFlags;
-
-    nFlags = g_FieldScriptVMCurActor->flags12C;
-
     // Error, invalid stack value
-    if (!(nFlags & 0x1C0)) {
+    if (!g_FieldScriptVMCurActor->flags12C_0x6) {
         if (g_FieldSystemMode == 0) {
             func_800379C8(&D_8006FD44, D_800AFD1C);
         }
-        g_FieldScriptVMCurActor->eventSlots[ g_FieldScriptVMCurActor->curEventSlotId].flags |= 0x3C0000;
-        g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].eventId = 0xFF;
+        g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].flags_0x12 = 0xFF;
+        g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].scriptId = 0xFF;
         D_800AFFEC = 1;
         D_800B00C0 = 1;
         return;
     }
     
-    nNewFlags = (nFlags & ~0x1C0) | (((((nFlags >> 6) & 7) - 1) & 7) << 6);
-    g_FieldScriptVMCurActor->flags12C = nNewFlags;
-    g_FieldScriptVMCurActor->scriptInstructionPointer = g_FieldScriptVMCurActor->scriptPointersStack[(nNewFlags >> 6) & 0x7];
+    g_FieldScriptVMCurActor->flags12C_0x6--;
+    g_FieldScriptVMCurActor->scriptInstructionPointer = g_FieldScriptVMCurActor->scriptPointersStack[g_FieldScriptVMCurActor->flags12C_0x6];
 }
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A19B0);
+void func_800A19B0(void) {
+    int i;
+    
+    for (i = 0; i < ACTOR_MAX_NUM_SCRIPTS; i++) {
+        g_FieldScriptVMCurActor->scripts[i].waitTimer = 0;
+        g_FieldScriptVMCurActor->scripts[i].state = SCRIPT_STATE_IDLE;
+        g_FieldScriptVMCurActor->scripts[i].flags_0x12 = 0xF;
+        g_FieldScriptVMCurActor->scripts[i].currentIP = 0xFFFF;
+        g_FieldScriptVMCurActor->scripts[i].isInUse = 0;
+        g_FieldScriptVMCurActor->scripts[i].scriptId = 0xFF;
+        g_FieldScriptVMCurActor->scripts[i].flags_0 = 0xFFFF;
+        g_FieldScriptVMCurActor->scripts[i].flags_0x17 = 0x0;
+    }
 
+    g_FieldScriptVMCurActor->curScriptIndex = 0;
+    g_FieldScriptVMCurActor->unkCF = 0;
+    g_FieldScriptVMCurActor->dialogFlags = 0;
+    D_800B00C0 = 1;
+    g_FieldScriptVMCurActor->flags12C_0x6 = 0;
+}
 
+// Yield / Stop, but change IP conditionally
 void func_800A1A8C(void) {
     int i;
 
-    for (i = 0; i < 8; i++) {
-        if ( ((g_FieldScriptVMCurActor->eventSlots[i].flags >> 0x12) & 0xF) == 7) {
-            g_FieldScriptVMCurActor->eventSlots[i].reqEvent = func_800A3090(D_800AFD1C, 1);
+    for (i = 0; i < ACTOR_MAX_NUM_SCRIPTS; i++) {
+        if (g_FieldScriptVMCurActor->scripts[i].flags_0x12 == 7) {
+            g_FieldScriptVMCurActor->scripts[i].currentIP = FieldScriptGetBytecodeOffset(D_800AFD1C, 1);
         }
     }
 
-    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags |=  0x3C0000;
-    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].eventId = 0xFF;
+    g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].flags_0x12 = 0xFF;
+    g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].scriptId = 0xFF;
     D_800B00C0 = 1;
 }
 
+// Yield / Stop Handler
 void func_800A1B70(void) {
-    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].flags |= 0x3C0000;
-    g_FieldScriptVMCurActor->eventSlots[g_FieldScriptVMCurActor->curEventSlotId].eventId = 0xFF;
+    g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].flags_0x12 = 0xFF;
+    g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].scriptId = 0xFF;
     D_800AFFEC = 1;
     D_800B00C0 = 1;
 }
@@ -208,13 +214,97 @@ INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", FieldScriptVMRun);
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A2030);
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A22AC);
+// Changes current actor to the top of the field actor array and runs a script routine on it
+extern FieldActor* D_800B06B8;
+extern s32 D_800ADB1C;
+void func_800A22AC(int scriptRoutineIndex) {
+    int i;
+    ActorData* pNewActor;
+
+    // Change current actor to the first actor in the list
+    D_800B06B8 = g_FieldActors;
+    g_FieldScriptVMCurActor = D_800B06B8->pActorData;
+    pNewActor = HeapAlloc(0x138, 0x1);
+    *pNewActor = *D_800B06B8->pActorData;
+
+    // Reset all event slots
+    for (i = 0; i < ACTOR_MAX_NUM_SCRIPTS; i++) {
+        g_FieldScriptVMCurActor->scripts[i].waitTimer = 0;
+        g_FieldScriptVMCurActor->scripts[i].state = SCRIPT_STATE_IDLE;
+        g_FieldScriptVMCurActor->scripts[i].flags_0x12 = 0xF;
+        g_FieldScriptVMCurActor->scripts[i].currentIP = 0xFFFF;
+        g_FieldScriptVMCurActor->scripts[i].isInUse = 0x0;
+        g_FieldScriptVMCurActor->scripts[i].scriptId = 0xFF;
+        g_FieldScriptVMCurActor->scripts[i].flags_0 = 0xFFFF;
+        g_FieldScriptVMCurActor->scripts[i].flags_0x17 = 0x0;
+    }
+    
+    D_800AFD1C = 0;
+    D_800ADB1C = 0;
+    D_800AFFEC = 0;
+
+    // Run entry point routine
+    g_FieldScriptVMCurActor->scriptInstructionPointer = FieldScriptGetBytecodeOffset(0, scriptRoutineIndex);
+    FieldScriptVMRun(0xFFFF);
+    D_800ADB1C = 1;
+
+    // Running VM bytecode will likely have changed some fields, so they are copied back into the top
+    // of the actor array.
+    *D_800B06B8->pActorData = *pNewActor;
+    HeapFree(pNewActor);
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A2488);
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A24C4);
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A2714);
+extern s32 g_GamePartySkinsInitialized;
+extern s32 D_800ADBFC;
+void func_800A2714(void) {
+    ActorData* pActor;
+    FieldActor* pFieldActors;
+    int i;
+    void* pData;
+
+    if (g_GamePartySkinsInitialized) {
+        // Read animation files
+        for (i = 0; i < D_800ADBFC; i++) {
+            ArchiveSetIndex(0x4, 0x0);
+            pActor = g_FieldActors[i].pActorData;
+            if (pActor->unk124 != -1) {
+                g_FieldScriptVMCurActor = pActor;
+                pData = HeapAlloc(ArchiveDecodeAlignedSize(pActor->unk124, pActor) + 8, 0x0);
+                g_FieldScriptVMCurActor->unk120 = pData;
+                func_800295D8(g_FieldScriptVMCurActor->unk124, pData, 0, 0x80); // Read from disc into buffer
+                ArchiveCdDataSync(0);
+            }
+        }
+
+        // Set Special animation file
+        for (i = 0; i < D_800ADBFC; i++) {
+            pFieldActors = g_FieldActors;
+            pActor = pFieldActors[i].pActorData;
+            if (pActor->unk124 != -1) {
+                SpriteSetSpecialAnimFile(pFieldActors[i].pSpriteData, pActor->unk120);
+            }
+        }
+        
+        func_800A3C8C();
+        
+        if (g_FieldEffects.distortion.isActive) {
+            FieldDistortionInitialize(1);
+        }
+        
+        FieldScriptMemoryWriteU16(0x10, 0x0);
+        FieldScriptWritePartyMemberIDs();
+
+        // Apply rotation and scale
+        for (i = 0; i < D_800ADBFC; i++) {
+            func_80072254(i);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A28D4);
 
@@ -222,6 +312,8 @@ void FieldScriptVMHandlerNop(void) {
     g_FieldScriptVMCurActor->scriptInstructionPointer++;
 }
 
+// Script files contains a sections of sign bits for variables. 
+// This function is a bit of a convoluted way to check if a bit in section of data is set or not.
 int FieldScriptVMGetVariableSign(int index) {
     return -((g_FieldCurScriptFile->signBits[index >> 6] & (1 << ((index >> 1) & 0x1F))) != 0);
 }
@@ -236,16 +328,22 @@ int FieldScriptVMGetVariableValue(int index) {
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", FieldScriptMemoryWriteU16);
 
-u_short func_800A3090(int scriptIndex, int dataOffset) {
+// scriptIndex here refers to the index of the script, which will (always?) correspond to an entity index
+// routineIndex is an index into the offset table, which points to a bytecode routine in that script.
+u_short FieldScriptGetBytecodeOffset(int scriptIndex, int routineIndex) {
     int nOffset;
     u_short* pScriptData;
 
     pScriptData = &g_FieldCurScriptFile->metadata;
-    nOffset = (scriptIndex * (SCRIPT_SIZE / sizeof(u_short)) + dataOffset);
+    nOffset = (scriptIndex * (SCRIPT_OFFSET_TABLE_SIZE / sizeof(u_short)) + routineIndex);
     return *(pScriptData + nOffset);
 }
 
-INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A30B4);
+void FieldScriptWritePartyMemberIDs(void) {
+    FieldScriptMemoryWriteU16(0x3E, g_GamePartyMembers[0]);
+    FieldScriptMemoryWriteU16(0x40, g_GamePartyMembers[1]);
+    FieldScriptMemoryWriteU16(0x42, g_GamePartyMembers[2]);
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/scripts/virtual_machine", func_800A30FC);
 

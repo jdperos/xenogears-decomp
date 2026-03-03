@@ -1,14 +1,49 @@
 #include "common.h"
+#include "field/actor.h"
 #include "field/main.h"
 #include "field/text_box.h"
 #include "field/effects.h"
+#include "system/memory.h"
+#include "system/archive.h"
+#include "system/sound.h"
 #include "psyq/libetc.h"
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80078B5C);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80078BC8);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80078C5C);
+extern s16 D_800B2344;
+void func_80078C5C(void) {
+    RECT rect;
+    int i;
+    u_int* pImage;
+
+    if (D_800B2344 != 0) {
+        g_FieldRenderContexts[0].drawEnvs[0].dtd = 0;
+        g_FieldRenderContexts[1].drawEnvs[0].dtd = 0;
+        pImage = HeapAlloc(0x4000, 0x0);
+        rect.y = 0x1E0;
+        rect.w = 0x100;
+        rect.x = 0;
+        rect.h = 0x20;
+        StoreImage(&rect, pImage);
+        DrawSync(0);
+
+        // Process image before storing it back in VRAM
+        for (i = 0; i < 0x1000; i++) {
+            if (pImage[i] & 0xFFFF) {
+                pImage[i] |= 0xC63;
+            }
+            if (pImage[i] & 0xFFFF0000) {
+                pImage[i] |= 0x0C630000;
+            }
+        }
+        
+        LoadImage(&rect, pImage);
+        DrawSync(0);
+        HeapFree(pImage);
+    }
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80078D44);
 
@@ -67,9 +102,7 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_800799D4);
 
 // Quad rendering
 // --------------------
-
-// Set POLY_FT4 UVs
-void func_8007A44C(POLY_FT4* poly, short u0, short v0, short u1, short v1, short u2, short v2, short u3, short v3) {
+void FieldClampPolyFT4UVs(POLY_FT4* poly, short u0, short v0, short u1, short v1, short u2, short v2, short u3, short v3) {
     if (u0 < 0) u0 = 0;
     if (u1 < 0) u1 = 0;
     if (u2 < 0) u2 = 0;
@@ -152,7 +185,7 @@ void func_8007A7F4(Quad* pPart, int x, int y, int tex) {
     
     pPart->polys[0].clut = GetClut(D_800ADE08[nIndexTex], D_800ADE0A[nIndexTex]);
     
-    func_8007A44C(&pPart->polys[0], 
+    FieldClampPolyFT4UVs(&pPart->polys[0], 
         D_800ADD70[x].x, D_800ADDB8[y].x, 
         D_800ADD70[x].y, D_800ADDB8[y].y, 
         D_800ADD70[x].z, D_800ADDB8[y].z, 
@@ -269,6 +302,8 @@ extern s32 D_800C3A44;
 extern s32 D_800C3A4C;
 extern s32 D_800C3A50;
 extern s32 D_800C3A54;
+extern int g_FieldMousePositionsX[2];
+extern int g_FieldMousePositionsY[2];
 
 void FieldSetControllerBuffers(void* controllerBuffer1, void* controllerBuffer2) {
     g_pFieldControllerBuffer1 = controllerBuffer1;
@@ -282,12 +317,15 @@ void func_8007ADA4(int arg0, int arg1, int arg2, int arg3) {
     D_800C3A54 = arg3 * g_FieldMouseSpeedY;
 }
 
-void func_8007AE14(u_short xSpeed, u_short ySpeed) {
+void FieldSetMouseSpeed(u_short xSpeed, u_short ySpeed) {
     g_FieldMouseSpeedX = xSpeed;
     g_FieldMouseSpeedY = ySpeed;
 }
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007AE2C);
+void FieldSetMousePosition(int mouseIndex, int xMovement, int yMovement) {
+    g_FieldMousePositionsX[mouseIndex] = xMovement * g_FieldMouseSpeedX;
+    g_FieldMousePositionsY[mouseIndex] = yMovement * g_FieldMouseSpeedY;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007AE78);
 
@@ -389,9 +427,16 @@ void FieldFadeDraw(u_long* ot, int renderContext) {
 // --------------------
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007DCF8);
 
+// https://decomp.me/scratch/NE0tE
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", FieldTextBoxInitialize);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007E114);
+// _pad[0x4A] is possibly a RECT?
+void func_8007E114(int index, int arg1, int arg2, int arg3, s32 arg4) {
+    g_FieldTextBoxes[index]._pad[0x4A] = arg1;
+    g_FieldTextBoxes[index]._pad[0x4B] = arg2;
+    g_FieldTextBoxes[index]._pad[0x4C] = arg3;
+    g_FieldTextBoxes[index]._pad[0x4D] = arg4;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007E16C);
 
@@ -525,21 +570,123 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007F814);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007F8DC);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8007FFE8);
+void func_8007FFE8(void) {
+    int i;
+
+    for (i = 0; i < 4; i++) {
+        if (!g_FieldTextBoxes[i].visibility) {
+            func_8007F6F8((s16) i); // TODO: Clean up cast w/ function sig
+        }
+    }
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8008004C);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_800805F4);
+void func_800805F4(void) {
+    int i;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_800806E4);
+    for (i = 0; i < 4; i++) {
+        if (!g_FieldTextBoxes[i].visibility) {
+            // TODO: _pad[0x8] is probably a short holding some flags
+            if (g_FieldTextBoxes[i].windowOpenTimer == 0 && !(g_FieldTextBoxes[i]._pad[0x8] & 4)) {
+                func_8007F6F8( (i*0x10000) >> 0x10);
+            }
+            if (g_FieldTextBoxes[i].status == 0) {
+                func_8007F6F8( (i*0x10000) >> 0x10);
+            }
+            if (g_FieldTextBoxes[i].windowOpenTimer) {
+                g_FieldTextBoxes[i].windowOpenTimer--;
+            }
+        }
+    }
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80080720);
+// Get index of textbox with order 0
+int func_800806E4(void) {
+    int i;
+    
+    for (i = 0; i < 4; i++) {
+        if (g_FieldTextBoxes[i].order == 0) {
+            return i;
+        }
+    }
+    return TEXT_BOX_UNINITIALIZED;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80080760);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_800807B4);
+// Is textbox free to use?
+int func_80080720(void) {
+    int i;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_8008083C);
+    for (i = 0; i < 4; i++) {
+        if (g_FieldTextBoxes[i].order == TEXT_BOX_UNINITIALIZED) {
+            return 0;
+        }
+    }
+    return -1;
+}
+
+// Get index of textbox with lowest order
+int func_80080760(void) {
+    int i;
+    int nResult;
+    int lowestOrder;
+    
+    lowestOrder = 0; // 0 = Top
+    nResult = 0xFFFF;
+    
+    for (i = 0; i < 4; i++) {
+        if (g_FieldTextBoxes[i].order != 0xFFFF && g_FieldTextBoxes[i].order >= lowestOrder) {
+            lowestOrder = g_FieldTextBoxes[i].order;
+            nResult = i;
+        }
+    }
+    return nResult;
+}
+
+// Update textbox order
+int func_800807B4(void) {
+    int i;
+
+    for (i = 0; i < 4; i++) {
+        if (g_FieldTextBoxes[i].order != TEXT_BOX_UNINITIALIZED) {
+            g_FieldTextBoxes[i].order++;
+        }
+    }
+
+    for (i = 0; i < 4; i++) {
+        if (g_FieldTextBoxes[i].order == TEXT_BOX_UNINITIALIZED) {
+            g_FieldTextBoxes[i].order = 0;
+            return i;
+        }
+    }
+
+    return TEXT_BOX_UNINITIALIZED;
+}
+
+extern int D_800ADBFC;
+void func_8008083C(int actorIndex) {
+    ActorData* pActor;
+
+    if (actorIndex < D_800ADBFC) {
+        pActor = g_FieldActors[actorIndex].pActorData;
+        if (pActor->flags134 & 0x80) {
+            HeapFree(pActor->unk110);
+        }
+        if (pActor->flags12C_0xD) {
+            HeapFree(pActor->unk114);
+        }
+        if (g_FieldActors[actorIndex].status & 0x2000) {
+            HeapFree(pActor->unk118);
+        }
+        if (pActor->unk124 != -1) {
+            HeapFree(pActor->unk120);
+        }
+        HeapFree(pActor);
+        HeapFree(g_FieldActors[actorIndex].pShadow);
+        func_800230A8(g_FieldActors[actorIndex].pSpriteData);
+    }
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80080968);
 
@@ -620,11 +767,51 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80085C90);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80085EEC);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80085F30);
+extern s32 D_8004F364;
+extern s32 D_8004F368;
+extern s16 D_8004F384;
+extern s32 D_80059560;
+extern SoundWDSEntry* D_8006251C;
+extern void* D_800B00E0; // WDS File Buffer
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80085FB8);
+int func_80085F30(void) {
+    void* pWdsEntry;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80086024);
+    if (ArchiveDataSync()) {
+        return -1;
+    }
+    
+    pWdsEntry = SoundLoadWdsFile(D_800B00E0, 0);
+    D_8006251C = pWdsEntry;
+    D_80059560 = pWdsEntry;
+    func_8003BDFC(0x10);
+    HeapFree(D_800B00E0);
+    D_8004F364 = 1;
+    D_8004F384 = 0;
+    D_8004F368 = 0;
+    return 0;
+}
+
+void func_80085FB8(void) {
+    void* pWdsFileBuffer;
+
+    ArchiveSetIndex(0x1C, 0x0);
+    pWdsFileBuffer = HeapAlloc(ArchiveDecodeAlignedSize(3), 1);
+    D_800B00E0 = pWdsFileBuffer;
+    func_800295D8(3, pWdsFileBuffer, 0, 0x80);
+    ArchiveSetIndex(4, 0);
+    D_8004F364 = 0x80;
+}
+
+void func_80086024(void) {
+    if (D_8004F368 == 0) {
+        D_8004F384 = 1;
+        SoundFreeWdsEntry(D_8006251C);
+        D_8004F368 = 1;
+    }
+    D_8004F364 = 0;
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc4", func_80086078);
 

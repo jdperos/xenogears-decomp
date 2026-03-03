@@ -42,6 +42,15 @@ typedef struct {
     SVECTOR vectors[20]; // Vectors for RotAverage4
 } ZoomFadeEffect;
 
+// Random assortment of control-related things
+typedef struct {
+    short isRandomEncountersEnabled;
+    short unkAngle;
+    short controllerBtnMask;
+} FieldControl;
+
+extern FieldControl g_FieldControl;
+
 extern ZoomFadeEffect g_FieldZoomFadeEffect;
 
 extern int D_80059198; // Has initialized render contexts?

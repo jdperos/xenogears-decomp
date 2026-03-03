@@ -30,7 +30,24 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp1", func_800231E0);
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp1", func_800231F8);
 
-INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp1", func_80023210);
+INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp1", AnimScriptTick);
+/*
+Matches on  GCC 2.7.2-970404, ASPSX 2.67
+
+extern s32 D_80059198;
+
+void AnimScriptTick(SpriteData* pSpriteData) {
+    int i;
+    for (i = 0; i != D_80059198 + 1; i++) {
+        if (pSpriteData->animScriptWaitTimer) {
+            pSpriteData->animScriptWaitTimer--;
+            if (pSpriteData->animScriptWaitTimer == 0) {
+                func_800248D4(pSpriteData);
+            }
+        }
+    }
+}
+*/
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp1", func_80023290);
 
@@ -38,6 +55,37 @@ INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp1", func_80023340);
 
 // Allocate struct stuff
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp1", func_800233A4);
+/*
+Matches on  GCC 2.7.2-970404, ASPSX 2.67
+
+typedef struct {
+    WorkListEntry task1;
+    WorkListEntry task2;
+    SpriteData spriteData;
+} AnimTask;
+
+extern u8 D_800591AF;
+extern WorkListCallback_t func_80022DF4[];
+extern WorkListCallback_t func_80022EB8[];
+
+AnimTask* func_800233A4(void* pData, int dataSize) {
+    AnimTask* pEntry;
+    WorkListEntry* pTask1;
+    WorkListEntry* pTask2;
+
+    pEntry = HeapAlloc(dataSize + 0xEC, D_800591AF);
+    pTask1 = &pEntry->task1;
+    pTask2 = &pEntry->task2;
+    TimerWorkListAddTask(pData, pTask1);
+    WorkListAddTask(pEntry, pTask2);
+    func_80023804(&pEntry->spriteData);
+    pTask1->unk4 = &pEntry->spriteData;
+    pTask2->unk4 = &pEntry->spriteData;
+    TimerWorkListSetTaskCallback(pEntry, &func_80022DF4);
+    WorkListTaskSetOnFreeCallback(pEntry, &func_80022EB8);
+    return pEntry;
+}
+*/
 
 INCLUDE_ASM("asm/slus_006.64/nonmatchings/system/temp1", func_80023440);
 

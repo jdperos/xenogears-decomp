@@ -1,10 +1,19 @@
 #include "common.h"
+#include "main/game.h"
 #include "field/main.h"
 #include "field/actor.h"
 #include "field/script_vm.h"
+#include "field/text_box.h"
+
+void FieldScriptMemoryWriteU16(int, int);
 
 extern int rcos(int);
 extern int rsin(int);
+
+extern s32 D_8005A444;
+extern s32 D_8005A448;
+extern s32 D_8005A44C;
+extern s32 D_800AFD1C;
 
 void FieldSetScreenDimensions(void) {
     g_FieldRenderContexts[0].dispEnv.screen.x = 0;
@@ -17,13 +26,82 @@ void FieldSetScreenDimensions(void) {
     g_FieldRenderContexts[1].dispEnv.screen.h = 0xd8;
 }
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80086DE0);
+extern u8 D_800B2358[]; // Is pause disabled?
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80086E1C);
+void func_80086DE0(void) {
+    D_800B2358[0] = SCRIPT_READ_U8_REL(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80086F7C);
+extern s16 D_800ADB54;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80086FD0);
+void func_80086E1C(void) {
+    RECT rect;
+    switch (FieldScriptVMGetArgument(1)) {
+        case 0:
+            rect.w = 0x500;
+            rect.x = 0;
+            rect.y = 0;
+            rect.h = 0x200;
+            ClearImage(&rect, 0x0, 0x0, 0x0);
+            DrawSync(0);
+            Vsync(0);
+            SetDefDrawEnv(g_FieldRenderContexts[0].drawEnvs, 0, 0, 0x280, 0xE0);
+            SetDefDrawEnv(g_FieldRenderContexts[1].drawEnvs, 0, 0x100, 0x280, 0xE0);
+            SetDefDispEnv(&g_FieldRenderContexts[0].dispEnv, 0, 0x100, 0x280, 0xE0);
+            SetDefDispEnv(&g_FieldRenderContexts[1].dispEnv, 0, 0, 0x280, 0xE0);
+            FieldSetScreenDimensions();
+            break;
+        case 1:
+            D_800ADB54 = 0x1;
+            break;
+        case 2:
+            D_800ADB54 = 0x0;
+            break;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
+
+// Set model animation for actor
+void func_80086F7C(void) {
+    g_FieldScriptVMCurActor->modelAnimation = (FieldScriptVMGetArgument(1) << 0xC) | FieldScriptVMGetArgument(3);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 5;
+}
+
+void func_80086FD0(void) {
+    switch (SCRIPT_READ_U8_REL(1)) {
+        case 0:
+            // Initialize Sprite List
+            func_800AAC08();
+            g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+            return;
+        case 2:
+            // Free Sprite List
+            func_800AABD8();
+            g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+            return;
+        case 1:
+            // Set X, Y of Sprite and add it to OT for drawing
+            func_800AAE4C(
+                FieldScriptVMGetArgument(2), // Sprite Index
+                FieldScriptVMGetArgument(4), // X
+                FieldScriptVMGetArgument(6), // Y
+                FieldScriptVMGetArgument(8)  // Sprite type
+            );
+            g_FieldScriptVMCurActor->scriptInstructionPointer += 0xA;
+            return;
+        case 3:
+            // Set Sprite Color
+            func_800AADC8(
+                FieldScriptVMGetArgument(2), // Sprite Index
+                FieldScriptVMGetArgument(4), // Red
+                FieldScriptVMGetArgument(6), // Green
+                FieldScriptVMGetArgument(8)  // Blue
+            );
+            g_FieldScriptVMCurActor->scriptInstructionPointer += 0xA;
+            return;
+    }
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80087148);
 
@@ -31,9 +109,35 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800871B0);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800873C4);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80087420);
+void func_80087420(void) {
+    int arg1, arg2, arg3, arg4, arg5, arg6;
+    int value1, value2;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008752C);
+    arg1 = FieldScriptVMGetArgument(1);
+    arg2 = FieldScriptVMGetArgument(3);
+    arg3 = FieldScriptVMGetArgument(5);
+    arg4 = FieldScriptVMGetArgument(7);
+    arg5 = FieldScriptVMGetArgument(9);
+    arg6 = FieldScriptVMGetArgument(0xB);
+
+    value1 = ((arg5 << 0x10) / arg3 * arg1) >> 0x10;
+    value2 = ((arg6 << 0x10) / arg4 * arg2) >> 0x10;
+    
+    FieldScriptMemoryWriteU16(
+        FieldScriptVMGetInstructionArgument(0xD) & 0xFFFF, 
+        value1
+    );
+    FieldScriptMemoryWriteU16(
+        FieldScriptVMGetInstructionArgument(0xF) & 0xFFFF, 
+        value2
+    );
+    
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 0x11;
+}
+
+void func_8008752C(void) {
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008754C);
 
@@ -41,7 +145,15 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80087580);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008764C);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80087800);
+extern u8 D_80050622;
+
+void func_80087800(void) {
+    FieldScriptMemoryWriteU16(
+        FieldScriptVMGetInstructionArgument(1) & 0xFFFF, 
+        D_80050622
+    );
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80087848);
 
@@ -283,11 +395,40 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008D5C8);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008D604);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008D684);
+void func_8008D684(void) {
+    int mask;
+    unsigned int slotIndex;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008D700);
+    slotIndex = (unsigned int) (FieldScriptVMGetInstructionArgument(1) & 0xFFFF) >> 4;
+    mask = 1 << (FieldScriptVMGetInstructionArgument(1) & 0xF);
+    FieldScriptMemoryWriteU16(slotIndex, FieldScriptVMGetVariableValue(slotIndex) | mask);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008D780);
+void func_8008D700(void) {
+    int mask;
+    unsigned int slotIndex;
+
+    slotIndex = (unsigned int) (FieldScriptVMGetInstructionArgument(1) & 0xFFFF) >> 4;
+    mask = 1 << (FieldScriptVMGetInstructionArgument(1) & 0xF);
+    FieldScriptMemoryWriteU16(slotIndex, FieldScriptVMGetVariableValue(slotIndex) & ~mask);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
+
+void func_8008D780(void) {
+    short destination;
+    int mask;
+    unsigned int slotIndex;
+
+    slotIndex = (unsigned int) (FieldScriptVMGetInstructionArgument(1) & 0xFFFF) >> 4;
+    mask = 1 << (FieldScriptVMGetInstructionArgument(1) & 0xF);
+    if (FieldScriptVMGetVariableValue(slotIndex) & mask) {
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 5;
+    } else {
+        destination = FieldScriptVMGetInstructionArgument(3);
+        g_FieldScriptVMCurActor->scriptInstructionPointer = destination;
+    }
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008D808);
 
@@ -297,13 +438,72 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008DAFC);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008DB2C);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008DB68);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008DBF0);
+int FieldPartyMemberIncreaseGearHp(int partyMemberIndex, unsigned int amount) {
+    int gearId;
+    unsigned int maxHp;
+    unsigned int newHp;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008DC74);
+    gearId = GameCharacterGetGearID(g_GamePartyMembers[partyMemberIndex]);
+    if (gearId != CHARACTER_ID_NONE) {
+        maxHp = g_GameState->gears[gearId].maxHp;
+        newHp = g_GameState->gears[gearId].hp + amount;
+        g_GameState->gears[gearId].hp = newHp;
+        if (maxHp < newHp) {
+            g_GameState->gears[gearId].hp = maxHp;
+        }
+    }
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008DD6C);
+int FieldPartyMemberDecreaseGearHp(int partyMemberIndex, unsigned int amount) {
+    int gearId;
+    int newHp;
+
+    gearId = GameCharacterGetGearID(g_GamePartyMembers[partyMemberIndex]);
+    if (gearId != CHARACTER_ID_NONE) {
+        newHp = g_GameState->gears[gearId].hp - amount;
+        if (newHp <= 0) {
+            newHp = 1;
+        }
+        g_GameState->gears[gearId].hp = newHp;
+    }
+}
+
+extern s16 g_FieldNumPartyMembersMasks[4];
+
+void FieldScriptVMHandlerIncreasePartyGearHp(void) {
+    int mask;
+    int amount;
+    int i;
+
+    amount = func_8009CF78(1, SCRIPT_READ_U8_REL(3));
+    mask = g_FieldNumPartyMembersMasks[SCRIPT_READ_U8_REL(3) & 0x3];
+
+    for (i = 0; i < MAX_PARTY_MEMBERS; i++) {
+        if ((g_GamePartyMembers[i] != CHARACTER_ID_NONE) && (mask & 1)) {
+            FieldPartyMemberIncreaseGearHp(i, amount);
+        }
+        mask >>= 1;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 4;
+}
+
+void FieldScriptVMHandlerDecreasePartyGearHp(void) {
+    int mask;
+    int amount;
+    int i;
+
+    amount = func_8009CF78(1, SCRIPT_READ_U8_REL(3));
+    mask = g_FieldNumPartyMembersMasks[SCRIPT_READ_U8_REL(3) & 0x3];
+
+    for (i = 0; i < MAX_PARTY_MEMBERS; i++) {
+        if ((g_GamePartyMembers[i] != CHARACTER_ID_NONE) && (mask & 1)) {
+            FieldPartyMemberDecreaseGearHp(i, amount);
+        }
+        mask >>= 1;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 4;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8008DE64);
 
@@ -517,7 +717,10 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800924D4);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800925A0);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80092628);
+void FieldScriptVMHandlerSetControllerBtnMask(void) {
+    g_FieldControl.controllerBtnMask = FieldScriptVMGetInstructionArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80092664);
 
@@ -562,75 +765,442 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093790);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800937E0);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093824);
+extern s32 D_8004F350;
+extern s8 D_80059171;
+extern s32 D_800ADB64;
+
+void func_80093824(void) {
+    D_80059171 = FieldScriptVMGetArgument(1);
+    D_800ADB64 = 0x3;
+    D_800B00C0 = 1;
+    D_8004F350++;
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093888);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093930);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800939A0);
+void func_800939A0(void) {
+    D_80059171 = FieldScriptVMGetArgument(1);
+    D_800ADB64 = 0x4;
+    D_800B00C0 = 1;
+    D_8004F350++;
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093A04);
+void func_80093A04(void) {
+    D_80059171 = FieldScriptVMGetArgument(1);
+    D_800ADB64 = 0x5;
+    D_800B00C0 = 1;
+    D_8004F350++;
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093A68);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093A98);
+// Random encounter stuff
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093AC8);
+// These are likely part of a struct
+extern s8 D_800B21D0[];
+extern s8 D_800B21D1[];
+extern s32 D_800AF9D8[];
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093B10);
+extern s32 D_800ADBDC;
+extern s32 D_800ADBE4;
+extern s32 D_800B00C0;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093BB0);
+void func_80093A68(void) {
+    D_800AF9D8[0] &= 0x7FFF;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093BD4);
+void func_80093A98(void) {
+    D_800AF9D8[0] |= 0x8000;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093BFC);
+void func_80093AC8(void) {
+    g_FieldControl.isRandomEncountersEnabled = 0;
+    D_800B21D0[0] = 0;
+    D_800B21D1[0] = 0;
+    D_800AF9D8[0] &= 0x3FFF;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093C20);
+void func_80093B10(void) {
+    g_FieldControl.isRandomEncountersEnabled = -1;
+    D_800B21D0[0] = 1;
+    D_800B21D1[0] = 1;
+    D_800AF9D8[0] |= 0xC000;
+    if ((D_800ADBDC == 0) || (D_800ADBE4 == 0)) {
+        D_800B00C0 = 1; // Stop script VM execution?
+        g_FieldScriptVMCurActor->scriptInstructionPointer--;
+        return;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093C48);
+void func_80093BB0(void) {
+    D_800B21D0[0] = 0x0;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093C6C);
+void func_80093BD4(void) {
+    D_800B21D0[0] = 0x1;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093CD0);
+void func_80093BFC(void) {
+    D_800B21D1[0] = 0x0;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093D48);
+void func_80093C20(void) {
+    D_800B21D1[0] = 0x1;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093E30);
+void FieldScriptVMHandlerDisableRandomEncounters(void) {
+    g_FieldControl.isRandomEncountersEnabled = 0;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80093FC0);
+void func_80093C6C(void) {
+    if (D_800ADBDC == 0 || D_800ADBE4 == 0) {
+        D_800B00C0 = 1;
+        return;
+    }
+    g_FieldControl.isRandomEncountersEnabled = -1;
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 1;
+}
+// End of random encounter stuff
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094158);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800943AC);
+// Write U8 Handler
+// Arg1 + Arg3 = Offset to U8 value in script
+// Arg2 = Write address
+void func_80093CD0(void) {
+    unsigned short offset;
+    unsigned short arg1;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800945D4);
+    arg1 = FieldScriptVMGetInstructionArgument(1);
+    offset = arg1 + FieldScriptVMGetArgument(5);
+    FieldScriptMemoryWriteU16(
+        FieldScriptVMGetInstructionArgument(3) & 0xFFFF, 
+        SCRIPT_READ_U8(offset)
+    );
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 7;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094650);
+// Write U16/S16 handler
+// Arg1 + Arg3 = Offset in script to short to write
+// Arg3: Write address
+void func_80093D48(void) {
+    int arg1;
+    int nAddress;
+    unsigned short nOffset;
+    int nValue;
+    int arg3;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009468C);
+    arg1 = FieldScriptVMGetInstructionArgument(1);
+    nOffset = arg1 + FieldScriptVMGetArgument(5);
+    if (SCRIPT_READ_U8_REL(7) == 0) {
+        // W/O carry
+        FieldScriptMemoryWriteU16(
+            FieldScriptVMGetInstructionArgument(3) & 0xFFFF,
+            SCRIPT_READ_U8(nOffset) | (SCRIPT_READ_U8(nOffset + 1) << 8)
+        );
+    } else {
+        // With carry
+        FieldScriptMemoryWriteU16(
+            FieldScriptVMGetInstructionArgument(3) & 0xFFFF,
+            (short)(SCRIPT_READ_U8(nOffset) + (SCRIPT_READ_U8(nOffset + 1) << 8))
+        );
+    }
+    
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 8;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800946BC);
+// The two functions seems to be related to handling room transitions
+void func_80093E30(void) {
+    if (!g_FieldScriptVMCurActor->scriptFlags_0x13) {
+        if (!(g_FieldScriptVMCurActor->flags12C_0x5)) {
+            g_FieldScriptVMCurActor->flags12C_0x5 = 1;
+            g_FieldScriptVMCurActor->curDoorStep = 0;
+            func_80085634(8, 3);
+        } else {
+            g_FieldScriptVMCurActor->curDoorStep++;
+            if (g_FieldScriptVMCurActor->curDoorStep < 0x1F) {
+                if (SCRIPT_READ_U8_REL(1) == 0) {
+                    g_FieldActors[D_800AFD1C].rotation.y += 0x20;
+                } else {
+                    g_FieldActors[D_800AFD1C].rotation.y -= 0x20;
+                }
+            } else {
+                g_FieldScriptVMCurActor->scriptFlags_0x13 = 0x1;
+                g_FieldScriptVMCurActor->flags12C_0x5 = 0;
+                g_FieldScriptVMCurActor->curDoorStep = 0;
+                g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+            }
+        }
+    } else {
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+    }
+    
+    func_80072254(D_800AFD1C);
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094710);
+void func_80093FC0(void) {
+    if (g_FieldScriptVMCurActor->scriptFlags_0x13) {
+        if (!(g_FieldScriptVMCurActor->flags12C_0x5)) {
+            g_FieldScriptVMCurActor->flags12C_0x5 = 1;
+            g_FieldScriptVMCurActor->curDoorStep = 0;
+            func_80085634(8, 3);
+        } else {
+            g_FieldScriptVMCurActor->curDoorStep++;
+            if (g_FieldScriptVMCurActor->curDoorStep < 0x1F) {
+                if (SCRIPT_READ_U8_REL(1) == 0) {
+                    g_FieldActors[D_800AFD1C].rotation.y -= 0x20;
+                } else {
+                    g_FieldActors[D_800AFD1C].rotation.y += 0x20;
+                }
+            } else {
+                g_FieldScriptVMCurActor->scriptFlags_0x13 = 0;
+                g_FieldScriptVMCurActor->flags12C_0x5 = 0;
+                g_FieldScriptVMCurActor->curDoorStep = 0;
+                g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+            }
+        }
+    } else {
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+    }
+    func_80072254(D_800AFD1C);
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094764);
+extern void func_80072254(int);
+extern void func_80085634(int,int);
+extern s32 D_800AFD1C;
+extern ActorData* D_800B06B8;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800947B0);
+void func_80094158() {
+    ActorData* pActor;
+    int angle;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094918);
+    if (!g_FieldScriptVMCurActor->scriptFlags_0x13) {
+        if (!g_FieldScriptVMCurActor->flags12C_0x5) {
+            g_FieldScriptVMCurActor->flags12C_0x5 = 0x1;
+            g_FieldScriptVMCurActor->curDoorStep = 0;
+            func_80085634(8, 3);
+            g_FieldScriptVMCurActor->unkD0.vx = g_FieldScriptVMCurActor->position.vx;
+            g_FieldScriptVMCurActor->unkD0.vy = g_FieldScriptVMCurActor->position.vy;
+            g_FieldScriptVMCurActor->unkD0.vz = g_FieldScriptVMCurActor->position.vz;
+        } else {
+            g_FieldScriptVMCurActor->curDoorStep++;
+            if (g_FieldScriptVMCurActor->curDoorStep < FieldScriptVMGetArgument(3)) {
+                switch (FieldScriptVMGetArgument(5)) { 
+                    case 0x1000:
+                        g_FieldScriptVMCurActor->unkD0.vy -= FieldScriptVMGetArgument(1) * 0x10;
+                        D_800B06B8->position.vy = g_FieldScriptVMCurActor->unkD0.vz >> 0x10;
+                        break;
+                    case 0x1001:
+                        g_FieldScriptVMCurActor->unkD0.vy += FieldScriptVMGetArgument(1) * 0x10;
+                        D_800B06B8->position.vy = g_FieldScriptVMCurActor->unkD0.vz >> 0x10;
+                        break;
+                    default:
+                        angle = (D_800B06B8->curTriNormal.vx >> 0x10) + FieldScriptVMGetArgument(5) - 0x400;
+                        g_FieldScriptVMCurActor->unkD0.vx += rsin(angle) * FieldScriptVMGetArgument(1);
+                        g_FieldScriptVMCurActor->unkD0.vz -= rcos(angle) * FieldScriptVMGetArgument(1);
+                        D_800B06B8->position.vx = g_FieldScriptVMCurActor->unkD0.vx >> 0x10;
+                        D_800B06B8->position.vz = g_FieldScriptVMCurActor->unkD0.vz >> 0x10;
+                        break;
+                }
+            } else {
+                g_FieldScriptVMCurActor->scriptFlags_0x13 = 1;
+                g_FieldScriptVMCurActor->flags12C_0x5 = 0;
+                g_FieldScriptVMCurActor->curDoorStep = 0;   
+                g_FieldScriptVMCurActor->scriptInstructionPointer += 7;
+            }
+        }
+    } else {
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 7;
+    }
+    func_80072254(D_800AFD1C);
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094A5C);
+void func_800943AC(void) {
+    ActorData* temp_a1;
+    int angle;
+    
+    if (g_FieldScriptVMCurActor->scriptFlags_0x13) {
+        if (!g_FieldScriptVMCurActor->flags12C_0x5) {
+            g_FieldScriptVMCurActor->flags12C_0x5 = 0x1;
+            g_FieldScriptVMCurActor->curDoorStep = 0x0;
+            func_80085634(8, 3);
+        } else {
+            g_FieldScriptVMCurActor->curDoorStep++;
+            if (g_FieldScriptVMCurActor->curDoorStep < FieldScriptVMGetArgument(3)) {
+                switch (FieldScriptVMGetArgument(5)) {
+                    case 0x1000:
+                        g_FieldScriptVMCurActor->unkD0.vy -= FieldScriptVMGetArgument(1) * 0x10;
+                        D_800B06B8->position.vy = g_FieldScriptVMCurActor->unkD0.vz >> 0x10;
+                        break;
+                    case 0x1001:
+                        g_FieldScriptVMCurActor->unkD0.vy += FieldScriptVMGetArgument(1) * 0x10;
+                        D_800B06B8->position.vy = g_FieldScriptVMCurActor->unkD0.vz >> 0x10;
+                        break;
+                    default:
+                        angle = (D_800B06B8->curTriNormal.vx >> 0x10) + FieldScriptVMGetArgument(5) - 0x400;
+                        g_FieldScriptVMCurActor->unkD0.vx -= rsin(angle) * FieldScriptVMGetArgument(1);
+                        g_FieldScriptVMCurActor->unkD0.vz += rcos(angle) * FieldScriptVMGetArgument(1);
+                        D_800B06B8->position.vx = g_FieldScriptVMCurActor->unkD0.vx >> 0x10;
+                        D_800B06B8->position.vz = g_FieldScriptVMCurActor->unkD0.vz >> 0x10;
+                        break;
+                }
+            } else {
+                g_FieldScriptVMCurActor->scriptFlags_0x13 = 0x0;
+                g_FieldScriptVMCurActor->flags12C_0x5 = 0x0;
+                g_FieldScriptVMCurActor->curDoorStep = 0;
+                g_FieldScriptVMCurActor->scriptInstructionPointer += 7;
+            }
+        }
+    } else {
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 7;
+    }
+    func_80072254(D_800AFD1C);
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094ACC);
+extern s32 D_8004F318;
+extern s32 D_8004F328;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094B3C);
+void func_800945D4(void) {
+    D_8004F318 = 0;
+    D_8004F328 = 0xFF;
+    FieldScriptMemoryWriteU16(
+        0xA, 
+        ((FieldScriptVMGetArgument(1) << 8) & 0xFF00) | (FieldScriptVMGetArgument(3) & 0xFF)
+    );
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 5;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094BAC);
+void func_80094650(void) {
+    D_8004F328 = SCRIPT_READ_U8_REL(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094C1C);
+void func_8009468C(void) {
+    D_8004F318 = 0;
+    D_8004F328 = 0xFF;
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094C8C);
+void func_800946BC(void) {
+    g_FieldScriptVMCurActor->flags12C_0 = 0x1;
+    g_FieldScriptVMCurActor->unk70 = FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
+
+void func_80094710(void) {
+    g_FieldScriptVMCurActor->flags12C_0 = 0x2;
+    g_FieldScriptVMCurActor->unk70 = FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
+
+void func_80094764(void) {
+    g_FieldScriptVMCurActor->flags12C_0 = 0x3;
+    g_FieldScriptVMCurActor->unk70 = FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
+
+extern void func_80072254(int);
+
+void func_800947B0(void) {
+    FieldActor* pActor;
+
+    if (FieldScriptVMGetActorIndex(2) != 0xFF) {
+        pActor = &g_FieldActors[FieldScriptVMGetActorIndex(2)];
+        switch (SCRIPT_READ_U8_REL(1)) {
+            case 0:
+                pActor->rotation.x += FieldScriptVMGetArgument(3);
+                break;
+            case 1:
+                pActor->rotation.x -= FieldScriptVMGetArgument(3);
+                break;
+            case 2:
+                pActor->rotation.y += FieldScriptVMGetArgument(3);
+                break;
+            case 3:
+                pActor->rotation.y -= FieldScriptVMGetArgument(3);
+                break;
+            case 4:
+                pActor->rotation.z += FieldScriptVMGetArgument(3);
+                break;
+            case 5:
+                pActor->rotation.z -= FieldScriptVMGetArgument(3);
+                break;
+        }
+        func_80072254(FieldScriptVMGetActorIndex(2));
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 5;
+}
+
+// Set X, Y or Z rotaiton of Actor D_800AFD1C
+void func_80094918(void) {
+    switch (SCRIPT_READ_U8_REL(3)) { 
+        case 0:
+            g_FieldActors[D_800AFD1C].rotation.x = FieldScriptVMGetArgument(1);
+            break;
+        case 1:
+            g_FieldActors[D_800AFD1C].rotation.y = FieldScriptVMGetArgument(1);
+            break;
+        case 2:
+            g_FieldActors[D_800AFD1C].rotation.z = FieldScriptVMGetArgument(1);
+            break;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 4;
+    func_80072254(D_800AFD1C);
+}
+
+// Increase X Rotation of Actor D_800AFD1C
+void func_80094A5C(void) {
+    (&g_FieldActors[D_800AFD1C])->rotation.x += FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+    func_80072254(D_800AFD1C);
+}
+
+// Decrease X Rotation of Actor D_800AFD1C
+void func_80094ACC(void) {
+    (&g_FieldActors[D_800AFD1C])->rotation.x -= FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+    func_80072254(D_800AFD1C);
+}
+
+// Increase Y Rotation of Actor D_800AFD1C
+void func_80094B3C(void) {
+    (&g_FieldActors[D_800AFD1C])->rotation.y += FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+    func_80072254(D_800AFD1C);
+}
+
+// Decrease Y Rotation of Actor D_800AFD1C
+void func_80094BAC(void) {
+    (&g_FieldActors[D_800AFD1C])->rotation.y -= FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+    func_80072254(D_800AFD1C);
+}
+
+// Increase Z Rotation of Actor D_800AFD1C
+void func_80094C1C(void) {
+    (&g_FieldActors[D_800AFD1C])->rotation.z += FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+    func_80072254(D_800AFD1C);
+}
+
+// Decrease Z Rotation of Actor D_800AFD1C
+void func_80094C8C(void) {
+    (&g_FieldActors[D_800AFD1C])->rotation.z -= FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+    func_80072254(D_800AFD1C);
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80094CFC);
 
@@ -664,7 +1234,10 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009524C);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80095284);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80095300);
+void func_80095300(void) {
+    g_FieldControl.unkAngle = FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009533C);
 
@@ -762,37 +1335,172 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80096790);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800967E8);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80096844);
+void FieldPartyMemberIncreaseHp(int i, int amount) {
+    g_GameState->characters[g_GamePartyMembers[i]].hp += amount;
+    if (g_GameState->characters[g_GamePartyMembers[i]].maxHp < g_GameState->characters[g_GamePartyMembers[i]].hp) {
+        g_GameState->characters[g_GamePartyMembers[i]].hp = g_GameState->characters[g_GamePartyMembers[i]].maxHp;
+    }
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800968CC);
+void FieldPartyMemberDecreaseHp(int partyMemberIndex, int amount) {
+    int newHp;
+    int characterId = g_GamePartyMembers[partyMemberIndex];
+    newHp = g_GameState->characters[characterId].hp - amount;
+    if (newHp <= 0) {
+        newHp = 1;
+    }
+    g_GameState->characters[characterId].hp = newHp;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80096920);
+void FieldPartyMemberIncreaseMp(int i, int amount) {
+    g_GameState->characters[g_GamePartyMembers[i]].mp += amount;
+    if (g_GameState->characters[g_GamePartyMembers[i]].maxMp < g_GameState->characters[g_GamePartyMembers[i]].mp) {
+        g_GameState->characters[g_GamePartyMembers[i]].mp = g_GameState->characters[g_GamePartyMembers[i]].maxMp;
+    }
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800969A8);
+void FieldPartyMemberDecreaseMp(int partyMemberIndex, int amount) {
+    int newMp;
+    int characterId = g_GamePartyMembers[partyMemberIndex];
+    newMp = g_GameState->characters[characterId].mp - amount;
+    if (newMp <= 0) {
+        newMp = 1;
+    }
+    g_GameState->characters[characterId].mp = newMp;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800969FC);
+extern s16 g_FieldNumPartyMembersMasks[4];
+
+void FieldScriptVMHandlerDecreasePartyHp(void) {
+    int mask;
+    int amount;
+    int i;
+
+    amount = func_8009CF78(1, SCRIPT_READ_U8_REL(3));
+    mask = g_FieldNumPartyMembersMasks[SCRIPT_READ_U8_REL(3) & 0x3];
+
+    for (i = 0; i < MAX_PARTY_MEMBERS; i++) {
+        if ((g_GamePartyMembers[i] != CHARACTER_ID_NONE) && (mask & 1)) {
+            FieldPartyMemberDecreaseHp(i, amount);
+        }
+        mask >>= 1;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 4;
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80096AF4);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80096B58);
+void FieldScriptVMHandlerWritePartyMemberHp(void) {
+    if (g_GamePartyMembers[SCRIPT_READ_U8_REL(3)] != CHARACTER_ID_NONE) {
+        FieldScriptMemoryWriteU16(
+            FieldScriptVMGetInstructionArgument(1) & 0xFFFF, 
+            g_GameState->characters[g_GamePartyMembers[SCRIPT_READ_U8_REL(3)]].hp
+        );
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 4;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80096C40);
+void FieldScriptVMHandlerWritePartyMemberMp(void) {
+    if (g_GamePartyMembers[SCRIPT_READ_U8_REL(3)] != CHARACTER_ID_NONE) {
+        FieldScriptMemoryWriteU16(
+            FieldScriptVMGetInstructionArgument(1) & 0xFFFF, 
+            g_GameState->characters[g_GamePartyMembers[SCRIPT_READ_U8_REL(3)]].mp
+        );
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 4;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80096D28);
+// Sets the HP of a character to a target amount, but only if we have a full party
+void FieldScriptVMHandlerSetPartyMemberHp(void) {
+    int targetHp;
+    int characterHp;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80096E20);
+    if (g_GamePartyMembers[SCRIPT_READ_U8_REL(3)] != 0xFF) {
+        targetHp = FieldScriptVMGetArgument(2);
+        characterHp = g_GameState->characters[g_GamePartyMembers[SCRIPT_READ_U8_REL(1)]].maxHp;
+        if (characterHp < targetHp) {
+            targetHp = characterHp;
+        }
+        g_GameState->characters[g_GamePartyMembers[SCRIPT_READ_U8_REL(1)]].hp = targetHp;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 4;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80096F18);
+// Sets the MP of a character to a target amount, but only if we have a full party
+void FieldScriptVMHandlerSetPartyMemberMp(void) {
+    int targetMp;
+    int characterMp;
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80097010);
+    if (g_GamePartyMembers[SCRIPT_READ_U8_REL(3)] != 0xFF) {
+        targetMp = FieldScriptVMGetArgument(2);
+        characterMp = g_GameState->characters[g_GamePartyMembers[SCRIPT_READ_U8_REL(1)]].maxMp;
+        if (characterMp < targetMp) {
+            targetMp = characterMp;
+        }
+        g_GameState->characters[g_GamePartyMembers[SCRIPT_READ_U8_REL(1)]].mp = targetMp;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 4;
+}
+
+void FieldScriptVMHandlerIncreasePartyMp(void) {
+    int mask;
+    int amount;
+    int i;
+
+    amount = func_8009CF78(1, SCRIPT_READ_U8_REL(3));
+    mask = g_FieldNumPartyMembersMasks[SCRIPT_READ_U8_REL(3) & 0x3];
+
+    for (i = 0; i < MAX_PARTY_MEMBERS; i++) {
+        if ((g_GamePartyMembers[i] != CHARACTER_ID_NONE) && (mask & 1)) {
+            FieldPartyMemberIncreaseMp(i, amount);
+        }
+        mask >>= 1;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 4;
+}
+
+void FieldScriptVMHandlerDecreasePartyMp(void) {
+    int mask;
+    int amount;
+    int i;
+
+    amount = func_8009CF78(1, SCRIPT_READ_U8_REL(3));
+    mask = g_FieldNumPartyMembersMasks[SCRIPT_READ_U8_REL(3) & 0x3];
+
+    for (i = 0; i < MAX_PARTY_MEMBERS; i++) {
+        if ((g_GamePartyMembers[i] != CHARACTER_ID_NONE) && (mask & 1)) {
+            FieldPartyMemberDecreaseMp(i, amount);
+        }
+        mask >>= 1;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 4;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80097108);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80097200);
+void FieldScriptVMHandlerRestoreCharacterHpAndMp(void) {
+    int id = FieldScriptVMGetArgument(1);
+    g_GameState->characters[id].hp = g_GameState->characters[id].maxHp;
+    g_GameState->characters[id].mp = g_GameState->characters[id].maxMp;
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 3;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_80097264);
+void FieldScriptVMHandlerRestoreHp(void) {
+    int i;
+    for (i = 0; i < MAX_GAME_CHARACTERS; i++) {
+        g_GameState->characters[i].hp = g_GameState->characters[i].maxHp;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800972AC);
+void FieldScriptVMHandlerRestoreMp(void) {
+    int i;
+    for (i = 0; i < MAX_GAME_CHARACTERS; i++) {
+        g_GameState->characters[i].mp = g_GameState->characters[i].maxMp;
+    }
+    g_FieldScriptVMCurActor->scriptInstructionPointer++;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_800972F4);
 
@@ -1080,13 +1788,62 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BA0C);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BA7C);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BB0C);
+void func_8009BB0C(void) {
+    int nTextBoxIndex;
+    u32 lowerFlags;
+    u32 upperFlags;
+
+    // Check if there's no visible textbox owned by current actor
+    if (func_8009CD18(&nTextBoxIndex) == -1) {
+        g_FieldScriptMaxInstructionCount += 8;
+        FieldScriptMemoryWriteU16(0x14, g_FieldScriptVMCurActor->unk81);
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 1;
+        return;
+    }
+    
+    if (g_FieldActors[g_FieldTextBoxes[nTextBoxIndex].talkingActorID].pActorData->flags & 0x200) {
+        upperFlags = g_FieldScriptVMCurActor->dialogFlags >> 0x10;
+        if (g_FieldScriptVMCurActor->dialogFlags >> 0x10 == 0) {
+            lowerFlags = g_FieldScriptVMCurActor->dialogFlags & 0xFFFF;
+        } else {
+            lowerFlags = upperFlags & 0xFFFF;
+        }
+        
+        if (!(lowerFlags & 0x1)) {
+            if (g_FieldScriptVMCurActor->scripts[g_FieldScriptVMCurActor->curScriptIndex].flags_0x12 != 7) {
+                func_800A1B70();
+            }
+            g_FieldTextBoxes[nTextBoxIndex].status = 0;
+        }
+    }
+    D_800B00C0 = 1;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BC98);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BE58);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BE9C);
+// Reset text box?
+void func_8009BE9C(void) {
+    int index;
+    
+    if (SCRIPT_READ_U8_REL(1) == 0) {
+        if (func_8009CD18(&index) == 0) {
+            g_FieldTextBoxes[index].status = 0;
+            g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+        } else {
+            g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+        }
+    } else {
+        g_FieldScriptVMCurActor->dialogPixelWidth = 0;
+        g_FieldScriptVMCurActor->dialogPixelHeight = 0;
+        g_FieldScriptVMCurActor->dialogWidth = 0;
+        g_FieldScriptVMCurActor->dialogHeight = 0;
+        g_FieldScriptVMCurActor->dialogFlags = 0;
+        g_FieldScriptVMCurActor->scriptInstructionPointer += 2;
+    }
+    D_800B00C0 = 1;
+}
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009BF8C);
 
@@ -1100,20 +1857,48 @@ INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009C104);
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009C12C);
 
+// https://decomp.me/scratch/tL6mE
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009C154);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009C538);
+// Check if there is a portrait w/ targetId that's free to use?
+int func_8009C538(int targetId) {
+    int i;
+    
+    for (i = 0; i < 4; i++) {
+        if (g_FieldTextBoxes[i].visibility || g_FieldTextBoxes[i].portrait.shouldRenderPortrait != 1) {
+            continue;
+        }
+        
+        if (g_FieldTextBoxes[i].portrait.portraitID == targetId) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
 
 INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009C5A8);
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CCF8);
+extern u16 D_800B2174[];
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CD18);
+void func_8009CCF8(int arg0) {
+    D_800B2174[0] |= 1 << arg0;
+}
 
-extern s32 D_8005A444;
-extern s32 D_8005A448;
-extern s32 D_8005A44C;
-extern s32 D_800AFD1C;
+int func_8009CD18(int* pTextBoxIndex) {
+    int i;
+
+    for (i = 0; i < 4; i++) {
+        if (g_FieldTextBoxes[i].ownerActorID == D_800AFD1C && g_FieldTextBoxes[i].visibility == 0) {
+            *pTextBoxIndex = i;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
 u32 func_8009CD7C(int bytecodeOffset) {
     u32 nActorIndex = FieldScriptVMGetActorIndex(bytecodeOffset);
     if (nActorIndex == 0xFF) {
@@ -1137,6 +1922,22 @@ u32 FieldScriptVMGetActorIndex(int bytecodeOffset) {
 }
 
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CE48);
+// Set up dialog window / text box
+void func_8009CE48(void) {
+    g_FieldScriptVMCurActor->dialogPixelWidth = SCRIPT_READ_U8_REL(1) * 2;
+    g_FieldScriptVMCurActor->dialogPixelHeight = SCRIPT_READ_U8_REL(2);
+    g_FieldScriptVMCurActor->dialogWidth = SCRIPT_READ_U8_REL(3) * 3;
+    g_FieldScriptVMCurActor->dialogHeight = SCRIPT_READ_U8_REL(4);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 5;
+}
 
-INCLUDE_ASM("asm/field/nonmatchings/main/misc", func_8009CEE0);
+
+// Set up dialog window / text box
+void func_8009CEE0(void) {
+    g_FieldScriptVMCurActor->dialogPixelWidth = FieldScriptVMGetArgument(1);
+    g_FieldScriptVMCurActor->dialogPixelHeight = FieldScriptVMGetArgument(3);
+    g_FieldScriptVMCurActor->dialogWidth = FieldScriptVMGetArgument(5) * 3;
+    g_FieldScriptVMCurActor->dialogHeight = FieldScriptVMGetArgument(7);
+    g_FieldScriptVMCurActor->dialogFlags = FieldScriptVMGetArgument(9);
+    g_FieldScriptVMCurActor->scriptInstructionPointer += 0xB;
+}

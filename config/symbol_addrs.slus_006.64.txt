@@ -16,6 +16,16 @@ KernelMenuInitialize = 0x8001A250;
 KernelMenuUpdate = 0x8001A344;
 KernelMenuMain = 0x8001A4B4;
 
+//
+GamePartySignalReinitialize = 0x8001AC94;
+GameCharacterGetGearID = 0x8001ACF0;
+GameWaitForCdData = 0x8001AD1C;
+GamePartyCharactersInitializeSkins = 0x8001AD4C;
+GamePartyGearsInitializeSkins = 0x8001AEB8;
+GamePartySyncSkinData = 0x8001B044;
+GamePartyStreamLoadSkinData = 0x8001B158;
+GamePartySyncStreamedData = 0x8001B3A8;
+
 // Work List
 WorkListsFreeAllEntries = 0x8001C8DC;
 WorkListsReset = 0x8001C944;
@@ -42,6 +52,8 @@ WorkListsAddTasks = 0x8001D1D8;
 GraphicsDrawPauseLetters = 0x8001FAB4;
 
 // Animation Stuff
+SpriteSetColor = 0x80021B98;
+SpriteSetSpecialAnimFile = 0x80021BF0;
 AnimScriptStackPopU8 = 0x80021C20;
 AnimScriptStackPopU16 = 0x80021C3C;
 AnimScriptStackPopU24 = 0x80021C6C;
@@ -49,8 +61,13 @@ AnimScriptStackPushU8 = 0x80021CA0;
 AnimScriptStackPushU16 = 0x80021CC4;
 AnimScriptStackPushU24 = 0x80021CF8;
 
+SpriteSetScale = 0x80022000;
+SpriteComputeTransformMatrix = 0x80022090;
+
 GfxLoadImageAccelerated = 0x80022A0C;
 GfxLoadClutsAccelerated = 0x80022A70;
+
+AnimScriptTick = 0x80023210;
 
 GfxAllocateWorkBuffers = 0x80024F64;
 GfxFreeWorkBuffers = 0x80024FB8;
@@ -79,6 +96,7 @@ ArchiveReadFile = 0x80029690;
 ArchiveAllocStreamFile = 0x8002A260;
 ArchiveCdSeekToFile = 0x8002A394;
 ArchiveCdSetMode = 0x8002A428;
+ArchiveStreamFreeQueueData = 0x8002A524;
 ArchiveCdDriveCommandHandler = 0x8002A68C;
 
 // Heap / Dynamic Memory
@@ -622,6 +640,9 @@ g_CurGameStateOverlayBuffer = 0x800592bc;
 g_CurGameStateOverlayID =  0x800592C0;
 g_GameStateOverlayArchiveOffsets = 0x8004EAA0;
 
+g_GameHasLoadedWDS = 0x8004F360;
+g_GameCurLoadedWDS = 0x8006258C;
+
 g_PublishedByLogoCompressed = 0x8004EABC;
 
 g_ArchiveTable = 0x8004FDF0;
@@ -634,6 +655,8 @@ g_ArchiveCdDriveError = 0x8004FE20;
 g_ArchiveCurStreamFile = 0x8004FE30;
 g_ArchiveDebugTable = 0x8004FE48;
 g_ArchiveCdCurLocation = 0x80059F10;
+
+g_GfxPauseLettersCompressed = 0x8004FBD8;
 
 g_pRCounters = 0x80056400;
 g_InterruptStatusMasks = 0x80056404;
@@ -835,6 +858,17 @@ g_C1ButtonStatesReleased = 0x8005A13C;
 g_C2ButtonStatesReleased = 0x8005A15C;
 g_C1ButtonStatesPressedOnce = 0x8005A17C;
 g_C2ButtonStatesPressedOnce = 0x8005A19C;
+
+g_GameState = 0x8005A39C;
+g_GamePartyMembers = 0x80062590; // size:0xC
+
+g_PartyIsWaitingForStreamData = 0x8004F374;
+g_PartyDataBuffers = 0x8005A414;
+g_PartyStreamDataQueue = 0x800625A4; // type:StreamDataQueueEntry[] size:0x20
+g_PartyStreamDataPointers = 0x80065AFC;
+
+g_GamePartyMemberSkins = 0x8006FABC; // size:0xC
+g_GamePartySkinsInitialized = 0x8004F30C;
 
 g_C1Buffer = 0x800625FC;
 g_C2Buffer = 0x8006261E;

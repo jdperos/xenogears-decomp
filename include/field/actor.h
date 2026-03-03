@@ -5,59 +5,254 @@
 
 #define ACTOR_STATUS_INVISIBLE 0x20
 
-#define SCRIPT_VM_DISABLED 0x1
-#define SCRIPT_DIALOG_ACTIVATION_DISABLED 0x20000
-
+#define NUM_8DIR_MOVEMENT_DIRECTIONS 0x8
 #define MASK_8DIR_MOVEMENT_NUM_DIRECTIONS 0x7
 
+#define SCRIPT_MAX_STACK_SIZE 0x4
+
+#define SCRIPT_STATE_IDLE 0x0
+
+#define ACTOR_SCRIPT_EXISTS -1
+
+#define ACTOR_MAX_NUM_SCRIPTS 0x8
+
+
 typedef struct {
-    u_short reqEvent;
-    u_char waitTimer;
-    u_char eventId;
-    u_int flags;
-} ActorEventSlot;
+    u_short currentIP; // Instruction Pointer
+    u_char waitTimer; // Used for sleep() logic in scripts
+    u_char scriptId;
+    u_int flags_0: 16;
+    u_int state: 2; // Execution state
+    u_int flags_0x12: 4;
+    u_int isInUse: 1;
+    u_int flags_0x17: 2;
+    u_int flags_0x19: 7;
+} ActorScriptSlot;
+
+typedef struct {
+    short x, y;
+} SVEC2;
 
 typedef struct {
     short x, y, z;
 } SVEC;
 
 typedef struct {
-    /* 0x0  */ u_int scriptFlags;
+    int x;
+    int y;
+    int z;
+} IVEC3;
+
+// The file format containing sprite animations for an actor
+typedef struct {
+    /* 0x0 */ u32 field_0x0;
+    /* 0x4 */ u32 animationsOffset;
+    /* 0x8 */ u32 framesOffset;
+    /* 0xC */ u32 paletteOffset;
+    // ...
+} SpriteAnimPackageFileHeader;
+
+typedef struct {
+    /* 0x0 */ u16 flags; // Mask 0x3F = num animations
+    /* 0x2 */ //u16 animationOffsets[num animations];
+    /* 0xN */ // AnimationData[]
+} SpriteAnimPackageFileAnimationsData;
+
+typedef struct {
+    /* 0x0 */ u16 oneDirectional: 1;
+    /* 0x0 */ u16 fourDirectional: 1;
+    /* 0x0 */ u16 eightDirectional: 1;
+    /* 0x0 */ u16 flags: 3;
+    /* 0x0 */ u16 numAnimations: 6;
+    /* 0x0 */ u16 flags_2: 4;
+    /* 0x2 */ u16 scriptOffset;
+    /* 0x4 */ u16 unkOffset;
+} SpriteAnimPackageFileAnimation;
+
+// An animation package which has been parsed and possibly loaded in memory
+typedef struct {
+    /* 0x0  */ void* pFrames;
+    /* 0x4  */ SVEC2 tex;
+    /* 0x8  */ SVEC2 clut;
+    /* 0xC  */ void* pPalette;
+    /* 0x10 */ void* pAnimations;
+} SpriteAnimPackage;
+
+typedef struct {
+    /* 0x0 */ u8 translationX;
+    /* 0x1 */ u8 translationY;
+    /* 0x2 */ s16 rotationX;
+    /* 0x4 */ s16 rotationY;
+    /* 0x6 */ s16 rotationZ;
+} SpriteDirectionTransform;
+
+typedef struct {
+    /* 0x0 */ SpriteDirectionTransform dirTransforms[8];
+} SpriteDirectionTransforms;
+
+typedef struct {
+    /* 0x0  */ s16 rotationX;
+    /* 0x2  */ s16 rotationY;
+    /* 0x4  */ s16 rotationZ;
+    /* 0x6  */ s16 scaleX;
+    /* 0x8  */ s16 scaleY;
+    /* 0xA  */ s16 scaleZ;
+    /* 0xC  */ MATRIX transformMatrix;
+    /* 0x2C */ void* pFramesData;
+    /* 0x30 */ void* pCurRenderFramesData;
+    /* 0x34 */ SpriteDirectionTransforms* pDirTransforms;
+    /* 0x38 */ void* pNextSpriteData;
+    /* 0x3C */ u8 offsetX;
+    /* 0x3D */ u8 offsetY;
+    /* 0x3E */ s16 field_0x3E;
+} SpriteDataI1;
+
+typedef struct {
+    /* 0x0  */ s32 field_0x0;
+    /* 0x4  */ s32 field_0x4;
+    /* 0x8  */ s32 field_0x8;
+    /* 0xC  */ s16 field_0xC;
+    /* 0xE  */ s16 texX;
+    /* 0x10 */ s16 texY;
+    /* 0x12 */ s16 field_0x12;
+    /* 0x14 */ s16 entityId;
+    /* 0x16 */ s16 field_0x16;
+    /* 0x18 */ void* field_0x18;
+} SpriteDataI3;
+
+typedef struct {
+    /* 0x0  */ s16 tileX;
+    /* 0x2  */ s16 tileY;
+    /* 0x4  */ u8 texX;
+    /* 0x5  */ u8 texY;
+    /* 0x6  */ u8 width;
+    /* 0x7  */ u8 height;
+    /* 0x8  */ u8 deltaWidth;
+    /* 0x9  */ u8 deltaHeight;
+    /* 0xA  */ s16 texPage;
+    /* 0xC  */ s16 clutID;
+    /* 0xE  */ s16 field_0xE;
+    /* 0x10 */ u32 colorAndCode;
+    /* 0x14 */ s32 flags;
+} SpriteFrameData;
+
+// Flags (Field 0xB0):
+// 0x400: Current animation is using non-default animation package
+typedef struct {
+    /* 0x0  */ IVEC3 position;
+    /* 0xC  */ IVEC3 step;
+    /* 0x18 */ int moveSpeed;
+    /* 0x1C */ u32 gravity;
+    /* 0x20 */ SpriteDataI1* pBase;
+    /* 0x24 */ void* pVramData;
+    /* 0x28 */ u8 red;
+    /* 0x29 */ u8 green;
+    /* 0x2A */ u8 blue;
+    /* 0x2B */ u8 prim;
+    /* 0x2C */ s16 scale;
+    /* 0x2E */ s16 field_0x2e;
+    /* 0x30 */ s16 field_0x30;
+    /* 0x32 */ s16 direction; // Angle
+    /* 0x34 */ s16 curSpriteFrame;
+    /* 0x36 */ s16 field_0x36;
+    /* 0x38 */ s16 field_0x38;
+    /* 0x3A */ u16 field_0x3A;
+    /* 0x3C */ u32 field_0x3C_0: 20;
+    /* 0x3C */ u32 field_0x3C_1: 4;
+    /* 0x3C */ u32 field_0x3C_2: 4;
+    /* 0x3C */ u32 field_0x3C_6: 1; // Needs to recompute transform matrix?
+    /* 0x3C */ u32 field_0x3C_5: 1;
+    /* 0x3C */ u32 field_0x3C_3: 1;
+    /* 0x3C */ u32 field_0x3C_4: 1;
+    /* 0x40 */ u32 field_0x40;
+    /* 0x44 */ void* pCurAnimFile;
+    /* 0x48 */ void* pDefaultAnimFile;
+    /* 0x4C */ void* pSpecialAnimFile; // used when animation id is negative
+    /* 0x50 */ u32 field_0x50;
+    /* 0x54 */ u32 field_0x54;
+    /* 0x58 */ void* pCurAnimation; // Points to animation entry in SpriteAnimPackageAnimationsData
+    /* 0x5C */ u32 field_0x5C;
+    /* 0x60 */ u32 field_0x60;
+    /* 0x64 */ void* pSpriteBytecode; // IP
+    /* 0x68 */ void* field_0x68; // Callback
+    /* 0x6C */ void* field_0x6C; // Pointer to self?
+    /* 0x70 */ void* field_0x70;
+    /* 0x74 */ void* pTargetEntitySprite;
+    /* 0x78 */ u32 field_0x78;
+    /* 0x7C */ void* field_0x7C;
+    /* 0x80 */ s16 field_0x80;
+    /* 0x82 */ s16 field_0x82;
+    /* 0x84 */ s16 field_0x84;
+    /* 0x86 */ s16 allocatedDataSize;
+    /* 0x88 */ void* field_0x88;
+    /* 0x8C */ u8 stackIndex;
+    /* 0x8D */ u8 field_0x8D;
+    /* 0x8E */ u8 stack[16];
+    /* 0x9E */ s16 animScriptWaitTimer;
+    /* 0xA0 */ s16 field_0xA0;
+    /* 0xA2 */ s16 field_0xA2;
+    /* 0xA4 */ s16 field_0xA4;
+    /* 0xA6 */ s16 field_0xA6;
+    /* 0xA8 */ s32 flags_0xA8;
+    /* 0xAC */ s32 flags_0xAC;
+    /* 0xB0 */ s32 flags_0xB0;
+    /* 0xB4 */ SpriteDataI1 inner1;
+    /* 0xF4 */ SpriteDataI3 inner3;
+    /* 0x110 */ SpriteAnimPackage i2CurPackage;
+    /* 0x124 */ SpriteDirectionTransforms directionTransforms;
+} SpriteData;
+
+typedef struct {
+    // TODO: Fix the horrible naming of these bitfields.
+    /* 0x0 */ u_int scriptFlags_0x0: 1; // isDisabled?
+    u_int scriptFlags_0x1: 7;
+    u_int scriptFlags_0x8: 1;
+    u_int scriptFlags_0x9: 7;
+    u_int scriptFlags_0xX: 1;
+    u_int scriptFlags_0xA: 1; // isDialogActivationDisabled?
+    u_int scriptFlags_0x10: 1;
+    u_int scriptFlags_0x11: 1;
+    u_int scriptFlags_0x13: 1;
+    u_int scriptFlags_0x14: 1;
+    u_int scriptFlags_0x15: 1;
+    u_int scriptFlags_0x16: 1;
+    u_int scriptFlags_0x17: 8;
     /* 0x4  */ u_int flags; // ?
-    /* 0x6  */ u_short walkmesh0TriId;
-    /* 0x8  */ u_short walkmesh1TriId;
-    /* 0xA  */ u_short walkmesh2TriId;
-    /* 0xC  */ u_short walkmesh3TriId;
-    u_int walkmeshId;
-    u_int curWalkmeshTriMaterial;
-    u_short width; //xWidth
-    u_short height;
-    u_short zWidth;
-    u_short solidRange;
-    VECTOR position;
-    VECTOR moveModified;
-    VECTOR move;
-    VECTOR curTriNormal;
-    SVECTOR unk60;
-    SVEC prevPosition;
+    /* 0x8  */ u_short walkmesh0TriId;
+    /* 0xA  */ u_short walkmesh1TriId;
+    /* 0xC  */ u_short walkmesh2TriId;
+    /* 0xE  */ u_short walkmesh3TriId;
+    /* 0x10 */ short walkmeshId;
+    /* 0x12 */ short pad_0x12;
+    /* 0x14 */ u_int curWalkmeshTriMaterial;
+    /* 0x18 */ u_short width; //xWidth
+    /* 0x1A */ u_short height;
+    /* 0x1C */ u_short zWidth;
+    /* 0x1E */ u_short solidRange;
+    /* 0x20 */ VECTOR position;
+    /* 0x30 */ VECTOR moveModified; // Step / delta?
+    /* 0x40 */ VECTOR move;
+    /* 0x50 */ VECTOR curTriNormal; // Surface normal
+    /* 0x60 */ SVECTOR unk60;
+    /* 0x68 */ SVEC prevPosition;
     /* 0x6E  */ u_short unk6E;
     /* 0x70  */ u_short unk70;
     /* 0x72  */ u_short curYPos;
     /* 0x74  */ u_char canInteract;
     /* 0x75  */ u_char parentActorId;
     /* 0x76  */ u_short moveSpeed;
-    /* 0x78  */ short scriptPointersStack[4];
-    u_char faceId;
-    u_char unk81;
-    u_char dialogWidth;
-    u_char dialogHeight;
-    u_int dialogFlags;
-    u_short dialogPixelWidth;
-    u_short dialogPixelHeight;
-    ActorEventSlot eventSlots[8];
+    /* 0x78  */ short scriptPointersStack[SCRIPT_MAX_STACK_SIZE];
+    /* 0x80  */ u_char faceId;
+    /* 0x81  */ u_char unk81;
+    /* 0x82  */ u_char dialogWidth;
+    /* 0x83  */ u_char dialogHeight;
+    /* 0x84  */ u_int dialogFlags;
+    /* 0x88  */ u_short dialogPixelWidth;
+    /* 0x8A  */ u_short dialogPixelHeight;
+    /* 0x90  */ ActorScriptSlot scripts[ACTOR_MAX_NUM_SCRIPTS];
     /* 0xCC */ u_short scriptInstructionPointer;
-    /* 0xCE  */ u_char curEventSlotId;
-    /* 0xCF  */ u_char unkCF;
+    /* 0xCE  */ u_char curScriptIndex;
+    /* 0xCF  */ u_char unkCF; // Unknown event slot id
     /* 0xD0  */ VECTOR unkD0;
     /* 0xE0  */ u_short unkE0;
     /* 0xE2  */ u_char curDoorStep;
@@ -66,7 +261,8 @@ typedef struct {
     /* 0xE6  */ u_short defaultAnimationId;
     /* 0xE8  */ u_short curAnimationId;
     /* 0xEA  */ u_short unkAnimationId;
-    /* 0xEC  */ int unkEC;
+    /* 0xEC  */ short unkEC;
+    /* 0xEE  */ short unkEE;
     /* 0xF0  */ int unkF0;
     /* 0xF4  */ u_short scaleX;
     /* 0xF6  */ u_short scaleY;
@@ -90,15 +286,22 @@ typedef struct {
     /* 0x118 */ void* unk118;
     /* 0x11C */ short unk11C;
     /* 0x11E */ short unk11E;
-    /* 0x120 */ void* unk120;
-    /* 0x124 */ short unk124;
+    /* 0x120 */ void* unk120; // Special animation file?
+    /* 0x124 */ short unk124; // Archive index of special anim file?
     /* 0x126 */ u_char unk126;
     /* 0x127 */ u_char spriteId;
-    /* 0x128 */ u_int modelAnimation;
+    /* 0x128 */ short modelAnimation;
+    /* 0x12A */ u_short unk12A;
 
 
     // 0x1C0 => Stack index, bit 0x100 is not used since there's only four elements in the stack
-    u_int flags12C;
+    u_int flags12C_0: 2;
+    u_int flags12C_0x2: 3; // Tentative
+    u_int flags12C_0x5: 1;
+    u_int flags12C_0x6: 3; // Keeps track of recursion level in scripts - inc on call, dec on ret
+    u_int flags12C_0x9: 3; // Tentative
+    u_int flags12C_0xD: 1;
+    u_int flags12C_3: 19; // Tentative
 
 
     int flags130;
@@ -106,12 +309,12 @@ typedef struct {
 } ActorData;
 
 typedef struct {
-    void* pModelData; // 0x24 size, model related data
-    void* pSpriteData; // 0x164 size
-    void* pShadow; // 0x70 size
-    MATRIX transformMatrix;
-    MATRIX childMatrix;
-    ActorData* pActorData;
+    /* 0x0  */ void* pModelData; // 0x24 size, model related data
+    /* 0x4  */ void* pSpriteData; // 0x164 size
+    /* 0x8  */ void* pShadow; // 0x70 size
+    /* 0xC  */ MATRIX transformMatrix;
+    /* 0x2C */ MATRIX childMatrix;
+    /* 0x4C */ ActorData* pActorData;
     SVEC rotation;
     short flags;
     short status;
@@ -181,7 +384,7 @@ typedef struct {
 } ActorFile;
 
 
-#define SCRIPT_SIZE 0x40
+#define SCRIPT_OFFSET_TABLE_SIZE 0x40
 
 typedef struct {
     u_int signBits[0x20]; // Sign bits for variables
@@ -191,7 +394,7 @@ typedef struct {
 } ScriptsFile;
 
 extern int g_FieldNumActors;
-extern FieldActor* g_FieldActors;
+extern FieldActor* volatile g_FieldActors;
 
 extern ActorData* g_FieldScriptVMCurActor;
 extern void* g_FieldScriptVMCurScriptData;

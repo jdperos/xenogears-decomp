@@ -42,6 +42,12 @@ typedef struct {
     u_short unk2;
 } ArchiveStreamFileSectionHeader;
 
+typedef struct {
+    /* 0x0 */ short archiveIndex;
+    /* 0x2 */ u16 _pad;
+    /* 0x4 */ void* pData;
+} StreamDataQueueEntry;
+
 extern ArchiveStreamFileSectionHeader* D_8004FE2C;
 extern int D_8004FE40;
 

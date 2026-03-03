@@ -3,6 +3,8 @@
 
 #include "psyq/libgpu.h"
 
+#define TEXT_BOX_UNINITIALIZED 0xFFFF
+
 typedef struct {
     short visibility;
     short startPosition;
@@ -44,7 +46,7 @@ typedef struct {
     DR_MODE drawModes[2];
 
     // 0x18
-    char _pad[0xAC];
+    short _pad[0x56];
 
     // Background, 0xC4
     FieldTextBoxBackground background;
@@ -68,7 +70,7 @@ typedef struct {
     */
     short flags; // 0x40C
     short visibility; // 0 = Visible, -1 = Hidden
-    short order; // 0-top. 0xffff if window not inited
+    unsigned short order; // 0-top. 0xffff if window not inited
     short unk412;
     short status; // Set to 0 to close window. Usually 0xffff (not used in usual window render)
     short ownerActorID;

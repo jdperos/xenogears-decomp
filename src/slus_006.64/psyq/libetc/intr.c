@@ -49,12 +49,10 @@ VoidCallback_t DMACallback(int dma, VoidCallback_t fn) {
     return g_pInterruptControl->setDMAIntrCallback(dma, fn);
 }
 
-//INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc/intr", func_8004B7D0);
 void func_8004B7D0(VoidCallback_t fn) {
     g_pInterruptControl->setVsyncIntrCallback(4, fn);
 }
 
-//INCLUDE_ASM("asm/slus_006.64/nonmatchings/psyq/libetc/intr", func_8004B804);
 int func_8004B804(int ch, VoidCallback_t fn) {
     return g_pInterruptControl->setVsyncIntrCallback(ch, fn);
 }
